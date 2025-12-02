@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: under-utils-test
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.undernine.utils: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'

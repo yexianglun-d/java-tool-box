@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.undernineplaces</groupId>
+        <artifactId>under-utils</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>under-utils-test</artifactId>
+
+    <name>Under-Utils Test</name>
+    <description>工具库测试模块 - 用于测试所有已完成的工具类</description>
+
+    <dependencies>
+        <!-- 核心模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- HTTP 模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-http</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Redis 模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-redis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- MyBatis 模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-mybatis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Spring 模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-spring</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Starter 模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- 业务组件模块 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-biz</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- 日志 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter (用于运行测试) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ==================== 测试依赖 ==================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

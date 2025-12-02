@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.undernineplaces</groupId>
+    <artifactId>under-utils</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>Under-Utils</name>
+    <description>企业级 Java 工具库集合 - 统一各项目常用工具方法、封装逻辑、业务组件</description>
+
+    <properties>
+        <!-- 编译配置 -->
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Maven插件版本 -->
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
+    </properties>
+
+    <modules>
+        <!-- 依赖版本管理 BOM -->
+        <module>under-utils-bom</module>
+        
+        <!-- 核心工具模块：字符串、日期、加密、ID 等基础工具 -->
+        <module>under-utils-core</module>
+        
+        <!-- HTTP 请求封装：OkHttp、HttpClient、RestTemplate -->
+        <module>under-utils-http</module>
+        
+        <!-- Redis 操作封装：分布式锁、缓存工具等 -->
+        <module>under-utils-redis</module>
+        
+        <!-- MyBatis/MyBatis-Plus 增强：分页、元数据填充等 -->
+        <module>under-utils-mybatis</module>
+        
+        <!-- Spring 通用组件：统一返回体、异常处理、工具等 -->
+        <module>under-utils-spring</module>
+        
+        <!-- Spring Boot Starter：自动配置模块 -->
+        <module>under-utils-starter</module>
+        
+        <!-- 业务组件模块：短信、上传、Excel 等可复用组件 -->
+        <module>under-utils-biz</module>
+        
+        <!-- 占位符模块：预留扩展 -->
+        <module>under-utils-placeholder</module>
+        
+        <!-- 测试模块：用于测试所有工具类功能 -->
+        <module>under-utils-test</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- 引入 BOM 统一版本管理 -->
+            <dependency>
+                <groupId>com.undernineplaces</groupId>
+                <artifactId>under-utils-bom</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- 编译插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                    </configuration>
+                </plugin>
+
+                <!-- 单元测试插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+
+                <!-- 源码插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- JavaDoc插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
+                    <configuration>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <charset>${project.build.sourceEncoding}</charset>
+                        <docencoding>${project.build.sourceEncoding}</docencoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>
