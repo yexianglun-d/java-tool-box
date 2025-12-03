@@ -50,6 +50,9 @@ public class DefaultMetaObjectHandler implements MetaObjectHandler {
             this.strictInsertFill(metaObject, CREATE_BY, Long.class, userId);
             this.strictInsertFill(metaObject, UPDATE_BY, Long.class, userId);
         }
+
+        // 填充逻辑删除标记（默认未删除）
+        this.setFieldValByName("deleted", 0, metaObject);
     }
 
     /**
@@ -61,8 +64,8 @@ public class DefaultMetaObjectHandler implements MetaObjectHandler {
     public void updateFill(MetaObject metaObject) {
         log.debug("开始更新填充...");
 
-        // 填充修改时间
-        this.strictUpdateFill(metaObject, UPDATE_TIME, LocalDateTime.class, LocalDateTime.now());
+        // 填充修改时间（强制覆盖）
+        this.setFieldValByName(UPDATE_TIME, LocalDateTime.now(), metaObject);
 
         // 填充修改人（需要从上下文获取当前用户 ID）
         Long userId = getUserId();
