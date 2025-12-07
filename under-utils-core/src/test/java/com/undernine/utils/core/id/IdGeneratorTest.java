@@ -1,0 +1,276 @@
+package com.undernine.utils.core.id;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.*;
+
+/**
+ * IdGenerator 测试类
+ *
+ * @author Under-Utils Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+class IdGeneratorTest {
+
+    // ==================== 构造方法测试 ====================
+
+    @Test
+    void testConstructor_default() {
+        IdGenerator generator = new IdGenerator();
+        long id = generator.nextId();
+        assertThat(id).isPositive();
+    }
+
+    @Test
+    void testConstructor_withParams() {
+        IdGenerator generator = new IdGenerator(1, 1);
+        long id = generator.nextId();
+        assertThat(id).isPositive();
+    }
+
+    @Test
+    void testConstructor_invalidDatacenterId() {
+        assertThatThrownBy(() -> new IdGenerator(32, 1))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new IdGenerator(-1, 1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void testConstructor_invalidWorkerId() {
+        assertThatThrownBy(() -> new IdGenerator(1, 32))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new IdGenerator(1, -1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // ==================== nextId() 测试 ====================
+
+    @Test
+    void testNextId() {
+        IdGenerator generator = new IdGenerator();
+        long id = generator.nextId();
+
+        assertThat(id).isPositive();
+        assertThat(id).isGreaterThan(0);
+    }
+
+    @Test
+    void testNextId_uniqueness() {
+        IdGenerator generator = new IdGenerator();
+        Set<Long> ids = new HashSet<>();
+
+        // 生成 10000 个 ID
+        for (int i = 0; i < 10000; i++) {
+            long id = generator.nextId();
+            assertThat(ids.add(id)).isTrue(); // 每个 ID 都应该是唯一的
+        }
+
+        assertThat(ids).hasSize(10000);
+    }
+
+    @Test
+    void testNextId_increasing() {
+        IdGenerator generator = new IdGenerator();
+
+        long id1 = generator.nextId();
+        long id2 = generator.nextId();
+        long id3 = generator.nextId();
+
+        // ID 应该递增
+        assertThat(id2).isGreaterThan(id1);
+        assertThat(id3).isGreaterThan(id2);
+    }
+
+    // ==================== nextIdStr() 测试 ====================
+
+    @Test
+    void testNextIdStr() {
+        IdGenerator generator = new IdGenerator();
+        String idStr = generator.nextIdStr();
+
+        assertThat(idStr).isNotNull();
+        assertThat(idStr).isNotEmpty();
+        assertThat(idStr).matches("^\\d+$"); // 应该是纯数字字符串
+    }
+
+    @Test
+    void testNextIdStr_consistency() {
+        IdGenerator generator = new IdGenerator();
+        long id = generator.nextId();
+        String idStr = generator.nextIdStr();
+
+        // 两次生成的 ID 应该不同
+        assertThat(Long.parseLong(idStr)).isNotEqualTo(id);
+    }
+
+    // ==================== parseId() 测试 ====================
+
+    @Test
+    void testParseId() {
+        IdGenerator generator = new IdGenerator(5, 10);
+        long id = generator.nextId();
+
+        IdGenerator.IdInfo info = generator.parseId(id);
+
+        assertThat(info).isNotNull();
+        assertThat(info.getId()).isEqualTo(id);
+        assertThat(info.getTimestamp()).isGreaterThan(0);
+        assertThat(info.getDatacenterId()).isEqualTo(5);
+        assertThat(info.getWorkerId()).isEqualTo(10);
+        assertThat(info.getSequence()).isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    void testParseId_multipleIds() {
+        IdGenerator generator = new IdGenerator(3, 7);
+
+        for (int i = 0; i < 100; i++) {
+            long id = generator.nextId();
+            IdGenerator.IdInfo info = generator.parseId(id);
+
+            assertThat(info.getDatacenterId()).isEqualTo(3);
+            assertThat(info.getWorkerId()).isEqualTo(7);
+        }
+    }
+
+    // ==================== 并发测试 ====================
+
+    @Test
+    void testConcurrency() throws InterruptedException {
+        IdGenerator generator = new IdGenerator();
+        int threadCount = 10;
+        int idsPerThread = 1000;
+        Set<Long> ids = new HashSet<>();
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+        // 用于收集 ID（需要同步）
+        Object lock = new Object();
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    for (int j = 0; j < idsPerThread; j++) {
+                        long id = generator.nextId();
+                        synchronized (lock) {
+                            ids.add(id);
+                        }
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executor.shutdown();
+
+        // 验证所有 ID 都是唯一的
+        assertThat(ids).hasSize(threadCount * idsPerThread);
+    }
+
+    // ==================== 性能测试 ====================
+
+    @Test
+    void testPerformance() {
+        IdGenerator generator = new IdGenerator();
+        int count = 100000;
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            generator.nextId();
+        }
+        long duration = System.currentTimeMillis() - start;
+
+        System.out.println("生成 " + count + " 个 ID 耗时: " + duration + "ms");
+        System.out.println("平均每秒生成: " + (count * 1000 / duration) + " 个 ID");
+
+        // 性能应该很好
+        assertThat(duration).isLessThan(5000);
+    }
+
+    // ==================== 边界测试 ====================
+
+    @Test
+    void testBoundary_maxDatacenterAndWorker() {
+        // 测试最大的数据中心 ID 和机器 ID
+        IdGenerator generator = new IdGenerator(31, 31);
+        long id = generator.nextId();
+
+        IdGenerator.IdInfo info = generator.parseId(id);
+        assertThat(info.getDatacenterId()).isEqualTo(31);
+        assertThat(info.getWorkerId()).isEqualTo(31);
+    }
+
+    @Test
+    void testBoundary_minDatacenterAndWorker() {
+        // 测试最小的数据中心 ID 和机器 ID
+        IdGenerator generator = new IdGenerator(0, 0);
+        long id = generator.nextId();
+
+        IdGenerator.IdInfo info = generator.parseId(id);
+        assertThat(info.getDatacenterId()).isEqualTo(0);
+        assertThat(info.getWorkerId()).isEqualTo(0);
+    }
+
+    @Test
+    void testSequence_overflow() {
+        // 在同一毫秒内生成大量 ID，测试序列号溢出
+        IdGenerator generator = new IdGenerator();
+
+        // 快速生成 5000 个 ID（可能在同一毫秒内）
+        Set<Long> ids = new HashSet<>();
+        for (int i = 0; i < 5000; i++) {
+            ids.add(generator.nextId());
+        }
+
+        // 所有 ID 都应该唯一
+        assertThat(ids).hasSize(5000);
+    }
+
+    // ==================== 综合测试 ====================
+
+    @Test
+    void testMultipleGenerators() {
+        // 多个生成器使用不同的机器 ID
+        IdGenerator gen1 = new IdGenerator(0, 1);
+        IdGenerator gen2 = new IdGenerator(0, 2);
+        IdGenerator gen3 = new IdGenerator(1, 1);
+
+        long id1 = gen1.nextId();
+        long id2 = gen2.nextId();
+        long id3 = gen3.nextId();
+
+        // 不同生成器生成的 ID 应该不同
+        assertThat(id1).isNotEqualTo(id2);
+        assertThat(id2).isNotEqualTo(id3);
+        assertThat(id1).isNotEqualTo(id3);
+
+        // 验证机器 ID
+        assertThat(gen1.parseId(id1).getWorkerId()).isEqualTo(1);
+        assertThat(gen2.parseId(id2).getWorkerId()).isEqualTo(2);
+        assertThat(gen3.parseId(id3).getDatacenterId()).isEqualTo(1);
+    }
+
+    @Test
+    void testIdInfo_toString() {
+        IdGenerator generator = new IdGenerator(5, 10);
+        long id = generator.nextId();
+        IdGenerator.IdInfo info = generator.parseId(id);
+
+        String str = info.toString();
+        assertThat(str).contains("id=");
+        assertThat(str).contains("timestamp=");
+        assertThat(str).contains("datacenterId=5");
+        assertThat(str).contains("workerId=10");
+    }
+}
