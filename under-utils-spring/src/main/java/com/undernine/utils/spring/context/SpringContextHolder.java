@@ -7,25 +7,23 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 /**
- * Spring 上下文工具类
+ * Spring 上下文持有者
  * <p>
- * 提供在非 Spring 管理的类中获取 Bean 的能力
+ * 提供在非 Spring 管理的类中获取 Spring Bean 的能力。
  * </p>
- *
- * <h3>使用示例：</h3>
+ * <p>
+ * 使用示例：
  * <pre>{@code
  * // 获取 Bean
  * UserService userService = SpringContextHolder.getBean(UserService.class);
  *
- * // 获取指定名称的 Bean
- * UserService userService = SpringContextHolder.getBean("userService", UserService.class);
+ * // 获取配置属性
+ * String appName = SpringContextHolder.getProperty("spring.application.name");
  *
- * // 获取应用名称
- * String appName = SpringContextHolder.getApplicationName();
- *
- * // 获取激活的配置文件
+ * // 获取激活的 Profile
  * String[] profiles = SpringContextHolder.getActiveProfiles();
  * }</pre>
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
@@ -35,53 +33,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class SpringContextHolder implements ApplicationContextAware {
 
+    /**
+     * Spring 应用上下文
+     */
     private static ApplicationContext applicationContext;
 
     /**
-     * 设置应用上下文
+     * 设置 Spring 应用上下文
      *
-     * @param context Spring 应用上下文
+     * @param applicationContext Spring 应用上下文
      * @throws BeansException Bean 异常
      */
     @Override
-    public void setApplicationContext(ApplicationContext context) throws BeansException {
-        SpringContextHolder.applicationContext = context;
-        log.info("SpringContextHolder 初始化成功");
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        SpringContextHolder.applicationContext = applicationContext;
+        log.info("SpringContextHolder 初始化完成");
     }
 
     /**
-     * 获取应用上下文
+     * 获取 Spring 应用上下文
      *
      * @return ApplicationContext
      */
     public static ApplicationContext getApplicationContext() {
-        assertContextInjected();
+        assertApplicationContext();
         return applicationContext;
-    }
-
-    /**
-     * 根据类型获取 Bean
-     *
-     * @param clazz Bean 类型
-     * @param <T>   泛型
-     * @return Bean 实例
-     */
-    public static <T> T getBean(Class<T> clazz) {
-        assertContextInjected();
-        return applicationContext.getBean(clazz);
-    }
-
-    /**
-     * 根据名称和类型获取 Bean
-     *
-     * @param name  Bean 名称
-     * @param clazz Bean 类型
-     * @param <T>   泛型
-     * @return Bean 实例
-     */
-    public static <T> T getBean(String name, Class<T> clazz) {
-        assertContextInjected();
-        return applicationContext.getBean(name, clazz);
     }
 
     /**
@@ -91,166 +67,134 @@ public class SpringContextHolder implements ApplicationContextAware {
      * @return Bean 实例
      */
     public static Object getBean(String name) {
-        assertContextInjected();
+        assertApplicationContext();
         return applicationContext.getBean(name);
+    }
+
+    /**
+     * 根据类型获取 Bean
+     *
+     * @param clazz Bean 类型
+     * @param <T>   Bean 类型
+     * @return Bean 实例
+     */
+    public static <T> T getBean(Class<T> clazz) {
+        assertApplicationContext();
+        return applicationContext.getBean(clazz);
+    }
+
+    /**
+     * 根据名称和类型获取 Bean
+     *
+     * @param name  Bean 名称
+     * @param clazz Bean 类型
+     * @param <T>   Bean 类型
+     * @return Bean 实例
+     */
+    public static <T> T getBean(String name, Class<T> clazz) {
+        assertApplicationContext();
+        return applicationContext.getBean(name, clazz);
     }
 
     /**
      * 判断是否包含指定名称的 Bean
      *
      * @param name Bean 名称
-     * @return true-存在 false-不存在
+     * @return 包含返回 true，否则返回 false
      */
     public static boolean containsBean(String name) {
-        assertContextInjected();
+        assertApplicationContext();
         return applicationContext.containsBean(name);
     }
 
     /**
-     * 获取应用名称
+     * 判断指定名称的 Bean 是否为单例
      *
-     * @return 应用名称
+     * @param name Bean 名称
+     * @return 单例返回 true，否则返回 false
      */
-    public static String getApplicationName() {
-        assertContextInjected();
-        return applicationContext.getEnvironment().getProperty("spring.application.name");
+    public static boolean isSingleton(String name) {
+        assertApplicationContext();
+        return applicationContext.isSingleton(name);
     }
 
     /**
-     * 获取激活的配置文件
+     * 获取指定名称的 Bean 类型
      *
-     * @return 配置文件数组
+     * @param name Bean 名称
+     * @return Bean 类型
+     */
+    public static Class<?> getType(String name) {
+        assertApplicationContext();
+        return applicationContext.getType(name);
+    }
+
+    /**
+     * 获取激活的 Profile
+     *
+     * @return Profile 数组
      */
     public static String[] getActiveProfiles() {
-        assertContextInjected();
+        assertApplicationContext();
         return applicationContext.getEnvironment().getActiveProfiles();
     }
 
     /**
-     * 获取指定配置属性
+     * 获取配置属性
      *
      * @param key 属性键
      * @return 属性值
      */
     public static String getProperty(String key) {
-        assertContextInjected();
+        assertApplicationContext();
         return applicationContext.getEnvironment().getProperty(key);
     }
 
     /**
-     * 获取指定配置属性（带默认值）
+     * 获取配置属性（带默认值）
      *
      * @param key          属性键
      * @param defaultValue 默认值
      * @return 属性值
      */
     public static String getProperty(String key, String defaultValue) {
-        assertContextInjected();
+        assertApplicationContext();
         return applicationContext.getEnvironment().getProperty(key, defaultValue);
     }
 
     /**
-     * 判断指定 Bean 是否为单例
+     * 获取配置属性（指定类型）
      *
-     * @param name Bean 名称
-     * @return true-单例 false-非单例
+     * @param key        属性键
+     * @param targetType 目标类型
+     * @param <T>        类型
+     * @return 属性值
      */
-    public static boolean isSingleton(String name) {
-        assertContextInjected();
-        return applicationContext.isSingleton(name);
+    public static <T> T getProperty(String key, Class<T> targetType) {
+        assertApplicationContext();
+        return applicationContext.getEnvironment().getProperty(key, targetType);
     }
 
     /**
-     * 判断指定 Bean 是否为原型
+     * 获取配置属性（指定类型，带默认值）
      *
-     * @param name Bean 名称
-     * @return true-原型 false-非原型
+     * @param key          属性键
+     * @param targetType   目标类型
+     * @param defaultValue 默认值
+     * @param <T>          类型
+     * @return 属性值
      */
-    public static boolean isPrototype(String name) {
-        assertContextInjected();
-        return applicationContext.isPrototype(name);
+    public static <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
+        assertApplicationContext();
+        return applicationContext.getEnvironment().getProperty(key, targetType, defaultValue);
     }
 
     /**
-     * 获取指定 Bean 的类型
-     *
-     * @param name Bean 名称
-     * @return Bean 类型
+     * 断言 ApplicationContext 已初始化
      */
-    public static Class<?> getType(String name) {
-        assertContextInjected();
-        return applicationContext.getType(name);
-    }
-
-    /**
-     * 获取指定 Bean 的所有别名
-     *
-     * @param name Bean 名称
-     * @return 别名数组
-     */
-    public static String[] getAliases(String name) {
-        assertContextInjected();
-        return applicationContext.getAliases(name);
-    }
-
-    /**
-     * 根据类型获取所有 Bean 名称
-     *
-     * @param type Bean 类型
-     * @return Bean 名称数组
-     */
-    public static String[] getBeanNamesForType(Class<?> type) {
-        assertContextInjected();
-        return applicationContext.getBeanNamesForType(type);
-    }
-
-    /**
-     * 获取所有 Bean 定义的名称
-     *
-     * @return Bean 名称数组
-     */
-    public static String[] getBeanDefinitionNames() {
-        assertContextInjected();
-        return applicationContext.getBeanDefinitionNames();
-    }
-
-    /**
-     * 根据类型获取所有 Bean 实例（Map形式）
-     *
-     * @param type Bean 类型
-     * @param <T>  泛型
-     * @return Bean 名称和实例的 Map
-     */
-    public static <T> java.util.Map<String, T> getBeansOfType(Class<T> type) {
-        assertContextInjected();
-        return applicationContext.getBeansOfType(type);
-    }
-
-    /**
-     * 发布事件
-     *
-     * @param event 事件对象
-     */
-    public static void publishEvent(Object event) {
-        assertContextInjected();
-        applicationContext.publishEvent(event);
-        log.debug("事件已发布: {}", event.getClass().getSimpleName());
-    }
-
-    /**
-     * 断言上下文已注入
-     */
-    private static void assertContextInjected() {
+    private static void assertApplicationContext() {
         if (applicationContext == null) {
-            throw new IllegalStateException("ApplicationContext 未注入，请确保 SpringContextHolder 已被 Spring 管理");
+            throw new IllegalStateException("ApplicationContext 未初始化，请确保 SpringContextHolder 已被 Spring 容器管理");
         }
-    }
-
-    /**
-     * 清除上下文（用于测试）
-     */
-    public static void clearContext() {
-        applicationContext = null;
-        log.info("SpringContextHolder 上下文已清除");
     }
 }
