@@ -179,13 +179,14 @@ public final class ValidationUtils {
         try {
             int sum = 0;
             for (int i = 0; i < 17; i++) {
-                sum += Character.getNumericValue(idCard.charAt(i)) * ID_CARD_WEIGHTS[i];
+                int digit = idCard.charAt(i) - '0';
+                sum += digit * ID_CARD_WEIGHTS[i];
             }
             int mod = sum % 11;
-            char checkCode = ID_CARD_CHECK_CODES[mod];
-            char lastChar = idCard.charAt(17);
+            char expectedCheckCode = ID_CARD_CHECK_CODES[mod];
+            char actualCheckCode = Character.toUpperCase(idCard.charAt(17));
 
-            return checkCode == Character.toUpperCase(lastChar);
+            return expectedCheckCode == actualCheckCode;
         } catch (Exception e) {
             return false;
         }

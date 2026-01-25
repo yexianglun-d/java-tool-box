@@ -83,7 +83,7 @@ class ValidationUtilsTest {
     @Test
     void testIsIdCard_valid() {
         // 这些是格式正确且校验位正确的身份证号（可能是虚构的）
-        assertThat(ValidationUtils.isIdCard("110101199003074796")).isTrue();
+        assertThat(ValidationUtils.isIdCard("110101199003074792")).isTrue();
         assertThat(ValidationUtils.isIdCard("31010519900307869X")).isTrue();
     }
 

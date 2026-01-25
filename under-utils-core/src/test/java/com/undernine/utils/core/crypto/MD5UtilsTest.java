@@ -114,7 +114,8 @@ class MD5UtilsTest {
 
     @Test
     void testMd5Bytes_empty() {
-        assertThat(MD5Utils.md5(new byte[0])).isNull();
+        // 空字节数组的 MD5 值
+        assertThat(MD5Utils.md5(new byte[0])).isEqualTo("d41d8cd98f00b204e9800998ecf8427e");
     }
 
     // ==================== md5Bytes() 测试 ====================

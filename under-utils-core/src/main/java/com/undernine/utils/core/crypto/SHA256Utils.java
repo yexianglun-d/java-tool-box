@@ -52,10 +52,10 @@ public final class SHA256Utils {
      * </p>
      *
      * @param text 待加密的字符串
-     * @return SHA-256 值（64 位小写十六进制），如果输入为 null 或空则返回 null
+     * @return SHA-256 值（64 位小写十六进制），如果输入为 null 则返回 null
      */
     public static String sha256(String text) {
-        if (text == null || text.isEmpty()) {
+        if (text == null) {
             return null;
         }
         return sha256(text.getBytes(StandardCharsets.UTF_8));
@@ -65,7 +65,7 @@ public final class SHA256Utils {
      * 计算字符串的 SHA-256 值（64 位大写十六进制）。
      *
      * @param text 待加密的字符串
-     * @return SHA-256 值（64 位大写十六进制），如果输入为 null 或空则返回 null
+     * @return SHA-256 值（64 位大写十六进制），如果输入为 null 则返回 null
      */
     public static String sha256Upper(String text) {
         String sha256 = sha256(text);
@@ -78,10 +78,10 @@ public final class SHA256Utils {
      * 计算字节数组的 SHA-256 值（64 位小写十六进制）。
      *
      * @param bytes 待加密的字节数组
-     * @return SHA-256 值（64 位小写十六进制），如果输入为 null 或空则返回 null
+     * @return SHA-256 值（64 位小写十六进制），如果输入为 null 则返回 null
      */
     public static String sha256(byte[] bytes) {
-        if (bytes == null || bytes.length == 0) {
+        if (bytes == null) {
             return null;
         }
         byte[] sha256Bytes = digest(bytes);
@@ -92,10 +92,10 @@ public final class SHA256Utils {
      * 计算字节数组的 SHA-256 值（返回字节数组）。
      *
      * @param bytes 待加密的字节数组
-     * @return SHA-256 值（字节数组），如果输入为 null 或空则返回 null
+     * @return SHA-256 值（字节数组），如果输入为 null 则返回 null
      */
     public static byte[] sha256Bytes(byte[] bytes) {
-        if (bytes == null || bytes.length == 0) {
+        if (bytes == null) {
             return null;
         }
         return digest(bytes);
