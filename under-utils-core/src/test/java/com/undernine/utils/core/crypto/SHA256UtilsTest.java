@@ -81,7 +81,8 @@ class SHA256UtilsTest {
 
     @Test
     void testSha256Bytes_empty() {
-        assertThat(SHA256Utils.sha256(new byte[0])).isNull();
+        // 空字节数组的 SHA-256 值
+        assertThat(SHA256Utils.sha256(new byte[0])).isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     // ==================== sha256Bytes() 测试 ====================

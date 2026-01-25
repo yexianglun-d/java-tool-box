@@ -183,6 +183,10 @@ public final class UUIDUtils {
         if (uuid == null || uuid.isEmpty()) {
             return false;
         }
+        // 标准 UUID 格式必须是 36 个字符（8-4-4-4-12）
+        if (uuid.length() != 36) {
+            return false;
+        }
         try {
             UUID.fromString(uuid);
             return true;
