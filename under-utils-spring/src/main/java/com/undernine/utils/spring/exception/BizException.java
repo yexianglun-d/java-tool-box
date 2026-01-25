@@ -6,20 +6,21 @@ import lombok.Getter;
 /**
  * 业务异常类
  * <p>
- * 用于业务逻辑中抛出的可预期异常，会被全局异常处理器捕获并转换为统一的响应格式
+ * 用于业务逻辑中抛出的异常，会被全局异常处理器捕获并转换为统一的返回格式。
  * </p>
- *
- * <h3>使用示例：</h3>
+ * <p>
+ * 使用示例：
  * <pre>{@code
- * // 使用默认消息
+ * // 抛出默认业务异常
  * throw new BizException("用户不存在");
  *
- * // 使用自定义状态码和消息
- * throw new BizException(40001, "参数校验失败");
+ * // 抛出带状态码的业务异常
+ * throw new BizException(10001, "用户不存在");
  *
- * // 使用 ResultCode 枚举
+ * // 使用状态码枚举
  * throw new BizException(ResultCode.DATA_NOT_FOUND);
  * }</pre>
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
@@ -31,17 +32,17 @@ public class BizException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 错误码
+     * 状态码
      */
-    private Integer code;
+    private final Integer code;
 
     /**
      * 错误消息
      */
-    private String message;
+    private final String message;
 
     /**
-     * 构造函数（默认错误码）
+     * 构造方法（使用默认业务错误码）
      *
      * @param message 错误消息
      */
@@ -52,9 +53,9 @@ public class BizException extends RuntimeException {
     }
 
     /**
-     * 构造函数（自定义错误码）
+     * 构造方法（自定义状态码和消息）
      *
-     * @param code    错误码
+     * @param code    状态码
      * @param message 错误消息
      */
     public BizException(Integer code, String message) {
@@ -64,9 +65,9 @@ public class BizException extends RuntimeException {
     }
 
     /**
-     * 构造函数（使用 ResultCode 枚举）
+     * 构造方法（使用状态码枚举）
      *
-     * @param resultCode 结果码枚举
+     * @param resultCode 状态码枚举
      */
     public BizException(ResultCode resultCode) {
         super(resultCode.getMessage());
@@ -75,10 +76,10 @@ public class BizException extends RuntimeException {
     }
 
     /**
-     * 构造函数（使用 ResultCode 枚举，自定义消息）
+     * 构造方法（使用状态码枚举，覆盖消息）
      *
-     * @param resultCode 结果码枚举
-     * @param message    自定义消息
+     * @param resultCode 状态码枚举
+     * @param message    错误消息
      */
     public BizException(ResultCode resultCode, String message) {
         super(message);
@@ -87,10 +88,10 @@ public class BizException extends RuntimeException {
     }
 
     /**
-     * 构造函数（包含原始异常）
+     * 构造方法（带原因异常）
      *
      * @param message 错误消息
-     * @param cause   原始异常
+     * @param cause   原因异常
      */
     public BizException(String message, Throwable cause) {
         super(message, cause);
@@ -99,15 +100,20 @@ public class BizException extends RuntimeException {
     }
 
     /**
-     * 构造函数（自定义错误码，包含原始异常）
+     * 构造方法（带原因异常和状态码）
      *
-     * @param code    错误码
+     * @param code    状态码
      * @param message 错误消息
-     * @param cause   原始异常
+     * @param cause   原因异常
      */
     public BizException(Integer code, String message, Throwable cause) {
         super(message, cause);
         this.code = code;
         this.message = message;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
     }
 }
