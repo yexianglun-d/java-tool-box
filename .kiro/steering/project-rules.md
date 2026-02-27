@@ -11,6 +11,7 @@ inclusion: always
 - **Spring Boot 版本**: 3.2.5
 - **项目类型**: Maven 多模块项目
 - **包名前缀**: `com.undernine.utils`
+- **作者信息**: `deng`
 
 ## 开发风格
 - **要求**: 需保证编写的代码与当前系统高度统一：
@@ -22,34 +23,13 @@ inclusion: always
 ### 核心模块
 1. **under-utils-bom** - BOM 依赖管理模块（无业务代码）
 2. **under-utils-core** - 基础工具模块（仅依赖 JDK）
-   - 字符串工具 (string)
-   - 日期时间工具 (time)
-   - JSON 工具 (json)
-   - 加密工具 (crypto)
-   - ID 生成工具 (id)
-   - 集合工具 (collection)
-   - 金额计算工具 (money)
-   - 参数校验工具 (validation)
-   - IO 工具 (io)
-
 3. **under-utils-mybatis** - MyBatis/MyBatis-Plus 增强模块
-   - BaseEntity 基础实体类
-   - 元数据自动填充
-   - 统一分页 (PageQuery/PageResult)
-   - MyBatis-Plus 配置
-
 4. **under-utils-spring** - Spring 通用组件模块
-   - 统一返回体 (Result)
-   - 全局异常处理
-   - 业务异常 (BizException)
-   - Spring 上下文工具
-   - AOP 时间统计
-
-5. **under-utils-http** - HTTP 封装模块（待开发）
-6. **under-utils-redis** - Redis 封装模块（待开发）
-7. **under-utils-starter** - Spring Boot Starter（待开发）
-8. **under-utils-biz** - 业务组件模块（待开发）
-9. **under-utils-placeholder** - 占位符模块（预留）
+5. **under-utils-http** - HTTP 封装模块
+6. **under-utils-redis** - Redis 封装模块
+7. **under-utils-starter** - Spring Boot Starter
+8. **under-utils-biz** - 业务组件模块
+9. **under-utils-placeholder** - 占位符模块
 10. **under-utils-test** - 测试模块
 
 ### 模块依赖原则
