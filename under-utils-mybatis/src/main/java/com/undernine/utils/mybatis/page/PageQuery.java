@@ -11,14 +11,20 @@ import java.util.List;
 /**
  * 分页查询参数
  * <p>
- * 统一的分页查询参数封装
+ * 统一的分页查询参数封装。
+ * </p>
+ * <p>
+ * 该类直接接收数据库排序列名，适合内部可信代码，不建议作为 Web 入参暴露给前端。
+ * 面向接口入参请使用 {@link SafePageQuery} 配合 {@link SortFieldMapping} 做排序字段白名单映射。
  * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 使用 {@link SafePageQuery} 替代前端可控排序场景，避免 raw column 进入 ORDER BY。
  */
 @Data
+@Deprecated(since = "1.0.0")
 public class PageQuery implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -2,7 +2,7 @@
 
 > MyBatis-Plus 增强工具集，开箱即用的企业级数据访问层解决方案
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/undernineplaces/under-utils)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yexianglun-d/java-tool-box)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE)
 
 ## ✨ 核心特性
@@ -11,7 +11,7 @@
 |------|------|------|
 | 🚀 **BaseEntity** | 统一基础实体类 | 包含 ID、时间戳、操作人、逻辑删除等通用字段 |
 | 🔄 **自动填充** | 元数据自动填充 | 创建/更新时间、操作人自动记录，无需手动设置 |
-| 📄 **统一分页** | PageQuery/PageResult | 规范化分页参数和返回格式，前后端对接更简单 |
+| 📄 **安全分页** | SafePageQuery/SortFieldMapping/PageResult | 前端排序字段白名单映射，避免 raw column 进入 ORDER BY |
 | 🗑️ **逻辑删除** | 自动过滤已删除数据 | 删除操作变更新，数据可追溯可恢复 |
 | 🔒 **安全防护** | 防止全表更新/删除 | 避免误操作导致的数据灾难 |
 | 🎯 **Lambda 查询** | 类型安全的条件构造 | 编译时检查，重构友好 |
@@ -168,12 +168,16 @@ public List<SysUser> findActiveUsers(String keyword) {
 ### 分页查询
 
 ```java
-public PageResult<SysUser> pageUsers(PageQuery pageQuery, String keyword) {
+public PageResult<SysUser> pageUsers(SafePageQuery pageQuery, String keyword) {
+    SortFieldMapping mapping = SortFieldMapping.builder()
+        .add("createdAt", "create_time")
+        .add("username", "username")
+        .build();
+
     LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
-        .like(StringUtils.hasText(keyword), SysUser::getUsername, keyword)
-        .orderByDesc(SysUser::getCreateTime);
+        .like(StringUtils.hasText(keyword), SysUser::getUsername, keyword);
     
-    IPage<SysUser> page = userMapper.selectPage(pageQuery.toPage(), wrapper);
+    IPage<SysUser> page = userMapper.selectPage(pageQuery.buildPage(mapping), wrapper);
     return PageResult.of(page);
 }
 ```
@@ -182,11 +186,11 @@ public PageResult<SysUser> pageUsers(PageQuery pageQuery, String keyword) {
 
 ```java
 @GetMapping("/users")
-public PageResult<SysUser> page(PageQuery pageQuery, String keyword) {
+public PageResult<SysUser> page(SafePageQuery pageQuery, String keyword) {
     return userService.pageUsers(pageQuery, keyword);
 }
 
-// 请求: GET /users?current=1&size=10&keyword=admin
+// 请求: GET /users?current=1&size=10&orders[0].field=createdAt&orders[0].asc=false&keyword=admin
 ```
 
 **返回示例**
@@ -222,13 +226,20 @@ userMapper.updateById(user);
 ### 自定义排序
 
 ```java
+SortFieldMapping mapping = SortFieldMapping.builder()
+    .add("createdAt", "create_time")
+    .add("status", "status")
+    .add("username", "username")
+    .build();
+
 // 单字段排序
-PageQuery.of(1, 10).orderByDesc("create_time")
+SafePageQuery.of(1L, 10L).orderByDesc("createdAt").buildPage(mapping)
 
 // 多字段排序
-PageQuery.of(1, 10)
+SafePageQuery.of(1L, 10L)
     .orderByDesc("status")
     .orderByAsc("username")
+    .buildPage(mapping)
 ```
 
 ### 获取当前用户
@@ -260,6 +271,7 @@ protected Long getUserId() {
 | 🔤 **字段命名** | 数据库使用下划线（`create_time`），Java 使用驼峰（`createTime`），自动映射 |
 | 🗑️ **逻辑删除** | `deleted` 字段必须为 `INT` 类型，0=未删除，1=已删除 |
 | 📄 **分页限制** | 默认单页最大 1000 条，防止大数据量查询 |
+| ↕️ **排序入参** | Web 入参推荐 `SafePageQuery`，通过 `SortFieldMapping` 映射前端字段到数据库列名 |
 | 🚫 **安全防护** | 禁止无条件的全表 UPDATE/DELETE 操作 |
 | 🆔 **主键生成** | 使用雪花算法，无需数据库自增 |
 

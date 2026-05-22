@@ -40,7 +40,7 @@
  *   <li>{@link com.undernine.utils.http.request.HttpRequest} - HTTP 请求构建器</li>
  *   <li>{@link com.undernine.utils.http.response.HttpResponse} - HTTP 响应封装</li>
  *   <li>{@link com.undernine.utils.http.config.HttpConfig} - HTTP 配置类</li>
- *   <li>{@link com.undernine.utils.http.client.OkHttpClient} - OkHttp 客户端实现</li>
+ *   <li>{@link com.undernine.utils.http.client.OkHttpRequestExecutor} - OkHttp 请求执行器</li>
  * </ul>
  *
  * @author deng

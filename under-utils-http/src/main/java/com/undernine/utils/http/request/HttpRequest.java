@@ -1,6 +1,6 @@
 package com.undernine.utils.http.request;
 
-import com.undernine.utils.http.client.OkHttpClient;
+import com.undernine.utils.http.client.OkHttpRequestExecutor;
 import com.undernine.utils.http.config.HttpConfig;
 import com.undernine.utils.http.enums.HttpMethod;
 import com.undernine.utils.http.response.HttpResponse;
@@ -102,8 +102,8 @@ public class HttpRequest {
      * @return HTTP 响应
      */
     public HttpResponse execute() {
-        OkHttpClient client = new OkHttpClient(config != null ? config : HttpConfig.defaultConfig());
-        return client.execute(this);
+        OkHttpRequestExecutor executor = new OkHttpRequestExecutor(config != null ? config : HttpConfig.defaultConfig());
+        return executor.execute(this);
     }
 
     /**

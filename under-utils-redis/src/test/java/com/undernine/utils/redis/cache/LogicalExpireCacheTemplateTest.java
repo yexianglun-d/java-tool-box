@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -30,12 +31,23 @@ import static org.mockito.Mockito.when;
 class LogicalExpireCacheTemplateTest {
 
     @Test
+    void optionsRejectPhysicalTtlNotLongerThanLogicalTtl() {
+        assertThatThrownBy(() -> LogicalExpireCacheOptions.builder()
+            .logicalTtl(Duration.ofSeconds(30))
+            .physicalTtl(Duration.ofSeconds(30))
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("physicalTtl must be greater than logicalTtl");
+    }
+
+    @Test
     void getOrLoadReturnsCachedValueWhenLogicalTtlNotExpired() {
         CacheHarness harness = CacheHarness.create();
         TrackingExecutor refreshExecutor = new TrackingExecutor();
         LogicalExpireCacheTemplate template = new LogicalExpireCacheTemplate(harness.redissonClient());
         LogicalExpireCacheOptions options = options(refreshExecutor)
             .logicalTtl(Duration.ofSeconds(30))
+            .physicalTtl(Duration.ofSeconds(60))
             .build();
 
         String first = template.getOrLoad("hot:user:1", String.class, options, key -> "cached");

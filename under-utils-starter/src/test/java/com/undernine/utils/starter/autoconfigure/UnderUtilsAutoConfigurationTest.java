@@ -232,4 +232,16 @@ class UnderUtilsAutoConfigurationTest {
                     assertThat(executor.getMaxPoolSize()).isEqualTo(2);
                 });
     }
+
+    @Test
+    void shouldRejectLogicalCachePhysicalTtlNotLongerThanLogicalTtl() {
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withPropertyValues(
+                        "under.utils.redis.logical-cache.enabled=true",
+                        "under.utils.redis.logical-cache.logical-ttl=30s",
+                        "under.utils.redis.logical-cache.physical-ttl=30s"
+                )
+                .run(context -> assertThat(context).hasFailed());
+    }
 }

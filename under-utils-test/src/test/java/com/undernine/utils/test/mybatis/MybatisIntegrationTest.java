@@ -3,8 +3,9 @@ package com.undernine.utils.test.mybatis;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.undernine.utils.mybatis.page.PageQuery;
 import com.undernine.utils.mybatis.page.PageResult;
+import com.undernine.utils.mybatis.page.SafePageQuery;
+import com.undernine.utils.mybatis.page.SortFieldMapping;
 import com.undernine.utils.test.mybatis.entity.User;
 import com.undernine.utils.test.mybatis.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,9 +108,12 @@ class MybatisIntegrationTest {
         }
 
         // 2. 构建分页查询
-        PageQuery pageQuery = PageQuery.of(1L, 10L)
-                .orderByDesc("create_time");
-        Page<User> page = pageQuery.buildPage();
+        SortFieldMapping sortFieldMapping = SortFieldMapping.builder()
+                .add("createdAt", "create_time")
+                .build();
+        SafePageQuery pageQuery = SafePageQuery.of(1L, 10L)
+                .orderByDesc("createdAt");
+        Page<User> page = pageQuery.buildPage(sortFieldMapping);
 
         // 3. 执行查询
         IPage<User> result = userMapper.selectPage(page, null);

@@ -249,6 +249,7 @@ mvn -Pintegration-tests -pl under-utils-test -am test
 - 安全漏洞报告：[SECURITY.md](SECURITY.md)
 - 变更记录：[CHANGELOG.md](CHANGELOG.md)
 - 公开路线图：[ROADMAP.md](ROADMAP.md)
+- 发布前 API 审计：[docs/API_REVIEW.md](docs/API_REVIEW.md)
 
 提交功能前建议先开 issue 说明场景、边界和复用价值。新增能力需要附带测试，并说明为什么不属于 Hutool、Apache Commons 或 Guava 已覆盖的低复杂度通用工具。
 

@@ -8,6 +8,7 @@
 
 - 新增 GitHub Actions CI，覆盖默认编译、默认测试和 `under-utils-test` Testcontainers 集成测试。
 - 新增 Maven 发布准备配置，包含开源元信息、release 构件 profile、sources/javadocs 生成和可选 GPG 签名 profile。
+- 新增发布前 API 审计记录 `docs/API_REVIEW.md`，跟踪 public API、配置 key 和模块边界收口结论。
 - `under-utils-test` 新增 Testcontainers MySQL 集成测试依赖，集成验证不再依赖本地 MySQL。
 - 新增 GitHub 开源社区文件：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、Issue 模板和 Pull Request 模板。
 - 新增公开路线图 `ROADMAP.md`，替代内部阶段分析文档。
@@ -53,6 +54,10 @@
 - 更新 POM 描述，弱化“常用工具方法”表述，强调工程模式封装。
 - 父工程 Maven Compiler Plugin 开启 `parameters`，让 Spring 在干净编译后可直接读取方法参数名。
 - `under-utils-samples` 标记为不参与 Maven deploy，保留构建验证但避免作为正式库模块发布。
+- HTTP 模块底层 OkHttp 执行入口从 `OkHttpClient` 收敛为 `OkHttpRequestExecutor`，避免与三方库类型同名。
+- `LogicalExpireCacheOptions` 增加 `physicalTtl > logicalTtl` 校验，确保逻辑过期缓存保留旧值兜底窗口。
+- `LogicalExpireCacheTemplate.LogicalCachePayload` 收回为包内实现细节，不再作为 public API 暴露。
+- `PageQuery` 标记为不推荐 API，前端可控排序场景应使用 `SafePageQuery` 与 `SortFieldMapping`。
 - 收紧 starter 自动装配条件，用户自定义 `TaskDecorator`、`CacheValueCodec`、`CacheOptions`、`CacheAsideTemplate` 等 Bean 时自动退让。
 - `CacheValueCodec` 改为 cache-aside 与 logical-cache 共享的 Redis 缓存基础设施，仅在相关能力启用时自动装配。
 - Redis cache options 增加兼容别名，改善 `ttl/nullTtl/cacheNull` 与 value/null value 语义的可读性。
@@ -74,6 +79,8 @@
 - `mvn -pl under-utils-samples -am test`
 - `mvn -DskipTests compile`
 - `mvn clean test`
+- `mvn -pl under-utils-http,under-utils-redis,under-utils-mybatis,under-utils-starter -am test`
+- `mvn test`
 - `mvn -Prelease -DskipTests package`
 - `mvn -Prelease,sign-artifacts -Dgpg.skip=true -DskipTests verify`
 - `mvn -Pintegration-tests -pl under-utils-test -am -DskipTests test-compile`

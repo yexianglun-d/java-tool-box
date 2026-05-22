@@ -305,7 +305,7 @@ public class LogicalExpireCacheTemplate {
     /**
      * 逻辑缓存载荷。data 为业务值经过 CacheValueCodec 编码后的字符串。
      */
-    public static final class LogicalCachePayload {
+    static final class LogicalCachePayload {
 
         private String data;
         private boolean nullValue;

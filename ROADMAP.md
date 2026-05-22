@@ -15,6 +15,7 @@
 ## 首个稳定 Release
 
 - 梳理 public API，减少发布后需要破坏性调整的命名和配置项。
+- 持续维护发布前 API 审计记录，优先处理类名冲突、配置 key、异常语义和高风险默认值。
 - 为核心工程模式能力补齐边界文档和失败语义说明。
 - 建立 GitHub Actions CI，覆盖默认 `mvn test`、编译检查和 markdown 基础检查。
 - 确认 Maven Central namespace、发布账号、密钥托管方式和正式 deploy 流程。

@@ -20,9 +20,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * OkHttp 客户端实现
+ * OkHttp 请求执行器。
  * <p>
- * 基于 OkHttp 实现的 HTTP 客户端。
+ * 基于 OkHttp 执行 Under-Utils {@link HttpRequest}，避免将底层 {@code okhttp3.OkHttpClient}
+ * 直接暴露为业务调用入口。
  * </p>
  *
  * @author deng
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0.0
  */
 @Slf4j
-public class OkHttpClient {
+public class OkHttpRequestExecutor {
 
     /**
      * OkHttp 客户端实例
@@ -47,7 +48,7 @@ public class OkHttpClient {
      *
      * @param config HTTP 配置
      */
-    public OkHttpClient(HttpConfig config) {
+    public OkHttpRequestExecutor(HttpConfig config) {
         this.config = config;
         this.client = buildClient(config);
     }

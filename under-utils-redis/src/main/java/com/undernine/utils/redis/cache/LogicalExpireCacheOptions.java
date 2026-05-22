@@ -39,6 +39,7 @@ public final class LogicalExpireCacheOptions {
     private LogicalExpireCacheOptions(Builder builder) {
         this.logicalTtl = requirePositive(builder.logicalTtl, "logicalTtl");
         this.physicalTtl = requirePositive(builder.physicalTtl, "physicalTtl");
+        requirePhysicalTtlLongerThanLogicalTtl(this.logicalTtl, this.physicalTtl);
         this.cacheNull = builder.cacheNull;
         this.keyPrefix = builder.keyPrefix == null ? "" : builder.keyPrefix;
         this.rebuildLockKeyPrefix = builder.rebuildLockKeyPrefix == null ? "" : builder.rebuildLockKeyPrefix;
@@ -131,6 +132,12 @@ public final class LogicalExpireCacheOptions {
             throw new IllegalArgumentException(name + " must not be negative");
         }
         return duration;
+    }
+
+    private static void requirePhysicalTtlLongerThanLogicalTtl(Duration logicalTtl, Duration physicalTtl) {
+        if (physicalTtl.compareTo(logicalTtl) <= 0) {
+            throw new IllegalArgumentException("physicalTtl must be greater than logicalTtl");
+        }
     }
 
     /**
