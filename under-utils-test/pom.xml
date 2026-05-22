@@ -13,8 +13,8 @@
 
     <artifactId>under-utils-test</artifactId>
 
-    <name>Under-Utils Test</name>
-    <description>工具库测试模块 - 用于测试所有已完成的工具类</description>
+    <name>Under-Utils Manual Integration Test</name>
+    <description>手工集成验证模块 - 依赖本地 MySQL 等外部环境，不进入默认构建与发布链路</description>
 
     <dependencies>
         <!-- 核心模块 -->

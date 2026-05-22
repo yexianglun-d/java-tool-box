@@ -3,7 +3,7 @@
 > MyBatis-Plus 增强工具集，开箱即用的企业级数据访问层解决方案
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/undernineplaces/under-utils)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE)
 
 ## ✨ 核心特性
 
@@ -265,7 +265,7 @@ protected Long getUserId() {
 
 ## 🧪 测试用例
 
-完整的集成测试位于 `under-utils-test` 模块：
+手工集成验证用例位于 `under-utils-test` 模块。该模块依赖本地 MySQL，不进入默认构建链路：
 - ✅ BaseEntity 自动填充测试
 - ✅ 分页查询测试
 - ✅ 逻辑删除测试
@@ -274,7 +274,7 @@ protected Long getUserId() {
 
 运行测试：
 ```bash
-mvn test -Dtest=MybatisIntegrationTest
+mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=MybatisIntegrationTest
 ```
 
 ## 📦 依赖版本

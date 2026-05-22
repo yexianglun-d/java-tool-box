@@ -2,7 +2,7 @@
 
 ## 📖 模块介绍
 
-`under-utils-core` 是 Under-Utils 工具库的核心模块，提供基础的、无框架依赖的通用工具类。
+`under-utils-core` 是 Under-Utils 的无框架依赖基础模块，承载历史基础工具和轻量核心抽象。后续新增能力需要符合根 README 中的工程模式准入标准，不再扩张为 Hutool 式大而全工具集合。
 
 ## 🎯 设计原则
 
@@ -470,8 +470,8 @@ System.out.println("序列号: " + info.getSequence());
 
 ## 🤝 贡献指南
 
-请参考项目根目录的 [README.md](../README.md) 中的贡献规范。
+请参考项目根目录的 [CONTRIBUTING.md](../CONTRIBUTING.md)。
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证。
+本项目采用 MIT 许可证，详见 [LICENSE](../LICENSE)。

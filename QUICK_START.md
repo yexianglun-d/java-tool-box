@@ -1,103 +1,47 @@
-# Under-Utils 快速开始指南
+# Quick Start
 
-## 📋 前置要求
+本文档面向第一次接触 Under-Utils 的开发者，帮助你在本地完成构建、运行示例工程，并理解如何在业务项目中接入。
 
-- JDK 17 或更高版本
-- Maven 3.6+ 
-- IDE（推荐 IntelliJ IDEA 或 Eclipse）
+## Requirements
 
-## 🚀 项目结构
+- Java 21
+- Maven 3.9+
+- 可选：Docker，用于运行 samples 的 Redis 示例
+- 可选：MySQL，用于运行 `under-utils-test` 手工集成验证模块
 
-```
-under-utils/
-├── pom.xml                          # 父 POM
-├── README.md                        # 项目规范文档
-├── QUICK_START.md                   # 本文件
-├── .gitignore                       # Git 忽略配置
-│
-├── under-utils-bom/                 # BOM 依赖管理模块
-│   └── pom.xml
-│
-├── under-utils-core/                # 核心工具模块
-│   ├── pom.xml
-│   ├── README.md
-│   └── src/
-│       ├── main/java/com/undernine/utils/core/
-│       │   ├── string/              # 字符串工具
-│       │   ├── time/                # 日期时间工具
-│       │   ├── json/                # JSON 工具
-│       │   ├── crypto/              # 加密工具
-│       │   ├── id/                  # ID 生成工具
-│       │   ├── collection/          # 集合工具
-│       │   └── io/                  # IO 工具
-│       └── test/java/               # 测试代码
-│
-├── under-utils-http/                # HTTP 封装模块
-├── under-utils-redis/               # Redis 封装模块
-├── under-utils-mybatis/             # MyBatis 增强模块
-├── under-utils-spring/              # Spring 组件模块
-├── under-utils-starter/             # Spring Boot Starter
-├── under-utils-biz/                 # 业务组件模块
-└── under-utils-placeholder/         # 占位符模块
-```
-
-## 🔧 编译项目
-
-### 1. 编译所有模块
+## Build From Source
 
 ```bash
-cd /Users/deng/Desktop/Java开发工具包/under-utils
+git clone https://github.com/undernineplaces/under-utils.git
+cd under-utils
 mvn clean install
 ```
 
-### 2. 仅编译某个模块
+只做编译检查：
 
 ```bash
-cd under-utils-core
-mvn clean install
+mvn -DskipTests compile
 ```
 
-### 3. 跳过测试编译
-
-```bash
-mvn clean install -DskipTests
-```
-
-## 🧪 运行测试
-
-### 运行所有测试
+运行默认单元测试：
 
 ```bash
 mvn test
 ```
 
-### 运行某个模块的测试
+默认构建不包含 `under-utils-test`，因为该模块依赖本地 MySQL 等外部环境。
 
-```bash
-cd under-utils-core
-mvn test
-```
+## Add To Your Project
 
-### 运行单个测试类
-
-```bash
-mvn test -Dtest=StringUtilsTest
-```
-
-## 📦 使用工具库
-
-### 在项目中引入
-
-在你的项目 `pom.xml` 中添加：
+发布到 Maven 仓库前，请先在本地执行 `mvn clean install`。业务项目推荐引入 BOM 后再引入 starter：
 
 ```xml
 <dependencyManagement>
     <dependencies>
-        <!-- 引入 BOM -->
         <dependency>
             <groupId>com.undernineplaces</groupId>
             <artifactId>under-utils-bom</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -105,176 +49,117 @@ mvn test -Dtest=StringUtilsTest
 </dependencyManagement>
 
 <dependencies>
-    <!-- 引入核心模块 -->
     <dependency>
         <groupId>com.undernineplaces</groupId>
-        <artifactId>under-utils-core</artifactId>
+        <artifactId>under-utils-starter</artifactId>
     </dependency>
 </dependencies>
 ```
 
-### 使用示例
-
-```java
-import com.undernine.utils.core.string.StringUtils;
-import com.undernine.utils.core.time.LocalDateTimeUtils;
-
-public class Example {
-    public static void main(String[] args) {
-        // 字符串工具
-        String name = "  John  ";
-        String trimmed = StringUtils.trim(name);  // "John"
-        
-        // 日期时间工具
-        String now = LocalDateTimeUtils.now();  // "2024-12-02 17:13:00"
-        System.out.println("当前时间: " + now);
-    }
-}
-```
-
-## 🛠️ IDE 配置
-
-### IntelliJ IDEA
-
-1. **导入项目**
-   - File → Open → 选择 `under-utils` 目录
-   - 选择 "Open as Maven Project"
-
-2. **配置 JDK**
-   - File → Project Structure → Project
-   - 设置 SDK 为 JDK 17
-
-3. **自动导入依赖**
-   - Settings → Build, Execution, Deployment → Build Tools → Maven
-   - 勾选 "Import Maven projects automatically"
-
-4. **代码风格**
-   - Settings → Editor → Code Style → Java
-   - 缩进：4 空格
-
-### Eclipse
-
-1. **导入项目**
-   - File → Import → Maven → Existing Maven Projects
-   - 选择 `under-utils` 目录
-
-2. **配置 JDK**
-   - 右键项目 → Properties → Java Build Path
-   - Libraries → 添加 JDK 17
-
-## 📝 开发新功能
-
-### 1. 创建新的工具类
-
-在合适的模块下创建工具类，例如在 `under-utils-core`:
-
-```java
-package com.undernine.utils.core.xxx;
-
-/**
- * XXX 工具类
- *
- * @author Your Name
- * @version 1.0.0
- * @since 1.0.0
- */
-public final class XxxUtils {
-    
-    private XxxUtils() {
-        throw new UnsupportedOperationException("Utility class");
-    }
-    
-    /**
-     * 方法说明
-     *
-     * @param param 参数说明
-     * @return 返回值说明
-     */
-    public static String someMethod(String param) {
-        // 实现逻辑
-        return param;
-    }
-}
-```
-
-### 2. 编写单元测试
-
-```java
-package com.undernine.utils.core.xxx;
-
-import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
-
-class XxxUtilsTest {
-    
-    @Test
-    void testSomeMethod() {
-        String result = XxxUtils.someMethod("test");
-        assertThat(result).isEqualTo("test");
-    }
-}
-```
-
-### 3. 运行测试
-
-```bash
-mvn test -Dtest=XxxUtilsTest
-```
-
-## 📚 相关文档
-
-- [README.md](README.md) - 完整的开发规范与贡献指南
-- [under-utils-core/README.md](under-utils-core/README.md) - 核心模块文档
-
-## ❓ 常见问题
-
-### 1. Maven 依赖下载失败
-
-**解决方案**：配置国内镜像
-
-在 `~/.m2/settings.xml` 中添加：
+也可以按需引入单模块：
 
 ```xml
-<mirrors>
-    <mirror>
-        <id>aliyun</id>
-        <mirrorOf>central</mirrorOf>
-        <name>Aliyun Maven</name>
-        <url>https://maven.aliyun.com/repository/public</url>
-    </mirror>
-</mirrors>
+<dependency>
+    <groupId>com.undernineplaces</groupId>
+    <artifactId>under-utils-spring</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>com.undernineplaces</groupId>
+    <artifactId>under-utils-redis</artifactId>
+</dependency>
 ```
 
-### 2. IDE 提示包名错误
+## Enable Starter Features
 
-**原因**：IDE 还未识别为 Maven 项目
+本地内存状态存储适合单实例开发环境：
 
-**解决方案**：
-- IntelliJ IDEA: 右键 `pom.xml` → Maven → Reload Project
-- Eclipse: 右键项目 → Maven → Update Project
+```yaml
+under:
+  utils:
+    web:
+      operation-context:
+        enabled: true
+        task-decorator-enabled: true
+      rate-limit:
+        enabled: true
+        store: local
+      repeat-submit:
+        enabled: true
+        store: local
+```
 
-### 3. 编译错误：找不到符号
+集群环境可以切换到 Redis 存储，并由业务项目提供 `RedissonClient`：
 
-**原因**：可能是跨模块依赖问题
+```yaml
+under:
+  utils:
+    web:
+      rate-limit:
+        store: redis
+      repeat-submit:
+        store: redis
+    redis:
+      lock-enabled: true
+      cache:
+        enabled: true
+        ttl: 5m
+        null-ttl: 30s
+        jitter: 10s
+        cache-null: true
+        rebuild-lock-enabled: true
+      logical-cache:
+        enabled: true
+        logical-ttl: 5m
+        physical-ttl: 30m
+```
 
-**解决方案**：
+## Run Samples
+
+基础示例不依赖 Redis/MySQL：
+
 ```bash
-# 先安装被依赖的模块
-cd under-utils-core
-mvn clean install
-
-# 再编译依赖它的模块
-cd ../under-utils-http
-mvn clean install
+mvn -pl under-utils-samples -am spring-boot:run
 ```
 
-## 🎯 下一步
+默认端口为 `18080`。接口清单和请求样例见 [under-utils-samples/README.md](under-utils-samples/README.md)。
 
-1. 阅读 [README.md](README.md) 了解完整的开发规范
-2. 查看各模块的 README 了解具体功能
-3. 开始编写你的工具类
-4. 提交 Pull Request
+运行 Redis 示例环境：
 
-## 📞 联系我们
+```bash
+cd under-utils-samples
+docker compose up -d
+cd ..
+mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=redis
+```
 
-如有问题，请提交 Issue 或联系项目维护者。
+如果本地没有 Docker，也可以接入已有 Redis，并按 samples 文档调整连接配置。
+
+## Manual Integration Tests
+
+`under-utils-test` 是手工集成验证模块，不是默认 CI/release 模块。它当前依赖本地 MySQL：
+
+- host: `localhost`
+- port: `3306`
+- database: `under_utils_test`
+- username/password: `root` / `root`
+
+运行命令：
+
+```bash
+mvn -Pintegration-tests -pl under-utils-test -am test
+```
+
+只验证 MyBatis 集成测试：
+
+```bash
+mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=MybatisIntegrationTest
+```
+
+## Troubleshooting
+
+Maven 依赖下载慢时，可以在 `~/.m2/settings.xml` 配置你所在网络环境可用的镜像。
+
+IDE 无法识别模块时，先确认项目根目录的 `pom.xml` 已作为 Maven Project 导入，然后重新刷新 Maven。
+
+`under-utils-test` 编译或运行失败时，先确认是否启用了 `integration-tests` profile，以及本地 MySQL 是否满足上面的连接参数。

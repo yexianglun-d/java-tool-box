@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
 
     <name>Under-Utils</name>
-    <description>企业级 Java 工具库集合 - 统一各项目常用工具方法、封装逻辑、业务组件</description>
+    <description>Java 工程模式工具包 - 封装复杂、重复、跨项目复用的基础设施与业务流程能力</description>
 
     <properties>
         <!-- 编译配置 -->
@@ -56,12 +56,6 @@
 
         <!-- 示例工程：验证 starter 与工程模式封装的真实使用体验 -->
         <module>under-utils-samples</module>
-        
-        <!-- 占位符模块：预留扩展 -->
-        <module>under-utils-placeholder</module>
-        
-        <!-- 测试模块：用于测试所有工具类功能 -->
-        <module>under-utils-test</module>
     </modules>
 
     <dependencyManagement>
@@ -146,5 +140,15 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <modules>
+                <!-- 手工集成验证模块：依赖本地 MySQL 等外部环境，不进入默认构建链路 -->
+                <module>under-utils-test</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>

@@ -1,6 +1,6 @@
 # Under-Utils HTTP 模块
 
-企业级 HTTP 客户端工具库，提供统一、易用、功能强大的 HTTP 请求封装。
+HTTP / OpenAPI 客户端模块，提供基础 HTTP 请求封装，以及 token 注入、请求签名、trace/idempotency header、业务错误解码和重试等开放平台调用能力。
 
 ## 特性
 
@@ -350,10 +350,4 @@ future.thenAccept(response -> {
 
 ## 许可证
 
-MIT License
-
-## 联系方式
-
-- 作者：deng
-- 项目：Under-Utils
-- 版本：1.0.0
+MIT License - 详见 [LICENSE](../LICENSE)。
