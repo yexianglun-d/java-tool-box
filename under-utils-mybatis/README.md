@@ -265,7 +265,7 @@ protected Long getUserId() {
 
 ## 🧪 测试用例
 
-手工集成验证用例位于 `under-utils-test` 模块。该模块依赖本地 MySQL，不进入默认构建链路：
+Testcontainers 集成验证用例位于 `under-utils-test` 模块。该模块会启动临时 MySQL 容器，不进入默认构建链路：
 - ✅ BaseEntity 自动填充测试
 - ✅ 分页查询测试
 - ✅ 逻辑删除测试

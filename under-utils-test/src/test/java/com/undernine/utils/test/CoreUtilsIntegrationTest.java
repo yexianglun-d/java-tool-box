@@ -4,7 +4,6 @@ import com.undernine.utils.core.string.StringUtils;
 import com.undernine.utils.core.time.LocalDateTimeUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @version 1.0.0
  * @since 1.0.0
  */
-@SpringBootTest
 @DisplayName("核心工具类集成测试")
 class CoreUtilsIntegrationTest {
 

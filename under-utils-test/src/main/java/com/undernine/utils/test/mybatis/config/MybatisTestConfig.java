@@ -24,7 +24,7 @@ public class MybatisTestConfig {
      */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
-        return MybatisPlusConfig.mybatisPlusInterceptor(DbType.H2);
+        return MybatisPlusConfig.mybatisPlusInterceptor(DbType.MYSQL);
     }
 
     /**

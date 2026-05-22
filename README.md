@@ -46,15 +46,14 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 | `under-utils-biz` | 可复用业务流程模板 | `ImportTaskTemplate`、`CsvImportRowReader`、逐行解析、校验失败收集、导入统计 |
 | `under-utils-starter` | Spring Boot 自动装配 | Web 横切、Redis 状态存储、分布式锁、缓存模板、逻辑过期缓存自动配置 |
 | `under-utils-samples` | 可运行示例工程 | starter 接入、上下文传播、限流防重、OpenAPI、本地导入、Redis 可选示例 |
-| `under-utils-test` | 手工集成验证模块 | 依赖本地 MySQL 等外部环境，通过 `integration-tests` profile 启用，不进入默认构建 |
+| `under-utils-test` | Testcontainers 集成验证模块 | 通过临时 MySQL 容器验证跨模块能力，使用 `integration-tests` profile 启用，不进入默认构建 |
 
 ## Requirements
 
 - Java 21
 - Maven 3.9+
 - Spring Boot 3.1.x
-- 可选：Docker，用于运行 samples 的 Redis 示例环境
-- 可选：MySQL，用于运行 `under-utils-test` 手工集成验证
+- 可选：Docker，用于运行 samples 的 Redis 示例环境，以及 `under-utils-test` Testcontainers 集成验证
 
 ## Installation
 
@@ -218,7 +217,7 @@ mvn test
 mvn -pl under-utils-samples -am test
 ```
 
-`under-utils-test` 依赖本地 MySQL 等外部环境，不进入默认父工程构建。如需运行：
+`under-utils-test` 通过 Testcontainers 启动临时 MySQL 容器，不进入默认父工程构建。具备 Docker 环境后可运行：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test

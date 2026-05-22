@@ -33,5 +33,5 @@ jobs:
       - name: Run default tests
         run: mvn -B -ntp test
 
-      - name: Compile manual integration module
-        run: mvn -B -ntp -Pintegration-tests -pl under-utils-test -am -DskipTests compile
+      - name: Run integration tests
+        run: mvn -B -ntp -Pintegration-tests -pl under-utils-test -am test

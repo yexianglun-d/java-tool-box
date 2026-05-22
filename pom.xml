@@ -147,7 +147,7 @@
         <profile>
             <id>integration-tests</id>
             <modules>
-                <!-- 手工集成验证模块：依赖本地 MySQL 等外部环境，不进入默认构建链路 -->
+                <!-- 集成验证模块：通过 Testcontainers 启动外部依赖，不进入默认构建链路 -->
                 <module>under-utils-test</module>
             </modules>
         </profile>

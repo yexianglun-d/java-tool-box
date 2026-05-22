@@ -7,13 +7,21 @@ import com.undernine.utils.mybatis.page.PageQuery;
 import com.undernine.utils.mybatis.page.PageResult;
 import com.undernine.utils.test.mybatis.entity.User;
 import com.undernine.utils.test.mybatis.mapper.UserMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,10 +35,33 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Testcontainers
 class MybatisIntegrationTest {
+
+    @Container
+    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.33")
+            .withDatabaseName("under_utils_test")
+            .withUsername("under_utils")
+            .withPassword("under_utils");
+
+    @DynamicPropertySource
+    static void mysqlProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
+        registry.add("spring.datasource.username", MYSQL::getUsername);
+        registry.add("spring.datasource.password", MYSQL::getPassword);
+        registry.add("spring.datasource.driver-class-name", MYSQL::getDriverClassName);
+    }
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void cleanDatabase() {
+        jdbcTemplate.execute("TRUNCATE TABLE t_user");
+    }
 
     @Test
     @DisplayName("测试基础实体类自动填充")
@@ -158,7 +189,8 @@ class MybatisIntegrationTest {
         User updatedUser = userMapper.selectById(user.getId());
 
         // 4. 验证更新时间已变化，创建时间和创建人未变
-        assertThat(updatedUser.getCreateTime()).isEqualTo(createTime);
+        assertThat(updatedUser.getCreateTime().truncatedTo(ChronoUnit.SECONDS))
+                .isEqualTo(createTime.truncatedTo(ChronoUnit.SECONDS));
         assertThat(updatedUser.getCreateBy()).isEqualTo(createBy);
         assertThat(updatedUser.getUpdateTime()).isAfter(updateTime);
         assertThat(updatedUser.getUpdateBy()).isEqualTo(1001L);

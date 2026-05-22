@@ -9,6 +9,7 @@
 - 收敛模块定位，明确不做 Hutool 式大而全通用工具集合。
 - 保证默认 Maven reactor 不依赖本地 MySQL、Redis、Docker 等外部环境。
 - 为 samples 保留无外部依赖的默认启动路径，并提供 Redis profile 示例。
+- 将 `under-utils-test` 迁移到 Testcontainers，让 CI 可以执行真实 MySQL 集成测试。
 
 ## 首个稳定 Release
 
@@ -16,7 +17,7 @@
 - 为核心工程模式能力补齐边界文档和失败语义说明。
 - 建立 GitHub Actions CI，覆盖默认 `mvn test`、编译检查和 markdown 基础检查。
 - 评估 Maven Central 发布所需的 groupId、签名、sources、javadocs 和 release 流程。
-- 将 `under-utils-test` 中依赖本地 MySQL 的验证迁移到 Testcontainers 或独立的集成测试 profile。
+- 扩大 Testcontainers 集成测试覆盖面，优先补齐 Redis 缓存模板和 starter 自动装配验证。
 
 ## 后续方向
 

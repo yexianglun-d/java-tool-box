@@ -6,7 +6,8 @@
 
 ### Added
 
-- 新增 GitHub Actions CI，覆盖默认编译、默认测试和手工集成模块跳测编译。
+- 新增 GitHub Actions CI，覆盖默认编译、默认测试和 `under-utils-test` Testcontainers 集成测试。
+- `under-utils-test` 新增 Testcontainers MySQL 集成测试依赖，集成验证不再依赖本地 MySQL。
 - 新增 GitHub 开源社区文件：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、Issue 模板和 Pull Request 模板。
 - 新增公开路线图 `ROADMAP.md`，替代内部阶段分析文档。
 - 新增 Spring 操作上下文体系：`OperationContext`、`OperationContextFilter`、`OperationContextHolder`、`OperationContextSnapshot`、`OperationContextTaskDecorator`、`OperationContextExecutors`。
@@ -55,7 +56,9 @@
 - Redis cache options 增加兼容别名，改善 `ttl/nullTtl/cacheNull` 与 value/null value 语义的可读性。
 - 为 OpenAPI、Redis cache、Spring context、Biz import task、MyBatis page 等包补充边界说明和关键 Javadoc。
 - 父工程增加 `spring-boot-maven-plugin` 版本管理，支持从根工程运行 samples 模块。
-- `under-utils-test` 改为手工集成验证模块，通过 `integration-tests` profile 启用，不再进入默认构建链路。
+- `under-utils-test` 改为 Testcontainers 集成验证模块，通过 `integration-tests` profile 启用，不再进入默认构建链路。
+- MyBatis 集成测试改为动态注入临时 MySQL 容器 datasource，并在每个测试前清理测试表。
+- `CoreUtilsIntegrationTest` 移除不必要的 Spring 上下文启动。
 
 ### Removed
 
@@ -69,11 +72,10 @@
 - `mvn -pl under-utils-samples -am test`
 - `mvn -DskipTests compile`
 - `mvn clean test`
-- `mvn -Pintegration-tests -pl under-utils-test -am -DskipTests compile`
+- `mvn -Pintegration-tests -pl under-utils-test -am -DskipTests test-compile`
 - `git diff --check`
 - samples 已在无 Redis/MySQL 的默认配置下完成 Spring Boot 启动与核心接口验证。
 
 ### Known Limitations
 
-- 当前机器无 `docker` 命令，Redis 容器实测未在本机执行；samples 已提供 `docker-compose.yml` 和运行文档，可在具备 Docker 的环境中验证。
-- `under-utils-test` 仍依赖本地 MySQL，后续建议迁移到 Testcontainers 或拆分为更清晰的集成测试 profile。
+- 当前机器无 `docker` 命令，Redis samples 和 Testcontainers 集成测试无法在本机执行；相关验证需要在具备 Docker 的环境或 GitHub Actions 中运行。

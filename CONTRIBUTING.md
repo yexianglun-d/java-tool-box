@@ -32,6 +32,7 @@
 
 - Java 21
 - Maven 3.9+
+- Docker，用于运行 `integration-tests` profile 下的 Testcontainers 集成测试
 
 常用命令：
 
@@ -41,7 +42,7 @@ mvn test
 mvn -pl under-utils-samples -am test
 ```
 
-`under-utils-test` 是手工集成验证模块，依赖本地 MySQL，不进入默认构建。如需运行：
+`under-utils-test` 是 Testcontainers 集成验证模块，不进入默认构建。如需运行：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test

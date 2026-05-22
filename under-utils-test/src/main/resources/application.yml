@@ -1,15 +1,8 @@
 spring:
   application:
     name: under-utils-test
-  
-  # MySQL 数据库配置
-  datasource:
-    url: jdbc:mysql://localhost:3306/under_utils_test?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: root
-  
-  # 自动执行建表脚本
+
+  # MyBatis 集成测试通过 Testcontainers 动态注入 datasource。
   sql:
     init:
       mode: always
