@@ -47,10 +47,27 @@ curl -X POST http://localhost:18080/samples/openapi/orders \
 
 ## Redis 场景
 
-默认 `application.yml` 关闭 Redis 缓存模板，所以无需 Redis 也能启动。要体验分布式锁、cache-aside 和逻辑过期缓存，需要提供 `RedissonClient` Bean，并启用 `redis` profile：
+默认 `application.yml` 关闭 Redis 缓存模板，所以无需 Redis 也能启动。要真实体验分布式锁、Redis 限流/防重提交、cache-aside 和逻辑过期缓存，先启动本模块自带的 Redis：
+
+```bash
+cd under-utils-samples
+docker compose up -d
+```
+
+再从仓库根目录启用 `redis` profile：
 
 ```bash
 mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=redis
+```
+
+`redis` profile 会按 `samples.redis.*` 配置创建一个示例 `RedissonClient`：
+
+```yaml
+samples:
+  redis:
+    address: redis://127.0.0.1:6379
+    database: 0
+    password:
 ```
 
 相关接口：
@@ -62,4 +79,9 @@ curl http://localhost:18080/samples/redis/cache-aside
 curl http://localhost:18080/samples/redis/logical-cache
 ```
 
-如果没有 `RedissonClient`，接口会返回缺少 Bean 的说明，不会导致应用启动失败。
+验证结束后停止 Redis：
+
+```bash
+cd under-utils-samples
+docker compose down
+```
