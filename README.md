@@ -16,6 +16,7 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式封装。
 | `under-utils-mybatis` | MyBatis-Plus 增强 | `SafePageQuery`、`SortFieldMapping`、`AuditorProvider`、`DefaultMetaObjectHandler`、分页结果 |
 | `under-utils-biz` | 可复用业务流程模板 | `ImportTaskTemplate`、`CsvImportRowReader`、逐行解析、校验失败收集、导入统计 |
 | `under-utils-starter` | Spring Boot 自动装配 | Web 横切、Redis 状态存储、分布式锁、缓存模板、逻辑过期缓存自动配置 |
+| `under-utils-samples` | 可运行示例工程 | starter 接入、上下文传播、限流防重、OpenAPI、本地导入、Redis 可选示例 |
 
 ## 快速开始
 
@@ -95,6 +96,14 @@ under:
 ```
 
 如果限流、防重提交使用 Redis 存储，需要业务项目提供 `RedissonClient`。如果不配置 `store: redis`，默认使用本地内存存储，适合单实例或测试环境。
+
+可运行样例在 `under-utils-samples`：
+
+```bash
+mvn -pl under-utils-samples -am spring-boot:run
+```
+
+默认端口为 `18080`，不依赖 Redis 或数据库即可启动。具体接口见 [under-utils-samples/README.md](under-utils-samples/README.md)。
 
 ## 典型场景
 

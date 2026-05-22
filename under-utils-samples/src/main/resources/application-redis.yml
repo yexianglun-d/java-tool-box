@@ -1,0 +1,21 @@
+under:
+  utils:
+    web:
+      rate-limit:
+        store: redis
+      repeat-submit:
+        store: redis
+    redis:
+      cache:
+        enabled: true
+        ttl: 5m
+        null-ttl: 30s
+        jitter: 5s
+        cache-null: true
+      logical-cache:
+        enabled: true
+        logical-ttl: 5m
+        physical-ttl: 30m
+
+# Provide a RedissonClient bean in your application, or add redisson-spring-boot-starter
+# and configure it according to your Redis deployment before using this profile.

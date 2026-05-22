@@ -1,0 +1,29 @@
+server:
+  port: 18080
+
+spring:
+  application:
+    name: under-utils-samples
+
+under:
+  utils:
+    web:
+      operation-context:
+        enabled: true
+        task-decorator-enabled: true
+      rate-limit:
+        enabled: true
+        store: local
+      repeat-submit:
+        enabled: true
+        store: local
+    redis:
+      lock-enabled: true
+      cache:
+        enabled: false
+      logical-cache:
+        enabled: false
+
+logging:
+  level:
+    com.undernine.utils: info

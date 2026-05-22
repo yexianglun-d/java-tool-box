@@ -26,6 +26,7 @@
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
+        <spring-boot-maven-plugin.version>3.1.11</spring-boot-maven-plugin.version>
     </properties>
 
     <modules>
@@ -52,6 +53,9 @@
         
         <!-- 业务组件模块：短信、上传、Excel 等可复用组件 -->
         <module>under-utils-biz</module>
+
+        <!-- 示例工程：验证 starter 与工程模式封装的真实使用体验 -->
+        <module>under-utils-samples</module>
         
         <!-- 占位符模块：预留扩展 -->
         <module>under-utils-placeholder</module>
@@ -128,6 +132,16 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+
+                <!-- Spring Boot 运行与打包插件（samples 模块使用） -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot-maven-plugin.version}</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
