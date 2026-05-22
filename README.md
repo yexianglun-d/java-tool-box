@@ -88,6 +88,22 @@ mvn clean install
 </dependencies>
 ```
 
+## Release Artifacts
+
+项目当前尚未发布到 Maven Central。发布前构件可以通过 `release` profile 本地验证，该 profile 会为参与构建的 jar 模块生成 sources 与 javadocs：
+
+```bash
+mvn -Prelease -DskipTests package
+```
+
+GPG 签名已预留为独立 profile，不会在默认构建或 release 构建中自动执行。需要签名时显式启用：
+
+```bash
+mvn -Prelease,sign-artifacts -Dgpg.sign=true -DskipTests verify
+```
+
+`under-utils-samples` 是示例工程，默认参与构建验证，但已配置为不随 Maven deploy 发布。
+
 ## Quick Start
 
 starter 会在条件满足时自动装配：
@@ -215,6 +231,7 @@ SafePageQuery query = SafePageQuery.of(page, size)
 mvn -DskipTests compile
 mvn test
 mvn -pl under-utils-samples -am test
+mvn -Prelease -DskipTests package
 ```
 
 `under-utils-test` 通过 Testcontainers 启动临时 MySQL 容器，不进入默认父工程构建。具备 Docker 环境后可运行：

@@ -16,6 +16,10 @@
     <name>Under-Utils Samples</name>
     <description>Under-Utils sample application for integration and developer experience checks</description>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.undernineplaces</groupId>

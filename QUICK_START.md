@@ -69,6 +69,22 @@ mvn test
 </dependency>
 ```
 
+## Release Build Check
+
+项目尚未发布到 Maven Central。正式发布前可以先验证发布构件：
+
+```bash
+mvn -Prelease -DskipTests package
+```
+
+该命令会生成 sources 与 javadocs，用于检查发布构件链路是否可用。GPG 签名不默认启用；准备好本机或 CI 的 GPG 环境后再执行：
+
+```bash
+mvn -Prelease,sign-artifacts -Dgpg.sign=true -DskipTests verify
+```
+
+`under-utils-samples` 用于示例和开发体验验证，不作为正式库模块发布。
+
 ## Enable Starter Features
 
 本地内存状态存储适合单实例开发环境：

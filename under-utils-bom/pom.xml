@@ -12,8 +12,46 @@
 
     <name>Under-Utils BOM</name>
     <description>Under-Utils 依赖与版本统一管理 BOM</description>
+    <url>https://github.com/yexianglun-d/java-tool-box</url>
+    <inceptionYear>2026</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>yexianglun-d</id>
+            <name>yexianglun-d</name>
+            <url>https://github.com/yexianglun-d</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/yexianglun-d/java-tool-box.git</connection>
+        <developerConnection>scm:git:https://github.com/yexianglun-d/java-tool-box.git</developerConnection>
+        <url>https://github.com/yexianglun-d/java-tool-box</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/yexianglun-d/java-tool-box/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/yexianglun-d/java-tool-box/actions</url>
+    </ciManagement>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+
         <!-- Spring Boot -->
         <spring-boot.version>3.1.11</spring-boot.version>
 
@@ -265,5 +303,35 @@
 
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>gpg.sign</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
