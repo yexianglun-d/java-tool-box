@@ -6,6 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * JVM 本地防重复提交存储。
+ * <p>
+ * 适合单实例应用或本地开发。该实现不在多个 JVM 之间共享 key，多实例部署时应替换为 Redis 等分布式实现。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0

@@ -82,4 +82,17 @@ class RateLimitAspectTest {
             .isInstanceOf(BizException.class)
             .hasMessage("访问过于频繁");
     }
+
+    @Test
+    void testNonPositiveLimitRejectsAllRequests() throws Throwable {
+        when(rateLimit.limit()).thenReturn(0);
+        when(rateLimit.period()).thenReturn(60);
+        when(rateLimit.message()).thenReturn("访问过于频繁");
+
+        assertThatThrownBy(() -> aspect.around(joinPoint, rateLimit))
+            .isInstanceOf(BizException.class)
+            .hasMessage("访问过于频繁");
+
+        verify(joinPoint, never()).proceed();
+    }
 }

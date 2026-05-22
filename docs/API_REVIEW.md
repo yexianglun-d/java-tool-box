@@ -53,7 +53,17 @@
 - `AESUtils.encryptECB` 与 `AESUtils.decryptECB` 标记为不推荐，ECB 仅保留历史兼容；MD5/SHA-256/AES 文档明确不作为推荐安全治理入口。
 - 移除 `under-utils-core` POM 中未使用的 Lombok、SLF4J、Apache Commons Lang、Guava 和 Bouncy Castle 可选依赖，避免模块边界和开源定位被误读。
 
+## 第四轮结论
+
+### Spring Rate Limit And Repeat Submit
+
+- 明确 `@RateLimit` 失败语义：超过窗口额度时抛出 `BizException`，消息来自 `message`；`limit <= 0` 等价于拒绝所有请求，`period <= 0` 按 1 秒窗口处理。
+- 明确 `@PreventRepeat` 失败语义：同一 key 在窗口内重复提交时抛出 `BizException`，消息来自 `message`；`timeout <= 0` 按最小 1ms 处理。
+- 明确 `releaseOnFailure` 只影响业务方法抛异常后的 key 释放；方法成功后 key 保持到窗口过期。
+- 明确 key 解析语义：空 `key` 使用租户、用户、URI、方法名和参数摘要；SpEL 解析失败不会中断业务，会退回到表达式和参数摘要生成的兜底 key。
+- 明确集群语义：local store 只在当前 JVM 内生效；多实例部署必须切换 Redis store 或自定义 `RateLimitStore` / `RepeatSubmitStore`。
+- 明确 Redis 失败语义：Redisson 调用异常向外传播，如需 Redis 故障时放行或降级，应由业务自定义 store。
+
 ## 后续待审
 
-- 为关键注解属性补充更明确的失败语义和集群环境说明。
 - Maven Central namespace、正式 deploy 仓库和 GPG 密钥托管仍需单独确认。

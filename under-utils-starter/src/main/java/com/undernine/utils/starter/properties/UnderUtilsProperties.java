@@ -371,6 +371,11 @@ public class UnderUtilsProperties {
 
     /**
      * 可切换存储的能力配置。
+     * <p>
+     * 用于 {@code under.utils.web.rate-limit} 和 {@code under.utils.web.repeat-submit}。
+     * {@code enabled=false} 会关闭对应切面；{@code store=local} 使用 JVM 本地状态，只适合单实例或测试环境；
+     * {@code store=redis} 使用 Redis 共享状态，要求应用上下文中存在 {@code RedissonClient}。
+     * </p>
      */
     public static class StoreCapability {
         private boolean enabled = true;
@@ -397,7 +402,13 @@ public class UnderUtilsProperties {
      * 状态存储类型。
      */
     public enum StoreType {
+        /**
+         * JVM 本地状态，不跨实例共享。
+         */
         LOCAL,
+        /**
+         * Redis 分布式状态，依赖 RedissonClient。
+         */
         REDIS
     }
 }

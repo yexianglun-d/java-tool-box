@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * JVM 本地限流存储。
  * <p>
- * 适合单实例应用或本地开发。多实例部署时应替换为 Redis 等分布式实现。
+ * 适合单实例应用或本地开发。该实现不在多个 JVM 之间共享计数，多实例部署时应替换为 Redis 等分布式实现。
  * </p>
  *
  * @author Under-Utils Team

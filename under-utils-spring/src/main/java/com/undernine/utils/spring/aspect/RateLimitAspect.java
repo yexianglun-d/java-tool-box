@@ -16,7 +16,12 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 /**
- * 接口限流切面
+ * 接口限流切面。
+ * <p>
+ * 解析操作 key 后向 {@link RateLimitStore} 请求访问额度；获取失败时抛出
+ * {@link BizException}。默认构造时使用 {@link LocalRateLimitStore}，starter 会按配置替换为
+ * 本地或 Redis 存储。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0

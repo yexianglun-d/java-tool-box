@@ -129,6 +129,13 @@ under:
         physical-ttl: 30m
 ```
 
+限流和防重复提交的失败语义：
+
+- `@RateLimit` 超过窗口额度时抛出 `BizException`，异常消息来自注解 `message`。
+- `@PreventRepeat` 在窗口内重复提交时抛出 `BizException`，异常消息来自注解 `message`。
+- `store: local` 只在当前 JVM 内生效，适合单实例或测试环境。
+- `store: redis` 跨实例共享状态，要求业务项目提供 `RedissonClient`；Redis 不可用时 Redisson 异常会向外传播，生产环境如需降级应自定义 `RateLimitStore` / `RepeatSubmitStore`。
+
 ## Run Samples
 
 基础示例不依赖 Redis/MySQL：

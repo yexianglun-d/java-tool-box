@@ -122,6 +122,45 @@ public class SomeUtil {
 }
 ```
 
+### 限流与防重复提交
+
+推荐通过 `under-utils-starter` 启用 `@RateLimit` 和 `@PreventRepeat`。直接使用本模块时，需要显式注册 `RateLimitAspect`、`PreventRepeatAspect`、`OperationKeyResolver` 以及对应的 `RateLimitStore` / `RepeatSubmitStore`。
+
+```java
+@RateLimit(limit = 10, period = 60, message = "请求过于频繁")
+@PostMapping("/sms/send")
+public void sendSms(@RequestBody SendSmsCommand command) {
+    smsService.send(command);
+}
+
+@PreventRepeat(timeout = 5, timeUnit = TimeUnit.SECONDS, message = "请勿重复提交")
+@PostMapping("/orders")
+public Long createOrder(@RequestBody CreateOrderCommand command) {
+    return orderService.create(command);
+}
+```
+
+失败语义：
+
+- `@RateLimit` 超过窗口额度时抛出 `BizException`。
+- `@RateLimit.limit <= 0` 会拒绝所有请求，`period <= 0` 会按 1 秒窗口处理。
+- `@PreventRepeat` 同一 key 在窗口内重复提交时抛出 `BizException`。
+- `@PreventRepeat.timeout <= 0` 会按最小 1ms 处理。
+- `@PreventRepeat.releaseOnFailure = true` 时，业务方法抛异常会释放 key；方法成功后 key 保持到窗口过期。
+
+key 语义：
+
+- `namespace` 用于区分业务域，避免不同注解或业务之间 key 冲突。
+- `key` 为空时使用默认规则：租户、用户、URI、方法名和参数摘要。
+- `key` 不为空时按 SpEL 解析，可使用 `#args`、`#userId`、`#tenantId`、`#traceId`、`#requestUri`、`#context` 等变量。
+- SpEL 解析失败不会中断业务，会退回到表达式和方法参数摘要生成的兜底 key。
+
+集群环境：
+
+- `LocalRateLimitStore` / `LocalRepeatSubmitStore` 只在当前 JVM 内共享状态，适合单实例或本地测试。
+- 多实例部署应使用 Redis 存储或实现自定义 store。
+- Redis 存储依赖 Redisson；Redis 不可用时异常会向外传播，生产环境如需放行或降级，需要自定义 `RateLimitStore` / `RepeatSubmitStore`。
+
 ### 兼容维护 AOP
 
 `@OperationLog`、`@Retry`、`@TimeLog` 是历史轻量切面，保留用于兼容维护。它们不会通过 starter 自动启用，也不建议作为新项目主线能力。确需使用时请显式注册对应切面：

@@ -11,6 +11,10 @@ import java.util.Objects;
 
 /**
  * 基于 Redisson 的分布式限流存储。
+ * <p>
+ * 使用 Redis 中的 {@link RRateLimiter} 共享额度，适合多实例应用。Redis 不可用时 Redisson
+ * 调用会向外抛出运行时异常，业务可通过自定义 {@link RateLimitStore} 实现降级策略。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0

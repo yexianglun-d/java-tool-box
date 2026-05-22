@@ -9,6 +9,10 @@ import java.util.Objects;
 
 /**
  * 基于 Redisson 的分布式防重复提交存储。
+ * <p>
+ * 使用 Redis {@code setIfAbsent} 语义共享提交 key，适合多实例应用。Redis 不可用时 Redisson
+ * 调用会向外抛出运行时异常，业务可通过自定义 {@link RepeatSubmitStore} 实现降级策略。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0

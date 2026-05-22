@@ -67,6 +67,7 @@
 - `JsonUtils.getObjectMapper()` 标记为不推荐，避免外部修改共享 ObjectMapper 影响全局序列化行为。
 - `AESUtils.encryptECB` 与 `AESUtils.decryptECB` 标记为不推荐，ECB 模式仅保留历史兼容。
 - 移除 `under-utils-core` 中未使用的 Lombok、SLF4J、Apache Commons Lang、Guava 和 Bouncy Castle 可选依赖。
+- 补充 `@RateLimit`、`@PreventRepeat`、`RateLimitStore`、`RepeatSubmitStore` 和 starter store 配置的失败语义、key 解析语义和集群环境说明。
 - 收紧 starter 自动装配条件，用户自定义 `TaskDecorator`、`CacheValueCodec`、`CacheOptions`、`CacheAsideTemplate` 等 Bean 时自动退让。
 - `CacheValueCodec` 改为 cache-aside 与 logical-cache 共享的 Redis 缓存基础设施，仅在相关能力启用时自动装配。
 - Redis cache options 增加兼容别名，改善 `ttl/nullTtl/cacheNull` 与 value/null value 语义的可读性。
@@ -91,6 +92,7 @@
 - `mvn -pl under-utils-core test`
 - `mvn -pl under-utils-spring -am test`
 - `mvn -pl under-utils-http,under-utils-redis,under-utils-mybatis,under-utils-starter -am test`
+- `mvn -pl under-utils-spring,under-utils-redis,under-utils-starter -am test`
 - `mvn test`
 - `mvn -Prelease -DskipTests package`
 - `mvn -Prelease,sign-artifacts -Dgpg.skip=true -DskipTests verify`

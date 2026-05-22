@@ -16,7 +16,12 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 /**
- * 防重复提交切面
+ * 防重复提交切面。
+ * <p>
+ * 解析操作 key 后向 {@link RepeatSubmitStore} 登记提交；登记失败时抛出 {@link BizException}。
+ * 方法成功执行后 key 保持到 TTL 过期，方法抛异常时按 {@link PreventRepeat#releaseOnFailure()}
+ * 决定是否释放 key。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0

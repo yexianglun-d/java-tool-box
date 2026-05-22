@@ -151,6 +151,8 @@ under:
 
 如果限流、防重提交使用 Redis 存储，业务项目需要提供 `RedissonClient`。如果不配置 `store: redis`，默认使用本地内存存储，适合单实例或测试环境。
 
+限流和防重复提交的失败语义是显式业务拒绝：`@RateLimit` 超过窗口额度、`@PreventRepeat` 在窗口内重复登记时都会抛出 `BizException`，消息来自注解的 `message` 属性。本地存储不跨 JVM 共享状态，集群环境必须切换到 Redis 或提供自定义 `RateLimitStore` / `RepeatSubmitStore`。
+
 运行示例工程：
 
 ```bash
@@ -188,6 +190,8 @@ public Long createOrder(@RequestBody CreateOrderCommand command) {
     return orderService.create(command);
 }
 ```
+
+`@RateLimit.limit <= 0` 会拒绝所有请求，`period <= 0` 会按 1 秒窗口处理。`@PreventRepeat.timeout <= 0` 会按最小 1ms 处理；方法成功后 key 保持到窗口过期，方法抛异常时默认释放 key，便于用户修正后重试。
 
 分布式锁：
 
