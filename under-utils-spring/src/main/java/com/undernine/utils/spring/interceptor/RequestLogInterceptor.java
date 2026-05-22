@@ -49,29 +49,32 @@ public class RequestLogInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, 
                                 Object handler, Exception ex) {
         Long startTime = (Long) request.getAttribute(START_TIME);
-        if (startTime != null) {
-            long elapsed = System.currentTimeMillis() - startTime;
-            int status = response.getStatus();
-            
-            log.info("【HTTP响应】{} {} - 状态码: {}, 耗时: {}ms", 
-                request.getMethod(), request.getRequestURI(), status, elapsed);
-            
-            if (ex != null) {
-                log.error("【请求异常】{}", ex.getMessage(), ex);
-            }
+        long elapsed = startTime == null ? -1L : System.currentTimeMillis() - startTime;
+        int status = response.getStatus();
+        String ip = getClientIp(request);
+
+        log.info("【HTTP响应】{} {} - 状态码: {}, IP: {}, 耗时: {}ms",
+            request.getMethod(), request.getRequestURI(), status, ip, elapsed);
+
+        if (ex != null) {
+            log.error("【请求异常】{}", ex.getMessage(), ex);
         }
     }
 
     private String getClientIp(HttpServletRequest request) {
+        String remoteAddr = request.getRemoteAddr();
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty()) ip = request.getHeader("X-Real-IP");
-        if (ip == null || ip.isEmpty()) ip = request.getRemoteAddr();
+        if (ip == null || ip.isEmpty()) ip = remoteAddr;
         return ip != null && ip.contains(",") ? ip.split(",")[0].trim() : ip;
     }
 
     private Map<String, String> getHeaders(HttpServletRequest request) {
         Map<String, String> headers = new HashMap<>();
         Enumeration<String> headerNames = request.getHeaderNames();
+        if (headerNames == null) {
+            return headers;
+        }
         while (headerNames.hasMoreElements()) {
             String name = headerNames.nextElement();
             headers.put(name, request.getHeader(name));

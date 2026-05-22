@@ -7,6 +7,8 @@
  * <h3>核心类：</h3>
  * <ul>
  *     <li>{@link com.undernine.utils.mybatis.page.PageQuery} - 分页查询参数封装</li>
+ *     <li>{@link com.undernine.utils.mybatis.page.SafePageQuery} - 白名单排序分页查询参数封装</li>
+ *     <li>{@link com.undernine.utils.mybatis.page.SortFieldMapping} - 前端排序字段到数据库列名的白名单映射</li>
  *     <li>{@link com.undernine.utils.mybatis.page.PageResult} - 分页查询结果封装</li>
  * </ul>
  *
@@ -60,7 +62,9 @@
  * <ul>
  *     <li>分页参数 current 从 1 开始，不是 0</li>
  *     <li>单页最大数量默认为 1000，可通过 {@code PageQuery.setMaxLimit()} 修改</li>
- *     <li>排序字段名使用数据库字段名（下划线格式），如 "create_time"</li>
+ *     <li>{@link com.undernine.utils.mybatis.page.PageQuery} 面向内部可信排序字段，排序字段名使用数据库字段名</li>
+ *     <li>{@link com.undernine.utils.mybatis.page.SafePageQuery} 面向外部请求排序字段，必须通过
+ *     {@link com.undernine.utils.mybatis.page.SortFieldMapping} 白名单映射为数据库列名</li>
  * </ul>
  *
  * @author Under-Utils Team

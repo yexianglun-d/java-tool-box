@@ -78,6 +78,33 @@ class DefaultMetaObjectHandlerTest {
     }
 
     @Test
+    @DisplayName("测试审计 Provider 注入")
+    void testAuditorProviderInjection() {
+        DefaultMetaObjectHandler providerHandler = new DefaultMetaObjectHandler(() -> 777L);
+
+        Map<String, Object> entity = new HashMap<>();
+        MetaObject metaObject = SystemMetaObject.forObject(entity);
+
+        providerHandler.insertFill(metaObject);
+
+        assertThat(entity.get("createBy")).isEqualTo(777L);
+        assertThat(entity.get("updateBy")).isEqualTo(777L);
+    }
+
+    @Test
+    @DisplayName("测试审计 Provider 更新填充")
+    void testAuditorProviderUpdateFill() {
+        DefaultMetaObjectHandler providerHandler = new DefaultMetaObjectHandler(() -> 778L);
+
+        Map<String, Object> entity = new HashMap<>();
+        MetaObject metaObject = SystemMetaObject.forObject(entity);
+
+        providerHandler.updateFill(metaObject);
+
+        assertThat(entity.get("updateBy")).isEqualTo(778L);
+    }
+
+    @Test
     @DisplayName("测试自定义用户 ID 获取逻辑")
     void testCustomUserIdHandler() {
         // 创建自定义处理器，返回固定用户 ID

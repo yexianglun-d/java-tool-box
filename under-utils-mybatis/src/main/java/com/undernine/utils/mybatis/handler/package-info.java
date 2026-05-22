@@ -7,6 +7,7 @@
  * <h3>核心类：</h3>
  * <ul>
  *     <li>{@link com.undernine.utils.mybatis.handler.DefaultMetaObjectHandler} - 默认元数据自动填充处理器</li>
+ *     <li>{@link com.undernine.utils.mybatis.handler.AuditorProvider} - 当前审计用户提供者</li>
  * </ul>
  *
  * <h3>使用示例：</h3>
@@ -16,13 +17,7 @@
  * public class MyBatisConfig {
  *     @Bean
  *     public MetaObjectHandler metaObjectHandler() {
- *         return new DefaultMetaObjectHandler() {
- *             @Override
- *             protected Long getUserId() {
- *                 // 从 Spring Security 或 ThreadLocal 获取当前用户 ID
- *                 return UserContext.getCurrentUserId();
- *             }
- *         };
+ *         return new DefaultMetaObjectHandler(UserContext::getCurrentUserId);
  *     }
  * }
  *

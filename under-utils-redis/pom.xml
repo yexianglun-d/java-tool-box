@@ -24,6 +24,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Spring 横切能力抽象 -->
+        <dependency>
+            <groupId>com.undernineplaces</groupId>
+            <artifactId>under-utils-spring</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

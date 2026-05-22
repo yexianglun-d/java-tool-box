@@ -1,0 +1,198 @@
+package com.undernine.utils.redis.cache;
+
+import org.redisson.api.RBucket;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+
+import java.time.Duration;
+import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Cache-aside 访问模板。
+ * <p>
+ * 封装读取缓存、未命中加载源数据、空值缓存、TTL 抖动和缓存重建锁等重复工程模式。
+ * </p>
+ *
+ * @author Under-Utils Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+public class CacheAsideTemplate {
+
+    private static final String NULL_VALUE = "__UNDER_UTILS_CACHE_NULL_V1__";
+    private static final String VALUE_PREFIX = "__UNDER_UTILS_CACHE_VALUE_V1__:";
+
+    private final RedissonClient redissonClient;
+    private final CacheValueCodec valueCodec;
+    private final CacheOptions defaultOptions;
+
+    public CacheAsideTemplate(RedissonClient redissonClient) {
+        this(redissonClient, new JacksonCacheValueCodec(), CacheOptions.defaults());
+    }
+
+    public CacheAsideTemplate(RedissonClient redissonClient, CacheValueCodec valueCodec) {
+        this(redissonClient, valueCodec, CacheOptions.defaults());
+    }
+
+    public CacheAsideTemplate(RedissonClient redissonClient, CacheValueCodec valueCodec, CacheOptions defaultOptions) {
+        this.redissonClient = Objects.requireNonNull(redissonClient, "redissonClient must not be null");
+        this.valueCodec = Objects.requireNonNull(valueCodec, "valueCodec must not be null");
+        this.defaultOptions = Objects.requireNonNull(defaultOptions, "defaultOptions must not be null");
+    }
+
+    public <T, E extends Throwable> T getOrLoad(
+        String key,
+        Class<T> valueType,
+        CacheLoadFunction<T, E> loader
+    ) throws E {
+        return getOrLoad(key, valueType, defaultOptions, loader);
+    }
+
+    public <T, E extends Throwable> T getOrLoad(
+        String key,
+        Class<T> valueType,
+        CacheOptions options,
+        CacheLoadFunction<T, E> loader
+    ) throws E {
+        Objects.requireNonNull(valueType, "valueType must not be null");
+        Objects.requireNonNull(loader, "loader must not be null");
+
+        String normalizedKey = normalizeKey(key);
+        CacheOptions effectiveOptions = options == null ? defaultOptions : options;
+        String cacheKey = buildCacheKey(normalizedKey, effectiveOptions);
+        RBucket<String> bucket = redissonClient.getBucket(cacheKey);
+
+        CacheLookup<T> cached = readCache(bucket, valueType);
+        if (cached.hit()) {
+            return cached.value();
+        }
+
+        if (!effectiveOptions.rebuildLockEnabled()) {
+            return loadAndCache(normalizedKey, bucket, effectiveOptions, loader);
+        }
+
+        return rebuildWithLock(normalizedKey, cacheKey, bucket, valueType, effectiveOptions, loader);
+    }
+
+    public <T, E extends Throwable> T get(
+        String key,
+        Class<T> valueType,
+        CacheLoadFunction<T, E> loader
+    ) throws E {
+        return getOrLoad(key, valueType, loader);
+    }
+
+    public <T, E extends Throwable> T get(
+        String key,
+        Class<T> valueType,
+        CacheOptions options,
+        CacheLoadFunction<T, E> loader
+    ) throws E {
+        return getOrLoad(key, valueType, options, loader);
+    }
+
+    private <T, E extends Throwable> T rebuildWithLock(
+        String key,
+        String cacheKey,
+        RBucket<String> bucket,
+        Class<T> valueType,
+        CacheOptions options,
+        CacheLoadFunction<T, E> loader
+    ) throws E {
+        RLock lock = redissonClient.getLock(options.rebuildLockKeyPrefix() + cacheKey);
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(
+                options.lockWaitTime().toMillis(),
+                options.lockLeaseTime().toMillis(),
+                TimeUnit.MILLISECONDS
+            );
+            if (!locked) {
+                CacheLookup<T> cachedAfterWait = readCache(bucket, valueType);
+                if (cachedAfterWait.hit()) {
+                    return cachedAfterWait.value();
+                }
+                throw new CacheRebuildLockException("Failed to acquire cache rebuild lock: " + cacheKey);
+            }
+
+            CacheLookup<T> cachedAfterLock = readCache(bucket, valueType);
+            if (cachedAfterLock.hit()) {
+                return cachedAfterLock.value();
+            }
+            return loadAndCache(key, bucket, options, loader);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CacheRebuildLockException("Interrupted while acquiring cache rebuild lock: " + cacheKey, e);
+        } finally {
+            if (locked && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    private <T, E extends Throwable> T loadAndCache(
+        String key,
+        RBucket<String> bucket,
+        CacheOptions options,
+        CacheLoadFunction<T, E> loader
+    ) throws E {
+        T loaded = loader.load(key);
+        if (loaded == null) {
+            if (options.cacheNull()) {
+                bucket.set(NULL_VALUE, ttlWithJitter(options.nullTtl(), options.jitter()));
+            }
+            return null;
+        }
+
+        String payload = Objects.requireNonNull(valueCodec.encode(loaded), "encoded cache value must not be null");
+        bucket.set(VALUE_PREFIX + payload, ttlWithJitter(options.ttl(), options.jitter()));
+        return loaded;
+    }
+
+    private <T> CacheLookup<T> readCache(RBucket<String> bucket, Class<T> valueType) {
+        String cached = bucket.get();
+        if (cached == null) {
+            return CacheLookup.miss();
+        }
+        if (NULL_VALUE.equals(cached)) {
+            return CacheLookup.hit(null);
+        }
+        if (!cached.startsWith(VALUE_PREFIX)) {
+            return CacheLookup.hit(valueCodec.decode(cached, valueType));
+        }
+        return CacheLookup.hit(valueCodec.decode(cached.substring(VALUE_PREFIX.length()), valueType));
+    }
+
+    private String buildCacheKey(String key, CacheOptions options) {
+        return options.keyPrefix() + key;
+    }
+
+    private String normalizeKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            throw new IllegalArgumentException("cache key must not be blank");
+        }
+        return key.trim();
+    }
+
+    private Duration ttlWithJitter(Duration ttl, Duration jitter) {
+        long jitterMillis = jitter.toMillis();
+        if (jitterMillis <= 0L) {
+            return ttl;
+        }
+        long extraMillis = ThreadLocalRandom.current().nextLong(jitterMillis + 1L);
+        return ttl.plusMillis(extraMillis);
+    }
+
+    private record CacheLookup<T>(boolean hit, T value) {
+
+        static <T> CacheLookup<T> hit(T value) {
+            return new CacheLookup<>(true, value);
+        }
+
+        static <T> CacheLookup<T> miss() {
+            return new CacheLookup<>(false, null);
+        }
+    }
+}

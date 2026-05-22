@@ -1,6 +1,7 @@
 package com.undernine.utils.spring.annotation;
 
 import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.undernine.utils.spring.enums.SensitiveType;
 import com.undernine.utils.spring.serializer.SensitiveJsonSerializer;
@@ -39,6 +40,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @JacksonAnnotationsInside
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonSerialize(using = SensitiveJsonSerializer.class)
 public @interface Sensitive {
     

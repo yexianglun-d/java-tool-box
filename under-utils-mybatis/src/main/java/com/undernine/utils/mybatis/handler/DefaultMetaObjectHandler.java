@@ -29,6 +29,16 @@ public class DefaultMetaObjectHandler implements MetaObjectHandler {
     private static final String CREATE_BY = "createBy";
     private static final String UPDATE_BY = "updateBy";
 
+    private final AuditorProvider auditorProvider;
+
+    public DefaultMetaObjectHandler() {
+        this(null);
+    }
+
+    public DefaultMetaObjectHandler(AuditorProvider auditorProvider) {
+        this.auditorProvider = auditorProvider;
+    }
+
     /**
      * 插入时自动填充
      *
@@ -83,8 +93,6 @@ public class DefaultMetaObjectHandler implements MetaObjectHandler {
      * @return 当前用户 ID，如果无法获取则返回 null
      */
     protected Long getUserId() {
-        // 默认返回 null，子类可以重写此方法
-        // 例如：return UserContextHolder.getUserId();
-        return null;
+        return auditorProvider == null ? null : auditorProvider.getCurrentAuditor();
     }
 }

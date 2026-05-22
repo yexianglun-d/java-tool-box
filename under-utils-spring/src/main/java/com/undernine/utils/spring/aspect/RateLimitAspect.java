@@ -2,18 +2,18 @@ package com.undernine.utils.spring.aspect;
 
 import com.undernine.utils.spring.annotation.RateLimit;
 import com.undernine.utils.spring.exception.BizException;
+import com.undernine.utils.spring.key.DefaultOperationKeyResolver;
+import com.undernine.utils.spring.key.OperationKeyResolver;
+import com.undernine.utils.spring.ratelimit.LocalRateLimitStore;
+import com.undernine.utils.spring.ratelimit.RateLimitStore;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.Duration;
 
 /**
  * 接口限流切面
@@ -27,69 +27,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class RateLimitAspect {
 
-    private static final Map<String, RateLimiter> LIMITER_CACHE = new ConcurrentHashMap<>();
+    private RateLimitStore rateLimitStore = new LocalRateLimitStore();
+    private OperationKeyResolver operationKeyResolver = new DefaultOperationKeyResolver();
 
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint point, RateLimit rateLimit) throws Throwable {
-        String key = generateKey(point);
-        RateLimiter limiter = LIMITER_CACHE.computeIfAbsent(key, 
-            k -> new RateLimiter(rateLimit.limit(), rateLimit.period() * 1000L));
-        
-        if (!limiter.tryAcquire()) {
+        String key = operationKeyResolver.resolve(point, rateLimit.namespace(), rateLimit.key());
+        Duration window = Duration.ofSeconds(Math.max(1, rateLimit.period()));
+        String message = rateLimit.message();
+
+        if (!rateLimitStore.tryAcquire(key, rateLimit.limit(), window)) {
             log.warn("【接口限流】请求被限流: {}", key);
-            throw new BizException(rateLimit.message());
+            throw new BizException(message);
         }
         
         return point.proceed();
     }
 
-    private String generateKey(ProceedingJoinPoint point) {
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        String uri = attrs != null ? attrs.getRequest().getRequestURI() : "";
-        String userId = getCurrentUserId();
-        return String.format("%s:%s", userId, uri);
+    @Autowired(required = false)
+    public void setRateLimitStore(RateLimitStore rateLimitStore) {
+        if (rateLimitStore != null) {
+            this.rateLimitStore = rateLimitStore;
+        }
     }
 
-    private String getCurrentUserId() {
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs != null) {
-            HttpServletRequest request = attrs.getRequest();
-            return request.getRemoteAddr();
-        }
-        return "anonymous";
-    }
-
-    /**
-     * 简单的令牌桶限流器
-     */
-    private static class RateLimiter {
-        private final int limit;
-        private final long period;
-        private final AtomicInteger count;
-        private volatile long lastRefillTime;
-
-        public RateLimiter(int limit, long period) {
-            this.limit = limit;
-            this.period = period;
-            this.count = new AtomicInteger(limit);
-            this.lastRefillTime = System.currentTimeMillis();
-        }
-
-        public synchronized boolean tryAcquire() {
-            refill();
-            if (count.get() > 0) {
-                count.decrementAndGet();
-                return true;
-            }
-            return false;
-        }
-
-        private void refill() {
-            long now = System.currentTimeMillis();
-            if (now - lastRefillTime >= period) {
-                count.set(limit);
-                lastRefillTime = now;
-            }
+    @Autowired(required = false)
+    public void setOperationKeyResolver(OperationKeyResolver operationKeyResolver) {
+        if (operationKeyResolver != null) {
+            this.operationKeyResolver = operationKeyResolver;
         }
     }
 }

@@ -110,7 +110,7 @@ public class DesensitizeUtils {
             return email;
         }
         
-        return prefix.charAt(0) + MASK_CHAR.repeat(Math.min(prefix.length() - 1, 3)) + suffix;
+        return prefix.charAt(0) + MASK_CHAR.repeat(3) + suffix;
     }
 
     /**
@@ -134,7 +134,8 @@ public class DesensitizeUtils {
         if (address == null || address.length() <= 6) {
             return address;
         }
-        return desensitize(address, 6, 0);
+        int maskLength = Math.max(address.length() - 6, 11);
+        return address.substring(0, 6) + MASK_CHAR.repeat(maskLength);
     }
 
     /**
@@ -160,7 +161,7 @@ public class DesensitizeUtils {
                 return parts[0] + "-" + desensitize(parts[1], 0, 4);
             }
         }
-        return desensitize(phone, 3, 4);
+        return desensitize(phone, 3, 3);
     }
 
     /**
