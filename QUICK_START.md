@@ -12,8 +12,8 @@
 ## Build From Source
 
 ```bash
-git clone https://github.com/undernineplaces/under-utils.git
-cd under-utils
+git clone https://github.com/yexianglun-d/java-tool-box.git
+cd java-tool-box
 mvn clean install
 ```
 

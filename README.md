@@ -60,8 +60,8 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 发布到 Maven 仓库前，可以先从源码安装到本地仓库：
 
 ```bash
-git clone https://github.com/undernineplaces/under-utils.git
-cd under-utils
+git clone https://github.com/yexianglun-d/java-tool-box.git
+cd java-tool-box
 mvn clean install
 ```
 
