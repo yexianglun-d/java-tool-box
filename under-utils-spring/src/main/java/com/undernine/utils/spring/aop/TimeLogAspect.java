@@ -5,7 +5,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
@@ -13,6 +12,8 @@ import java.lang.reflect.Method;
  * 方法执行时间统计切面
  * <p>
  * 拦截带有 {@link TimeLog} 注解的方法，统计执行时间并记录日志。
+ * 仅提供兼容维护的轻量耗时日志能力。该类不再声明为 Spring 组件，业务如仍需使用，应显式
+ * {@code @Import(TimeLogAspect.class)} 或注册为 {@code @Bean}。
  * </p>
  * <p>
  * 特性：
@@ -27,10 +28,11 @@ import java.lang.reflect.Method;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 轻量耗时日志保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
 @Slf4j
 @Aspect
-@Component
+@Deprecated(since = "1.0.0")
 public class TimeLogAspect {
 
     /**

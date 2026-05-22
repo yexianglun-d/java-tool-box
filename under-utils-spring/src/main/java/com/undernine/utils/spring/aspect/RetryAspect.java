@@ -5,24 +5,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.stereotype.Component;
 
 /**
- * 重试机制切面
+ * 重试机制切面。
+ * <p>
+ * 仅提供兼容维护的同步重试能力。该类不再声明为 Spring 组件，业务如仍需使用，应显式
+ * {@code @Import(RetryAspect.class)} 或注册为 {@code @Bean}。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 同步重试切面保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
 @Slf4j
 @Aspect
-@Component
+@Deprecated(since = "1.0.0")
 public class RetryAspect {
 
     @Around("@annotation(retry)")
     public Object around(ProceedingJoinPoint point, Retry retry) throws Throwable {
-        int maxAttempts = retry.maxAttempts();
-        long delay = retry.delay();
+        int maxAttempts = Math.max(1, retry.maxAttempts());
+        long delay = Math.max(0L, retry.delay());
         Class<? extends Throwable>[] exceptions = retry.exceptions();
         
         String methodName = point.getSignature().getName();
@@ -40,7 +44,7 @@ public class RetryAspect {
                 log.warn("【重试中】方法: {}, 尝试次数: {}/{}, 错误: {}, {}ms后重试", 
                     methodName, attempt, maxAttempts, e.getMessage(), delay);
                 
-                Thread.sleep(delay);
+                sleep(delay);
             }
         }
         
@@ -48,11 +52,26 @@ public class RetryAspect {
     }
 
     private boolean shouldRetry(Throwable e, Class<? extends Throwable>[] exceptions) {
+        if (exceptions == null || exceptions.length == 0) {
+            return false;
+        }
         for (Class<? extends Throwable> exceptionClass : exceptions) {
             if (exceptionClass.isInstance(e)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private void sleep(long delay) throws Throwable {
+        if (delay <= 0L) {
+            return;
+        }
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        }
     }
 }

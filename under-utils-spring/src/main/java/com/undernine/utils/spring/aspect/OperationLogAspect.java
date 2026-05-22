@@ -8,22 +8,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * 操作日志切面
+ * 操作日志切面。
+ * <p>
+ * 仅提供兼容维护的轻量日志输出。该类不再声明为 Spring 组件，业务如仍需使用，应显式
+ * {@code @Import(OperationLogAspect.class)} 或注册为 {@code @Bean}。
+ * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 轻量日志切面保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
 @Slf4j
 @Aspect
-@Component
+@Deprecated(since = "1.0.0")
 public class OperationLogAspect {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();

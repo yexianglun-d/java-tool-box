@@ -1,17 +1,16 @@
 # Under-Utils Spring 模块
 
-Spring 通用组件模块，提供 Web 开发常用的基础组件。
+Spring Web 横切能力模块，承载请求操作上下文、限流防重、统一异常响应和敏感字段脱敏等基础设施。推荐通过 `under-utils-starter` 使用自动装配；直接使用本模块时，建议显式 `@Import` 需要的组件，不建议扫描整个 `com.undernine.utils.spring` 包。
 
 ## 核心功能
 
 | 功能 | 说明 |
 |------|------|
-| 🎯 **统一返回结果** | `Result<T>` - 标准化 API 响应格式 |
-| 📋 **状态码枚举** | `ResultCode` - 预定义常用业务状态码 |
-| ⚠️ **业务异常** | `BizException` - 自定义业务异常 |
-| 🛡️ **全局异常处理** | `GlobalExceptionHandler` - 统一异常拦截 |
-| 🔧 **Spring 上下文工具** | `SpringContextHolder` - 非Spring管理类获取Bean |
-| ⏱️ **AOP 时间统计** | `@TimeLog` - 方法执行时间统计与慢方法监控 |
+| 🎯 **操作上下文** | `OperationContext` - traceId、tenantId、userId、请求信息和扩展属性传播 |
+| 🚦 **限流防重** | `@RateLimit` / `@PreventRepeat` - 支持本地或 Redis 状态存储 |
+| 🛡️ **统一异常处理** | `GlobalExceptionHandler` / `BizException` / `Result<T>` - 标准化 Web 错误响应 |
+| 🔐 **敏感字段脱敏** | `@Sensitive` - Jackson 序列化时进行字段脱敏 |
+| 🧩 **兼容维护 AOP** | `@OperationLog` / `@Retry` / `@TimeLog` - 轻量历史切面，不作为新增能力主线 |
 
 ## 快速开始
 
@@ -34,17 +33,7 @@ public class WebConfig {
 }
 ```
 
-或者直接扫描包路径：
-
-```java
-@SpringBootApplication
-@ComponentScan(basePackages = {
-    "com.yourcompany",
-    "com.undernine.utils.spring"
-})
-public class Application {
-}
-```
+如果需要限流、防重复提交、Redis 状态存储等工程模式能力，优先引入 `under-utils-starter` 并通过 `under.utils.*` 配置开关控制。
 
 ## 使用示例
 
@@ -133,25 +122,23 @@ public class SomeUtil {
 }
 ```
 
-###  AOP 时间统计
+### 兼容维护 AOP
 
-#### 1. 启用AOP
+`@OperationLog`、`@Retry`、`@TimeLog` 是历史轻量切面，保留用于兼容维护。它们不会通过 starter 自动启用，也不建议作为新项目主线能力。确需使用时请显式注册对应切面：
 
 ```java
-@SpringBootApplication
-@EnableAspectJAutoProxy  // 启用AOP
-@ComponentScan(basePackages = {
-    "com.yourcompany",
-    "com.undernine.utils.spring"  // 扫描工具包
+@Configuration
+@EnableAspectJAutoProxy
+@Import({
+    OperationLogAspect.class,
+    RetryAspect.class,
+    TimeLogAspect.class
 })
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
+public class LegacyAopConfiguration {
 }
 ```
 
-#### 2. 使用 @TimeLog 统计执行时间
+使用 `@TimeLog` 统计执行时间：
 
 ```java
 @Service
@@ -171,18 +158,18 @@ public class UserService {
 }
 ```
 
-**日志输出示例：**
+日志输出示例：
 
 ```
 [DEBUG] UserService.getById(未命名) 执行耗时: 45ms
 [WARN]  【慢方法】UserService.listUsers(批量查询用户) 执行耗时: 1523ms (阈值: 500ms)
 ```
 
-**特性说明：**
-- ✅ 自动记录方法执行时间
-- ✅ 慢方法自动以 WARN 级别记录（默认阈值1000ms）
-- ✅ 即使方法抛出异常也会记录执行时间
-- ✅ 支持自定义操作描述和慢方法阈值
+注意：
+
+- `@OperationLog` 默认不记录请求参数，需要显式设置 `recordParams = true`。
+- `@Retry` 使用当前线程同步 sleep，不适合高并发或需要退避、熔断、超时预算的外部调用治理。
+- 新项目的耗时、重试和审计建议优先接入 Micrometer、OpenTelemetry、消息队列或业务统一审计平台。
 
 ### 自定义状态码
 

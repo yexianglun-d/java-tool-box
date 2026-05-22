@@ -12,29 +12,7 @@
  *
  * <h2>使用示例</h2>
  *
- * <h3>1. 操作类型枚举</h3>
- * <pre>{@code
- * @OperationLog(
- *     module = "用户管理",
- *     type = OperationType.CREATE,  // 新增操作
- *     content = "创建用户"
- * )
- * public Result<User> createUser(User user) {
- *     return Result.success(userService.create(user));
- * }
- *
- * @OperationLog(
- *     module = "订单管理",
- *     type = OperationType.DELETE,  // 删除操作
- *     content = "删除订单"
- * )
- * public Result<Void> deleteOrder(Long id) {
- *     orderService.delete(id);
- *     return Result.success();
- * }
- * }</pre>
- *
- * <h3>2. 敏感信息类型枚举</h3>
+ * <h3>敏感信息类型枚举</h3>
  * <pre>{@code
  * public class User {
  *     @Sensitive(type = SensitiveType.MOBILE_PHONE)
@@ -55,6 +33,11 @@
  * }</pre>
  *
  * <h2>操作类型说明</h2>
+ * <p>
+ * {@link com.undernine.utils.spring.enums.OperationType} 主要服务兼容维护的
+ * {@link com.undernine.utils.spring.annotation.OperationLog} 注解。新项目如需审计事件模型，
+ * 建议按业务域定义更清晰的事件类型并接入统一审计平台。
+ * </p>
  * <ul>
  *     <li>QUERY - 查询操作</li>
  *     <li>CREATE - 新增操作</li>

@@ -32,9 +32,18 @@
 - Redis cache-aside 与 logical-cache 使用独立开关，共享 `CacheValueCodec`。
 - GPG 签名、release profile 与 Testcontainers 集成测试已进入发布准备链路。
 
+## 第二轮结论
+
+### Spring Legacy AOP
+
+- `OperationLog`、`Retry`、`TimeLog` 保留为兼容维护 API，并标记为 `@Deprecated`。
+- `OperationLogAspect`、`RetryAspect`、`TimeLogAspect` 不再声明为 Spring `@Component`，避免直接扫描 `com.undernine.utils.spring` 时意外启用历史切面；仍需兼容时应显式 `@Import` 或声明为 `@Bean`。
+- `OperationLog.recordParams` 默认值改为 `false`，降低误记录请求参数和敏感信息的风险；兼容旧行为需要显式设置 `recordParams = true`。
+- `RetryAspect` 仍保留同步 sleep 语义，但会规整非法 `maxAttempts`、`delay` 和空异常列表，避免配置异常造成不可预期循环或等待。
+- 新项目的审计、重试和耗时观测不再以轻量历史切面为主线，应优先使用业务统一审计、专用客户端治理、Micrometer 或 OpenTelemetry。
+
 ## 后续待审
 
-- 复核 `under-utils-spring` 中 `OperationLog`、`Retry`、`TimeLog` 等历史 AOP 能力是否保留、迁移或标记为兼容维护。
 - 复核 `under-utils-core` 中历史基础工具的 README 表达，避免被误解为 Hutool 式工具集合主线。
 - 为关键注解属性补充更明确的失败语义和集群环境说明。
 - Maven Central namespace、正式 deploy 仓库和 GPG 密钥托管仍需单独确认。

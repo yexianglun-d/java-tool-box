@@ -58,6 +58,10 @@
 - `LogicalExpireCacheOptions` 增加 `physicalTtl > logicalTtl` 校验，确保逻辑过期缓存保留旧值兜底窗口。
 - `LogicalExpireCacheTemplate.LogicalCachePayload` 收回为包内实现细节，不再作为 public API 暴露。
 - `PageQuery` 标记为不推荐 API，前端可控排序场景应使用 `SafePageQuery` 与 `SortFieldMapping`。
+- `OperationLog`、`Retry`、`TimeLog` 及对应历史切面标记为兼容维护 API，不再作为 Spring 模块新增能力主线。
+- `OperationLog.recordParams` 默认值改为 `false`，需要记录请求参数时必须显式开启。
+- `OperationLogAspect`、`RetryAspect`、`TimeLogAspect` 不再声明为 Spring `@Component`，兼容使用时需显式 `@Import` 或声明为 `@Bean`。
+- `RetryAspect` 对非法 `maxAttempts`、负数 `delay` 和空异常类型进行防御处理，保留同步重试语义但降低错误配置风险。
 - 收紧 starter 自动装配条件，用户自定义 `TaskDecorator`、`CacheValueCodec`、`CacheOptions`、`CacheAsideTemplate` 等 Bean 时自动退让。
 - `CacheValueCodec` 改为 cache-aside 与 logical-cache 共享的 Redis 缓存基础设施，仅在相关能力启用时自动装配。
 - Redis cache options 增加兼容别名，改善 `ttl/nullTtl/cacheNull` 与 value/null value 语义的可读性。
@@ -79,6 +83,7 @@
 - `mvn -pl under-utils-samples -am test`
 - `mvn -DskipTests compile`
 - `mvn clean test`
+- `mvn -pl under-utils-spring -am test`
 - `mvn -pl under-utils-http,under-utils-redis,under-utils-mybatis,under-utils-starter -am test`
 - `mvn test`
 - `mvn -Prelease -DskipTests package`

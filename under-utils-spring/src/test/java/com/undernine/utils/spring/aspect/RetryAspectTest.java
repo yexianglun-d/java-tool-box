@@ -97,4 +97,17 @@ class RetryAspectTest {
 
         verify(joinPoint, times(1)).proceed();
     }
+
+    @Test
+    void testInvalidMaxAttemptsFallsBackToSingleAttempt() throws Throwable {
+        when(retry.maxAttempts()).thenReturn(0);
+        when(retry.delay()).thenReturn(-1L);
+        when(retry.exceptions()).thenReturn(new Class[]{IOException.class});
+        when(joinPoint.proceed()).thenReturn("success");
+
+        Object result = aspect.around(joinPoint, retry);
+
+        assertThat(result).isEqualTo("success");
+        verify(joinPoint, times(1)).proceed();
+    }
 }

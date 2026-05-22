@@ -6,9 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 方法执行时间统计注解
+ * 方法执行时间统计注解。
  * <p>
- * 用于统计方法执行时间，支持慢方法监控。
+ * 用于统计方法执行时间，支持慢方法监控。该注解仅保留为兼容维护 API；
+ * 新项目建议优先使用 Micrometer、OpenTelemetry 或业务统一观测平台。
  * </p>
  * <p>
  * 使用示例：
@@ -34,9 +35,11 @@ import java.lang.annotation.Target;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 轻量耗时日志保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated(since = "1.0.0")
 public @interface TimeLog {
 
     /**
