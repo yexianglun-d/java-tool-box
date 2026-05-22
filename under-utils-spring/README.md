@@ -18,7 +18,7 @@ Spring Web 横切能力模块，承载请求操作上下文、限流防重、统
 
 ```xml
 <dependency>
-    <groupId>com.undernineplaces</groupId>
+    <groupId>io.github.yexianglun-d</groupId>
     <artifactId>under-utils-spring</artifactId>
     <version>1.0.0</version>
 </dependency>

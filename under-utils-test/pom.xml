@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.undernineplaces</groupId>
+        <groupId>io.github.yexianglun-d</groupId>
         <artifactId>under-utils</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -19,49 +19,49 @@
     <dependencies>
         <!-- 核心模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- HTTP 模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-http</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- Redis 模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-redis</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- MyBatis 模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-mybatis</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- Spring 模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-spring</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- Starter 模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- 业务组件模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-biz</artifactId>
             <version>${project.version}</version>
         </dependency>

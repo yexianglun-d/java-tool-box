@@ -53,6 +53,7 @@
 - 重写根 README，明确项目定位：Under-Utils 不做 Hutool 替代品，不主打低复杂度通用工具方法，而主打复杂、重复、高工程价值的模式封装。
 - 重写 `QUICK_START.md`，移除本地绝对路径、过时 JDK 版本和占位模块说明，改为 GitHub 开源上手流程。
 - 更新 POM 描述，弱化“常用工具方法”表述，强调工程模式封装。
+- Maven `groupId` 从 `com.undernineplaces` 收敛为 GitHub namespace `io.github.yexianglun-d`，降低 Maven Central namespace 验证成本。
 - 父工程 Maven Compiler Plugin 开启 `parameters`，让 Spring 在干净编译后可直接读取方法参数名。
 - `under-utils-samples` 标记为不参与 Maven deploy，保留构建验证但避免作为正式库模块发布。
 - `central-publish` profile 默认跳过上传，用于本地验证 Central 发布生命周期；真实发布必须显式设置 `central.skipPublishing=false`。

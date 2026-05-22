@@ -19,7 +19,7 @@
 - 持续维护发布前 API 审计记录，优先处理类名冲突、配置 key、异常语义和高风险默认值。
 - 为核心工程模式能力补齐边界文档和失败语义说明。
 - 建立 GitHub Actions CI，覆盖默认 `mvn test`、编译检查和 markdown 基础检查。
-- 正式发布前确认 Maven Central namespace 是否继续使用 `com.undernineplaces`，并完成 Central Portal 账号、token 和 GPG 私钥托管。
+- Maven 坐标收敛为 GitHub namespace `io.github.yexianglun-d`，正式发布前完成 Central Portal token 和 GPG 私钥托管。
 - 扩大 Testcontainers 集成测试覆盖面，优先补齐 Redis 缓存模板和 starter 自动装配验证。
 
 ## 后续方向

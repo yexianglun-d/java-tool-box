@@ -74,6 +74,13 @@
 - 新增 `docs/RELEASE.md`，明确 namespace、Central Portal token、GPG/PGP 签名、手动校验发布和 CI secrets 要求。
 - 新增手动触发的 GitHub Actions 发布工作流，默认上传后等待 `validated`，是否自动发布需要人工选择 `published` 模式。
 
+## 第六轮结论
+
+### Maven Coordinates
+
+- Maven `groupId` 从 `com.undernineplaces` 收敛为 GitHub namespace `io.github.yexianglun-d`，避免依赖未持有域名的 DNS namespace 验证。
+- Java 包名仍保持 `com.undernine.utils`，本轮只调整 Maven 坐标，不引入包名级破坏性迁移。
+
 ## 后续待审
 
-- Maven Central namespace 是否从 `com.undernineplaces` 切换到 GitHub namespace，仍需在首个公开发布前确认。
+- 正式发布前仍需确认 Central Portal 中 `io.github.yexianglun-d` namespace 可发布，并配置 token、GPG 私钥和受保护的 GitHub Actions environment。

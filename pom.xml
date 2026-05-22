@@ -5,7 +5,7 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.undernineplaces</groupId>
+    <groupId>io.github.yexianglun-d</groupId>
     <artifactId>under-utils</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
@@ -108,7 +108,7 @@
         <dependencies>
             <!-- 引入 BOM 统一版本管理 -->
             <dependency>
-                <groupId>com.undernineplaces</groupId>
+                <groupId>io.github.yexianglun-d</groupId>
                 <artifactId>under-utils-bom</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>

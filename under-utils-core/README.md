@@ -103,7 +103,7 @@ Payload parsed = JsonUtils.fromJson(json, Payload.class);
 
 ```xml
 <dependency>
-    <groupId>com.undernineplaces</groupId>
+    <groupId>io.github.yexianglun-d</groupId>
     <artifactId>under-utils-core</artifactId>
     <version>1.0.0</version>
 </dependency>

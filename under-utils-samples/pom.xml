@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.undernineplaces</groupId>
+        <groupId>io.github.yexianglun-d</groupId>
         <artifactId>under-utils</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -22,25 +22,25 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-http</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-mybatis</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-biz</artifactId>
             <version>${project.version}</version>
         </dependency>

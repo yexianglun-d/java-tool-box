@@ -14,7 +14,7 @@
 发布前需要先完成这些外部准备：
 
 - 在 <https://central.sonatype.com> 使用 GitHub 账号登录或注册 Central Portal。
-- 确认 Maven Central namespace。当前坐标使用 `com.undernineplaces`，需要能验证 `undernineplaces.com` 的 DNS 所有权；如果没有该域名控制权，应在首次公开发布前切换到 GitHub 个人 namespace，例如 `io.github.yexianglun-d`。
+- 确认 Maven Central namespace。当前坐标已收敛为 GitHub 个人 namespace `io.github.yexianglun-d`，需要在 Central Portal 中确认该 namespace 已属于当前 GitHub 账号。
 - 在 Central Portal 生成 user token，并保存 token username / token password。
 - 创建 GPG/PGP 签名密钥，将公钥发布到 Central 支持的 key server，并安全保存私钥和 passphrase。
 - 确认 `CHANGELOG.md`、README、示例和 public API 审计已经反映本次版本。

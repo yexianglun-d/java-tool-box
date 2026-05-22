@@ -38,7 +38,7 @@ mvn test
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-bom</artifactId>
             <version>1.0.0</version>
             <type>pom</type>
@@ -49,7 +49,7 @@ mvn test
 
 <dependencies>
     <dependency>
-        <groupId>com.undernineplaces</groupId>
+        <groupId>io.github.yexianglun-d</groupId>
         <artifactId>under-utils-starter</artifactId>
     </dependency>
 </dependencies>
@@ -59,12 +59,12 @@ mvn test
 
 ```xml
 <dependency>
-    <groupId>com.undernineplaces</groupId>
+    <groupId>io.github.yexianglun-d</groupId>
     <artifactId>under-utils-spring</artifactId>
 </dependency>
 
 <dependency>
-    <groupId>com.undernineplaces</groupId>
+    <groupId>io.github.yexianglun-d</groupId>
     <artifactId>under-utils-redis</artifactId>
 </dependency>
 ```

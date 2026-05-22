@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.undernineplaces</groupId>
+        <groupId>io.github.yexianglun-d</groupId>
         <artifactId>under-utils</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -19,14 +19,14 @@
     <dependencies>
         <!-- 核心模块 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- Spring 横切能力抽象 -->
         <dependency>
-            <groupId>com.undernineplaces</groupId>
+            <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-spring</artifactId>
             <version>${project.version}</version>
         </dependency>

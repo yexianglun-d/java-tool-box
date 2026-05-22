@@ -22,7 +22,7 @@
 
 ```xml
 <dependency>
-    <groupId>com.undernineplaces</groupId>
+    <groupId>io.github.yexianglun-d</groupId>
     <artifactId>under-utils-mybatis</artifactId>
     <version>1.0.0</version>
 </dependency>
