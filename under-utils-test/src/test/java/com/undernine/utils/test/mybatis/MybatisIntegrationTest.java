@@ -20,8 +20,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 class MybatisIntegrationTest {
+
+    private static final Duration MYSQL_DATETIME_PRECISION = Duration.ofMillis(1);
 
     @Container
     static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.33")
@@ -189,8 +191,8 @@ class MybatisIntegrationTest {
         User updatedUser = userMapper.selectById(user.getId());
 
         // 4. 验证更新时间已变化，创建时间和创建人未变
-        assertThat(updatedUser.getCreateTime().truncatedTo(ChronoUnit.SECONDS))
-                .isEqualTo(createTime.truncatedTo(ChronoUnit.SECONDS));
+        assertThat(Duration.between(createTime, updatedUser.getCreateTime()).abs())
+                .isLessThan(MYSQL_DATETIME_PRECISION);
         assertThat(updatedUser.getCreateBy()).isEqualTo(createBy);
         assertThat(updatedUser.getUpdateTime()).isAfter(updateTime);
         assertThat(updatedUser.getUpdateBy()).isEqualTo(1001L);
