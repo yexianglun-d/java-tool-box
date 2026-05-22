@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Compile default reactor
+        run: mvn -B -ntp -DskipTests compile
+
+      - name: Run default tests
+        run: mvn -B -ntp test
+
+      - name: Compile manual integration module
+        run: mvn -B -ntp -Pintegration-tests -pl under-utils-test -am -DskipTests compile
