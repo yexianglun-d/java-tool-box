@@ -1,15 +1,18 @@
 package com.undernine.utils.core.string;
 
 /**
- * 字符串工具类
+ * 字符串工具类。
  * <p>
- * 提供常用的字符串处理方法，如判空、trim、格式化等。
+ * 该类仅保留为兼容维护 API。新代码应优先使用 JDK、Apache Commons Lang 或业务内更明确的输入规范，
+ * Under-Utils 不再扩展低复杂度字符串工具方法。
  * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史基础工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class StringUtils {
 
     /**

@@ -3,9 +3,10 @@ package com.undernine.utils.core.validation;
 import java.util.regex.Pattern;
 
 /**
- * 参数校验工具类
+ * 参数校验工具类。
  * <p>
- * 提供常用的参数校验方法，如手机号、邮箱、身份证号、URL 等格式校验。
+ * 该类仅保留为兼容维护 API。新代码应优先使用 Bean Validation、业务显式规则或专门校验组件，
+ * 避免把会随地区、政策和业务场景变化的规则固化为通用工具方法。
  * </p>
  * <p>
  * 特性：
@@ -19,7 +20,9 @@ import java.util.regex.Pattern;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史基础工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class ValidationUtils {
 
     /**

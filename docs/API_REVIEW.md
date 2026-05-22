@@ -42,8 +42,18 @@
 - `RetryAspect` 仍保留同步 sleep 语义，但会规整非法 `maxAttempts`、`delay` 和空异常列表，避免配置异常造成不可预期循环或等待。
 - 新项目的审计、重试和耗时观测不再以轻量历史切面为主线，应优先使用业务统一审计、专用客户端治理、Micrometer 或 OpenTelemetry。
 
+## 第三轮结论
+
+### Core Historical Helpers
+
+- `under-utils-core` 不再按“基础工具大全”表达，README 与包级 Javadoc 改为强调低耦合基础能力和历史工具兼容维护。
+- `StringUtils`、`CollectionUtils`、`LocalDateTimeUtils`、`ValidationUtils`、`UUIDUtils`、`JsonUtils`、`MD5Utils`、`SHA256Utils`、`AESUtils` 标记为 `@Deprecated` 兼容 API，保留调用但不再扩展。
+- `IdGenerator` 与 `MoneyUtils` 暂作为 core 主线保留能力：前者承担本地趋势递增 ID 生成，后者固化 BigDecimal 金额计算与分/元转换语义。
+- `JsonUtils` 明确为历史兼容入口；复杂应用应注入业务自己的 `ObjectMapper` 或 codec，`getObjectMapper()` 标记为不推荐。
+- `AESUtils.encryptECB` 与 `AESUtils.decryptECB` 标记为不推荐，ECB 仅保留历史兼容；MD5/SHA-256/AES 文档明确不作为推荐安全治理入口。
+- 移除 `under-utils-core` POM 中未使用的 Lombok、SLF4J、Apache Commons Lang、Guava 和 Bouncy Castle 可选依赖，避免模块边界和开源定位被误读。
+
 ## 后续待审
 
-- 复核 `under-utils-core` 中历史基础工具的 README 表达，避免被误解为 Hutool 式工具集合主线。
 - 为关键注解属性补充更明确的失败语义和集群环境说明。
 - Maven Central namespace、正式 deploy 仓库和 GPG 密钥托管仍需单独确认。

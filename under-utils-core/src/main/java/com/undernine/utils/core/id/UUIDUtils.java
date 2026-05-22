@@ -6,9 +6,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 /**
- * UUID 生成工具类
+ * UUID 生成工具类。
  * <p>
- * 提供多种 UUID 生成方法，包括标准 UUID、简化 UUID、基于名称的 UUID 等。
+ * 该类仅保留为兼容维护 API。新代码中标准 UUID 建议直接使用 {@link java.util.UUID}；
+ * 数据库主键或业务流水号场景优先使用边界更清晰的 {@link IdGenerator} 或业务专用 ID 方案。
  * </p>
  * <p>
  * UUID（Universally Unique Identifier）是一个 128 位的标识符，
@@ -18,7 +19,9 @@ import java.util.UUID;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史基础工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class UUIDUtils {
 
     /**

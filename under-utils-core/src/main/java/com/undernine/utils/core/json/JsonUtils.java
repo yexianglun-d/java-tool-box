@@ -8,9 +8,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
- * JSON 工具类
+ * JSON 工具类。
  * <p>
- * 基于 Jackson 实现，提供 JSON 序列化与反序列化功能。
+ * 该类仅保留为兼容维护 API。它内置单例 {@link ObjectMapper}，适合作为轻量历史调用入口；
+ * 新代码应优先使用应用自身配置的 {@link ObjectMapper}、消息 codec 或边界更明确的序列化组件。
  * </p>
  * <p>
  * 特性：
@@ -25,7 +26,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史 JSON 工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class JsonUtils {
 
     /**
@@ -283,7 +286,9 @@ public final class JsonUtils {
      * </p>
      *
      * @return ObjectMapper 实例
+     * @deprecated 返回的是全局共享实例，修改配置会影响所有调用；新代码应注入业务自己的 ObjectMapper。
      */
+    @Deprecated(since = "1.0.0")
     public static ObjectMapper getObjectMapper() {
         return OBJECT_MAPPER;
     }

@@ -10,9 +10,10 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * AES 加密解密工具类
+ * AES 加密解密工具类。
  * <p>
- * 提供 AES 对称加密功能，支持多种工作模式和填充方式。
+ * 该类仅保留为兼容维护 API。当前实现主要覆盖 CBC/ECB 历史调用，不提供认证加密、密钥轮换、
+ * KMS 集成或密文版本治理；新代码应优先使用 AES/GCM、JDK JCA 或统一加密服务。
  * </p>
  * <p>
  * 特性：
@@ -35,7 +36,9 @@ import java.util.Base64;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史加解密工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class AESUtils {
 
     /**
@@ -203,7 +206,9 @@ public final class AESUtils {
      * @param plainText 明文
      * @param key       Base64 编码的密钥
      * @return Base64 编码的密文
+     * @deprecated ECB 模式不安全，仅保留历史兼容；新代码不得使用。
      */
+    @Deprecated(since = "1.0.0")
     public static String encryptECB(String plainText, String key) {
         if (plainText == null || key == null) {
             throw new IllegalArgumentException("Parameters cannot be null");
@@ -230,7 +235,9 @@ public final class AESUtils {
      * @param cipherText Base64 编码的密文
      * @param key        Base64 编码的密钥
      * @return 明文
+     * @deprecated ECB 模式不安全，仅保留历史兼容；新代码不得使用。
      */
+    @Deprecated(since = "1.0.0")
     public static String decryptECB(String cipherText, String key) {
         if (cipherText == null || key == null) {
             throw new IllegalArgumentException("Parameters cannot be null");

@@ -14,36 +14,9 @@
     <artifactId>under-utils-core</artifactId>
 
     <name>Under-Utils Core</name>
-    <description>基础通用工具模块 - 字符串、日期、金额、ID、加解密等</description>
+    <description>Low-coupling core primitives and compatibility-maintained historical helpers for Under-Utils.</description>
 
     <dependencies>
-        <!-- Lombok：简化代码 -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- 日志 API -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <!-- Apache Commons Lang3 -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Guava -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Jackson：JSON 处理 -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -53,13 +26,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-        </dependency>
-
-        <!-- 加密算法 -->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- ==================== 测试依赖 ==================== -->

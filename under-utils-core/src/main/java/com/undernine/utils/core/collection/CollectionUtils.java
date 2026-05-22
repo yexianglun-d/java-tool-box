@@ -5,9 +5,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 集合工具类
+ * 集合工具类。
  * <p>
- * 提供常用的集合处理方法，如判空、安全操作、分批处理等。
+ * 该类仅保留为兼容维护 API。新代码应优先使用 JDK Collections、Stream API 或业务内专用转换流程，
+ * Under-Utils 不再扩展低复杂度集合工具方法。
  * </p>
  * <p>
  * 特性：
@@ -22,7 +23,9 @@ import java.util.stream.Collectors;
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史基础工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class CollectionUtils {
 
     /**

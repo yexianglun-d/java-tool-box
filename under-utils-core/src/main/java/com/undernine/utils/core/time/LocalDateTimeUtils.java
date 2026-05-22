@@ -6,15 +6,18 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * 日期时间工具类（基于 Java 8+ 的 LocalDateTime）
+ * 日期时间工具类（基于 Java 8+ 的 LocalDateTime）。
  * <p>
- * 提供常用的日期时间格式化、解析等方法。
+ * 该类仅保留为兼容维护 API。新代码应直接使用 {@code java.time} 与业务显式的
+ * {@link java.time.format.DateTimeFormatter}，避免隐藏时区、格式和失败语义。
  * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史基础工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class LocalDateTimeUtils {
 
     /**

@@ -5,19 +5,21 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * MD5 摘要工具类
+ * MD5 摘要工具类。
  * <p>
- * 提供 MD5 加密功能，支持字符串和字节数组的 MD5 摘要计算。
+ * 该类仅保留为兼容维护 API。MD5 不是加密算法，也不适合密码、签名或安全校验场景；
+ * 新代码应优先使用 JDK {@link java.security.MessageDigest} 明确表达摘要用途，或使用专用密码哈希方案。
  * </p>
  * <p>
- * 注意：MD5 算法已不安全，不建议用于密码加密等安全要求高的场景。
- * 适用场景：文件校验、数据签名、非安全场景的哈希等。
+ * 注意：MD5 算法已不安全，仅适合历史兼容或非安全校验场景。
  * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史摘要工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class MD5Utils {
 
     /**

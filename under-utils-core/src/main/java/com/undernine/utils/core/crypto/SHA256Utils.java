@@ -5,19 +5,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * SHA-256 摘要工具类
+ * SHA-256 摘要工具类。
  * <p>
- * 提供 SHA-256 加密功能，支持字符串和字节数组的 SHA-256 摘要计算。
+ * 该类仅保留为兼容维护 API。SHA-256 是摘要算法，不是加密算法；新代码应按业务语义显式使用
+ * JDK {@link java.security.MessageDigest}、HMAC 或专用密码哈希方案。
  * </p>
  * <p>
  * SHA-256 是 SHA-2 系列中的一种，提供 256 位（32 字节）的哈希值，
- * 安全性高于 MD5 和 SHA-1，适用于密码加密、数字签名等安全场景。
+ * 安全性高于 MD5 和 SHA-1，但不能替代 BCrypt、PBKDF2、Argon2 等密码存储方案。
  * </p>
  *
  * @author Under-Utils Team
  * @version 1.0.0
  * @since 1.0.0
+ * @deprecated 历史摘要工具保留为兼容 API，不作为 Under-Utils 后续工程模式主线能力演进。
  */
+@Deprecated(since = "1.0.0")
 public final class SHA256Utils {
 
     /**

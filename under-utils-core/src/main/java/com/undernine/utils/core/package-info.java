@@ -1,17 +1,20 @@
 /**
- * Under-Utils 核心工具包
+ * Under-Utils 低耦合基础模块。
  * <p>
- * 提供基础的、无框架依赖的通用工具类，包括：
+ * 本包承载少量无 Spring 依赖的基础能力和历史工具兼容入口。Under-Utils 不以复制 Hutool、
+ * Apache Commons、Guava 或 JDK 工具方法为目标；新增 API 必须具备清晰工程边界和复用价值。
+ * </p>
+ *
+ * <h2>主线保留能力</h2>
  * <ul>
- *     <li>字符串处理工具 ({@link com.undernine.utils.core.string.StringUtils})</li>
- *     <li>日期时间工具 ({@link com.undernine.utils.core.time.LocalDateTimeUtils})</li>
- *     <li>JSON 处理工具 ({@link com.undernine.utils.core.json.JsonUtils})</li>
- *     <li>集合处理工具 ({@link com.undernine.utils.core.collection.CollectionUtils})</li>
- *     <li>金额计算工具 ({@link com.undernine.utils.core.money.MoneyUtils})</li>
- *     <li>参数校验工具 ({@link com.undernine.utils.core.validation.ValidationUtils})</li>
- *     <li>加密工具 ({@link com.undernine.utils.core.crypto.MD5Utils}, {@link com.undernine.utils.core.crypto.SHA256Utils}, {@link com.undernine.utils.core.crypto.AESUtils})</li>
- *     <li>ID生成工具 ({@link com.undernine.utils.core.id.UUIDUtils}, {@link com.undernine.utils.core.id.IdGenerator})</li>
+ *     <li>{@link com.undernine.utils.core.id.IdGenerator} - 雪花算法 ID 生成器。</li>
+ *     <li>{@link com.undernine.utils.core.money.MoneyUtils} - BigDecimal 金额计算和分/元转换。</li>
  * </ul>
+ *
+ * <h2>兼容维护能力</h2>
+ * <p>
+ * 字符串、集合、日期、正则校验、UUID、摘要、AES 和 JSON 等历史工具入口会保留兼容，
+ * 但不再作为新增工具方法的扩张方向。
  * </p>
  *
  * @author Under-Utils Team

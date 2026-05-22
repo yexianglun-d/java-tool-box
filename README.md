@@ -38,7 +38,7 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 | 模块 | 定位 | 典型能力 |
 |------|------|----------|
 | `under-utils-bom` | 统一依赖版本管理 | Spring Boot、MyBatis-Plus、Redisson、OkHttp、Jackson 等版本收口 |
-| `under-utils-core` | 无框架耦合的基础能力承载层 | 历史基础工具、轻量核心抽象；新增能力需要符合工程模式准入标准 |
+| `under-utils-core` | 低耦合基础能力承载层 | `IdGenerator`、`MoneyUtils` 等主线保留能力；历史静态工具仅兼容维护 |
 | `under-utils-spring` | Spring Web 横切能力 | `OperationContext`、上下文传播、`@RateLimit`、`@PreventRepeat`、`OperationKeyResolver` |
 | `under-utils-redis` | Redis 工程模式 | `DistributedLockTemplate`、Redis 限流/防重、`CacheAsideTemplate`、`LogicalExpireCacheTemplate` |
 | `under-utils-http` | HTTP / OpenAPI 客户端 | `OpenApiClient`、token 注入、请求签名、trace/idempotency header、业务错误解码、重试 |
