@@ -11,6 +11,7 @@
 - 为 samples 保留无外部依赖的默认启动路径，并提供 Redis profile 示例。
 - 将 `under-utils-test` 迁移到 Testcontainers，让 CI 可以执行真实 MySQL 集成测试。
 - 补齐 Maven 发布元信息，建立 sources、javadocs 与可选 GPG 签名的发布构件验证链路。
+- 接入 Central Publisher Portal 发布插件，建立本地 bundle dry run 和手动发布工作流。
 
 ## 首个稳定 Release
 
@@ -18,7 +19,7 @@
 - 持续维护发布前 API 审计记录，优先处理类名冲突、配置 key、异常语义和高风险默认值。
 - 为核心工程模式能力补齐边界文档和失败语义说明。
 - 建立 GitHub Actions CI，覆盖默认 `mvn test`、编译检查和 markdown 基础检查。
-- 确认 Maven Central namespace、发布账号、密钥托管方式和正式 deploy 流程。
+- 正式发布前确认 Maven Central namespace 是否继续使用 `com.undernineplaces`，并完成 Central Portal 账号、token 和 GPG 私钥托管。
 - 扩大 Testcontainers 集成测试覆盖面，优先补齐 Redis 缓存模板和 starter 自动装配验证。
 
 ## 后续方向

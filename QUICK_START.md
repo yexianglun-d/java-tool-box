@@ -83,7 +83,19 @@ mvn -Prelease -DskipTests package
 mvn -Prelease,sign-artifacts -Dgpg.sign=true -DskipTests verify
 ```
 
-`under-utils-samples` 用于示例和开发体验验证，不作为正式库模块发布。
+Central Portal 发布链路可通过以下命令做本地 dry run，默认不会上传：
+
+```bash
+mvn -s docs/central-dry-run-settings.xml \
+  -Prelease,central-publish \
+  -Dcentral.publishing.server.id=central-dry-run \
+  -Dcentral.skipPublishing=true \
+  -Dgpg.skip=true \
+  -DskipTests \
+  deploy
+```
+
+完整流程见 [Release Guide](docs/RELEASE.md)。`under-utils-samples` 用于示例和开发体验验证，不作为正式库模块发布。
 
 ## Enable Starter Features
 

@@ -64,6 +64,16 @@
 - 明确集群语义：local store 只在当前 JVM 内生效；多实例部署必须切换 Redis store 或自定义 `RateLimitStore` / `RepeatSubmitStore`。
 - 明确 Redis 失败语义：Redisson 调用异常向外传播，如需 Redis 故障时放行或降级，应由业务自定义 store。
 
+## 第五轮结论
+
+### Maven Central Release
+
+- 接入 Central Publisher Portal 的 Maven 发布链路，新增 `central-publish` profile；默认 `central.skipPublishing=true`，用于本地验证 deploy 生命周期，避免误上传。
+- 发布插件固定为 `org.sonatype.central:central-publishing-maven-plugin:0.10.0`，不再引入旧 OSSRH / nexus-staging 发布路径。
+- `central-publish` 通过 `excludeArtifacts` 排除 `under-utils-samples`，示例工程继续只参与构建和测试验证。
+- 新增 `docs/RELEASE.md`，明确 namespace、Central Portal token、GPG/PGP 签名、手动校验发布和 CI secrets 要求。
+- 新增手动触发的 GitHub Actions 发布工作流，默认上传后等待 `validated`，是否自动发布需要人工选择 `published` 模式。
+
 ## 后续待审
 
-- Maven Central namespace、正式 deploy 仓库和 GPG 密钥托管仍需单独确认。
+- Maven Central namespace 是否从 `com.undernineplaces` 切换到 GitHub namespace，仍需在首个公开发布前确认。

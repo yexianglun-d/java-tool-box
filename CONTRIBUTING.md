@@ -41,6 +41,7 @@ mvn -DskipTests compile
 mvn test
 mvn -pl under-utils-samples -am test
 mvn -Prelease -DskipTests package
+mvn -s docs/central-dry-run-settings.xml -Prelease,central-publish -Dcentral.publishing.server.id=central-dry-run -Dcentral.skipPublishing=true -Dgpg.skip=true -DskipTests deploy
 ```
 
 `under-utils-test` 是 Testcontainers 集成验证模块，不进入默认构建。如需运行：
@@ -58,6 +59,7 @@ mvn -Pintegration-tests -pl under-utils-test -am test
 - 新增能力包含单元测试；涉及外部系统的能力提供可复现的集成验证方式。
 - 默认 `mvn test` 不依赖本地 Redis、MySQL、Docker 等外部环境。
 - `mvn -Prelease -DskipTests package` 可以正常生成 sources 与 javadocs。
+- 如果变更发布配置，`mvn -s docs/central-dry-run-settings.xml -Prelease,central-publish -Dcentral.publishing.server.id=central-dry-run -Dcentral.skipPublishing=true -Dgpg.skip=true -DskipTests deploy` 可以正常完成 Central 发布链路 dry run。
 - README、CHANGELOG 或模块文档已按需更新。
 - 没有提交 IDE 临时文件、构建产物、个人路径或内部报告。
 

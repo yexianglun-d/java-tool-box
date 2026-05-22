@@ -8,6 +8,7 @@
 
 - 新增 GitHub Actions CI，覆盖默认编译、默认测试和 `under-utils-test` Testcontainers 集成测试。
 - 新增 Maven 发布准备配置，包含开源元信息、release 构件 profile、sources/javadocs 生成和可选 GPG 签名 profile。
+- 新增 Maven Central Portal 发布 profile、发布手册和手动 GitHub Actions 发布工作流。
 - 新增发布前 API 审计记录 `docs/API_REVIEW.md`，跟踪 public API、配置 key 和模块边界收口结论。
 - `under-utils-test` 新增 Testcontainers MySQL 集成测试依赖，集成验证不再依赖本地 MySQL。
 - 新增 GitHub 开源社区文件：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、Issue 模板和 Pull Request 模板。
@@ -54,6 +55,7 @@
 - 更新 POM 描述，弱化“常用工具方法”表述，强调工程模式封装。
 - 父工程 Maven Compiler Plugin 开启 `parameters`，让 Spring 在干净编译后可直接读取方法参数名。
 - `under-utils-samples` 标记为不参与 Maven deploy，保留构建验证但避免作为正式库模块发布。
+- `central-publish` profile 默认跳过上传，用于本地验证 Central 发布生命周期；真实发布必须显式设置 `central.skipPublishing=false`。
 - HTTP 模块底层 OkHttp 执行入口从 `OkHttpClient` 收敛为 `OkHttpRequestExecutor`，避免与三方库类型同名。
 - `LogicalExpireCacheOptions` 增加 `physicalTtl > logicalTtl` 校验，确保逻辑过期缓存保留旧值兜底窗口。
 - `LogicalExpireCacheTemplate.LogicalCachePayload` 收回为包内实现细节，不再作为 public API 暴露。
@@ -96,6 +98,7 @@
 - `mvn test`
 - `mvn -Prelease -DskipTests package`
 - `mvn -Prelease,sign-artifacts -Dgpg.skip=true -DskipTests verify`
+- `mvn -s docs/central-dry-run-settings.xml -Prelease,central-publish -Dcentral.publishing.server.id=central-dry-run -Dcentral.skipPublishing=true -Dgpg.skip=true -DskipTests deploy`
 - `mvn -Pintegration-tests -pl under-utils-test -am -DskipTests test-compile`
 - `git diff --check`
 - samples 已在无 Redis/MySQL 的默认配置下完成 Spring Boot 启动与核心接口验证。

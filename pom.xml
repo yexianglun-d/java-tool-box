@@ -64,7 +64,15 @@
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
         <spring-boot-maven-plugin.version>3.1.11</spring-boot-maven-plugin.version>
+
+        <!-- Maven Central Portal 发布配置：默认跳过上传，避免误发布。 -->
+        <central.publishing.server.id>central</central.publishing.server.id>
+        <central.deployment.name>${project.groupId}:${project.artifactId}:${project.version}</central.deployment.name>
+        <central.autoPublish>false</central.autoPublish>
+        <central.skipPublishing>true</central.skipPublishing>
+        <central.waitUntil>validated</central.waitUntil>
     </properties>
 
     <modules>
@@ -235,6 +243,30 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>central-publish</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>${central.publishing.server.id}</publishingServerId>
+                            <deploymentName>${central.deployment.name}</deploymentName>
+                            <autoPublish>${central.autoPublish}</autoPublish>
+                            <waitUntil>${central.waitUntil}</waitUntil>
+                            <skipPublishing>${central.skipPublishing}</skipPublishing>
+                            <excludeArtifacts>
+                                <excludeArtifact>under-utils-samples</excludeArtifact>
+                            </excludeArtifacts>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
