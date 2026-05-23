@@ -128,6 +128,14 @@
 - starter 在存在 `CacheOperationObserver` Bean 时自动注入 cache-aside 与 logical-cache 模板，不新增默认 Bean，避免污染应用上下文。
 - `under-utils-http` 新增 `RefreshingAccessTokenProvider`。它只负责当前 JVM 内 token 缓存、提前刷新和并发收敛；分布式 token 共享和刷新失败兜底仍属于业务实现边界。
 
+## 第十二轮结论
+
+### 1.0.1 Release Prep
+
+- Maven reactor 版本从 `1.0.1-SNAPSHOT` 收敛为 `1.0.1`，用于 patch release 验证与 Central Portal 上传。
+- 用户文档依赖版本同步更新为 `1.0.1`。
+- `CHANGELOG.md` 将当前 Unreleased 内容归档到 `1.0.1`，并新增 `docs/releases/v1.0.1.md` 作为 GitHub Release Notes 草稿。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

@@ -11,7 +11,7 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 
 这个项目不定位为 Hutool、Apache Commons 或 Guava 的替代品。新增能力应解决可复用的工程问题，并且有明确行为可以测试，例如请求上下文传播、限流、防重复提交、Redis 分布式锁、缓存重建、OpenAPI 客户端治理、安全分页、审计填充和导入任务流程。
 
-当前稳定版本：`1.0.0`。
+当前稳定版本：`1.0.1`。
 
 ## 项目边界
 
@@ -64,7 +64,7 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
         <dependency>
             <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-bom</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>

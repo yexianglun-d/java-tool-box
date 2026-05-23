@@ -18,7 +18,7 @@
         <dependency>
             <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-bom</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
