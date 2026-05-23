@@ -2,28 +2,28 @@
 
 ## Supported Versions
 
-Under-Utils 当前处于 GitHub 开源首发前的质量收口阶段，尚未发布稳定 Release。安全修复优先进入默认分支，并在后续 Release 中说明影响范围。
+Security fixes are applied to `main` first and are included in the next patch release when the affected code has already been published.
 
 | Version | Supported |
 |---------|-----------|
 | `main` | Yes |
-| Released versions before the first stable release | Best effort |
+| `1.0.x` | Best effort |
 
-## Reporting a Vulnerability
+## Reporting A Vulnerability
 
-请不要在公开 issue 中粘贴漏洞利用细节、密钥、内部地址、生产日志或可直接复现攻击的 payload。
+Do not post exploit details, secrets, internal addresses, production logs, or working payloads in public issues.
 
-推荐报告方式：
+Preferred reporting path:
 
-1. 使用 GitHub Security Advisories 私下报告漏洞。
-2. 如果仓库尚未开启私有安全公告，请创建一个不包含利用细节的 issue，说明“需要私下报告安全问题”，维护者会建立私有沟通渠道。
+1. Use GitHub Security Advisories if private reporting is available.
+2. If private reporting is not available, open a public issue that only says you need to report a security problem. A maintainer will move the discussion to a private channel.
 
-报告内容建议包含：
+Helpful information:
 
-- 受影响模块和版本。
-- 漏洞类型和影响范围。
-- 最小复现步骤或测试用例。
-- 已知的临时缓解方案。
-- 是否已经在公开环境中被利用。
+- Affected module and version.
+- Vulnerability type and impact.
+- Minimal reproduction or failing test.
+- Known mitigation.
+- Whether the issue appears to be exploited in public.
 
-维护者会尽快确认问题、评估影响范围，并在修复后通过 CHANGELOG 或 Release Notes 公开说明。
+Maintainers will confirm the report, assess impact, prepare a fix, and document the result in release notes or the changelog.

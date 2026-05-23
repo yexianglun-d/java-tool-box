@@ -1,20 +1,10 @@
-# Under-Utils Spring 模块
+# Under-Utils Spring
 
-Spring Web 横切能力模块，承载请求操作上下文、限流防重、统一异常响应和敏感字段脱敏等基础设施。推荐通过 `under-utils-starter` 使用自动装配；直接使用本模块时，建议显式 `@Import` 需要的组件，不建议扫描整个 `com.undernine.utils.spring` 包。
+Spring Web support for request context propagation, rate limiting, duplicate-submit guards, result objects, exception handling, and JSON field masking.
 
-## 核心功能
+Prefer `under-utils-starter` when you want auto-configuration. Use this module directly when you want to wire only selected beans.
 
-| 功能 | 说明 |
-|------|------|
-| 🎯 **操作上下文** | `OperationContext` - traceId、tenantId、userId、请求信息和扩展属性传播 |
-| 🚦 **限流防重** | `@RateLimit` / `@PreventRepeat` - 支持本地或 Redis 状态存储 |
-| 🛡️ **统一异常处理** | `GlobalExceptionHandler` / `BizException` / `Result<T>` - 标准化 Web 错误响应 |
-| 🔐 **敏感字段脱敏** | `@Sensitive` - Jackson 序列化时进行字段脱敏 |
-| 🧩 **兼容维护 AOP** | `@OperationLog` / `@Retry` / `@TimeLog` - 轻量历史切面，不作为新增能力主线 |
-
-## 快速开始
-
-### 1. 添加依赖
+## Dependency
 
 ```xml
 <dependency>
@@ -24,107 +14,38 @@ Spring Web 横切能力模块，承载请求操作上下文、限流防重、统
 </dependency>
 ```
 
-### 2. 导入全局异常处理器
+## Main APIs
+
+| Area | APIs |
+|------|------|
+| Request context | `OperationContext`, `OperationContextFilter`, `OperationContextHolder`, `OperationContextSnapshot`, `OperationContextTaskDecorator` |
+| Identity SPI | `CurrentUserProvider`, `CurrentTenantProvider`, `TraceIdProvider`, `OperationContextCustomizer` |
+| Rate limit | `@RateLimit`, `RateLimitAspect`, `RateLimitStore`, `LocalRateLimitStore` |
+| Duplicate submit | `@PreventRepeat`, `PreventRepeatAspect`, `RepeatSubmitStore`, `LocalRepeatSubmitStore` |
+| Web response | `Result`, `ResultCode`, `BizException`, `GlobalExceptionHandler` |
+| JSON masking | `@Sensitive`, `SensitiveJsonSerializer`, `DesensitizeUtils` |
+| Compatibility AOP | `@OperationLog`, `@Retry`, `@TimeLog` and their aspects |
+
+## Request Context
+
+`OperationContextFilter` reads request headers and stores a per-request context in `OperationContextHolder`.
 
 ```java
-@Configuration
-@Import(GlobalExceptionHandler.class)
-public class WebConfig {
-}
+OperationContext context = OperationContextHolder.getContext();
+String traceId = context == null ? null : context.getTraceId();
 ```
 
-如果需要限流、防重复提交、Redis 状态存储等工程模式能力，优先引入 `under-utils-starter` 并通过 `under.utils.*` 配置开关控制。
-
-## 使用示例
-
-### 统一返回结果
+For async work, capture and wrap the context:
 
 ```java
-@RestController
-@RequestMapping("/api/users")
-public class UserController {
-    
-    // ✅ 成功返回
-    @GetMapping("/{id}")
-    public Result<User> getUser(@PathVariable Long id) {
-        User user = userService.getById(id);
-        return Result.success(user);
-    }
-    
-    // ❌ 失败返回
-    @PostMapping
-    public Result<Void> createUser(@RequestBody User user) {
-        if (user.getUsername() == null) {
-            return Result.fail("用户名不能为空");
-        }
-        userService.create(user);
-        return Result.success();
-    }
-}
+Runnable task = OperationContextSnapshot.capture().wrap(() -> {
+    OperationContext asyncContext = OperationContextHolder.getContext();
+});
 ```
 
-**响应格式**
+`OperationContextTaskDecorator` can be attached to Spring task executors. The starter can configure it automatically unless the application already provides a `TaskDecorator`.
 
-```json
-{
-  "code": 200,
-  "message": "操作成功",
-  "data": {
-    "id": 1,
-    "username": "admin"
-  },
-  "timestamp": 1701612345678
-}
-```
-
-### 业务异常处理
-
-```java
-@Service
-public class UserService {
-    
-    public User getById(Long id) {
-        User user = userMapper.selectById(id);
-        if (user == null) {
-            throw new BizException("用户不存在");
-        }
-        return user;
-    }
-    
-    public void updateStatus(Long id, Integer status) {
-        if (status < 0 || status > 1) {
-            throw new BizException(ResultCode.PARAM_ERROR, "状态值无效");
-        }
-        // ...
-    }
-}
-```
-
-**自动捕获并转换为标准响应**
-
-```json
-{
-  "code": 10000,
-  "message": "用户不存在",
-  "timestamp": 1701612345678
-}
-```
-
-### Spring 上下文工具
-
-```java
-// 在非Spring管理的类中获取Bean
-public class SomeUtil {
-    public void doSomething() {
-        UserService userService = SpringContextHolder.getBean(UserService.class);
-        userService.doSomething();
-    }
-}
-```
-
-### 限流与防重复提交
-
-推荐通过 `under-utils-starter` 启用 `@RateLimit` 和 `@PreventRepeat`。直接使用本模块时，需要显式注册 `RateLimitAspect`、`PreventRepeatAspect`、`OperationKeyResolver` 以及对应的 `RateLimitStore` / `RepeatSubmitStore`。
+## Rate Limit And Duplicate Submit
 
 ```java
 @RateLimit(limit = 10, period = 60, message = "请求过于频繁")
@@ -140,30 +61,72 @@ public Long createOrder(@RequestBody CreateOrderCommand command) {
 }
 ```
 
-失败语义：
+Runtime behavior:
 
-- `@RateLimit` 超过窗口额度时抛出 `BizException`。
-- `@RateLimit.limit <= 0` 会拒绝所有请求，`period <= 0` 会按 1 秒窗口处理。
-- `@PreventRepeat` 同一 key 在窗口内重复提交时抛出 `BizException`。
-- `@PreventRepeat.timeout <= 0` 会按最小 1ms 处理。
-- `@PreventRepeat.releaseOnFailure = true` 时，业务方法抛异常会释放 key；方法成功后 key 保持到窗口过期。
+- `@RateLimit` throws `BizException` when quota is exceeded.
+- `limit <= 0` rejects all requests; `period <= 0` is treated as a 1-second window.
+- `@PreventRepeat` throws `BizException` when the same key is acquired again before expiry.
+- `timeout <= 0` is treated as the minimum 1ms window.
+- If `releaseOnFailure = true`, the duplicate-submit key is released when the business method throws.
 
-key 语义：
+Key resolution:
 
-- `namespace` 用于区分业务域，避免不同注解或业务之间 key 冲突。
-- `key` 为空时使用默认规则：租户、用户、URI、方法名和参数摘要。
-- `key` 不为空时按 SpEL 解析，可使用 `#args`、`#userId`、`#tenantId`、`#traceId`、`#requestUri`、`#context` 等变量。
-- SpEL 解析失败不会中断业务，会退回到表达式和方法参数摘要生成的兜底 key。
+- Empty `key` uses tenant, user, URI, method name, and method argument digest.
+- Non-empty `key` is parsed as SpEL. Available variables include `#args`, `#userId`, `#tenantId`, `#traceId`, `#requestUri`, and `#context`.
+- SpEL errors fall back to a deterministic key instead of interrupting the request.
 
-集群环境：
+Store selection:
 
-- `LocalRateLimitStore` / `LocalRepeatSubmitStore` 只在当前 JVM 内共享状态，适合单实例或本地测试。
-- 多实例部署应使用 Redis 存储或实现自定义 store。
-- Redis 存储依赖 Redisson；Redis 不可用时异常会向外传播，生产环境如需放行或降级，需要自定义 `RateLimitStore` / `RepeatSubmitStore`。
+- `LocalRateLimitStore` and `LocalRepeatSubmitStore` only protect the current JVM.
+- Multi-instance services should use Redis stores from `under-utils-redis` or provide custom stores.
+- Redis failures propagate unless a custom store implements fallback behavior.
 
-### 兼容维护 AOP
+Direct wiring requires `RateLimitAspect`, `PreventRepeatAspect`, `OperationKeyResolver`, and the relevant store beans. The starter is simpler for normal Spring Boot applications.
 
-`@OperationLog`、`@Retry`、`@TimeLog` 是历史轻量切面，保留用于兼容维护。它们不会通过 starter 自动启用，也不建议作为新项目主线能力。确需使用时请显式注册对应切面：
+## Result And Exceptions
+
+```java
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @GetMapping("/{id}")
+    public Result<User> getUser(@PathVariable Long id) {
+        return Result.success(userService.getById(id));
+    }
+}
+```
+
+Register `GlobalExceptionHandler` if you want Under-Utils to convert `BizException`, validation errors, 404s, method mismatch errors, and uncaught exceptions into `Result`.
+
+```java
+@Configuration
+@Import(GlobalExceptionHandler.class)
+public class WebConfiguration {
+}
+```
+
+`Result` is a small response model, not a requirement. Applications with an existing response contract can keep their own model and still use the context, rate-limit, and duplicate-submit pieces.
+
+## Sensitive Fields
+
+Use `@Sensitive` with the provided Jackson serializer when a response field needs masking.
+
+```java
+public class UserView {
+
+    @Sensitive(type = SensitiveType.PHONE)
+    private String phone;
+}
+```
+
+Make sure the serializer is registered in your Jackson configuration or use the starter path that wires the expected infrastructure.
+
+## Compatibility AOP
+
+`@OperationLog`, `@Retry`, and `@TimeLog` are retained for compatibility and are not the main direction for new code. They are not automatically enabled by the starter.
+
+If you still need them, import the aspects explicitly:
 
 ```java
 @Configuration
@@ -177,123 +140,8 @@ public class LegacyAopConfiguration {
 }
 ```
 
-使用 `@TimeLog` 统计执行时间：
+Notes:
 
-```java
-@Service
-public class UserService {
-    
-    // 记录方法执行时间
-    @TimeLog
-    public User getById(Long id) {
-        return userMapper.selectById(id);
-    }
-    
-    // 自定义描述和慢方法阈值
-    @TimeLog(value = "批量查询用户", slowThreshold = 500)
-    public List<User> listUsers(UserQuery query) {
-        return userMapper.selectList(query);
-    }
-}
-```
-
-日志输出示例：
-
-```
-[DEBUG] UserService.getById(未命名) 执行耗时: 45ms
-[WARN]  【慢方法】UserService.listUsers(批量查询用户) 执行耗时: 1523ms (阈值: 500ms)
-```
-
-注意：
-
-- `@OperationLog` 默认不记录请求参数，需要显式设置 `recordParams = true`。
-- `@Retry` 使用当前线程同步 sleep，不适合高并发或需要退避、熔断、超时预算的外部调用治理。
-- 新项目的耗时、重试和审计建议优先接入 Micrometer、OpenTelemetry、消息队列或业务统一审计平台。
-
-### 自定义状态码
-
-```java
-@RestController
-public class OrderController {
-    
-    @PostMapping("/orders")
-    public Result<Order> createOrder(@RequestBody OrderRequest request) {
-        // 库存不足
-        if (!stockService.check(request.getProductId())) {
-            return Result.fail(40001, "库存不足");
-        }
-        
-        Order order = orderService.create(request);
-        return Result.success(order);
-    }
-}
-```
-
-## 内置状态码
-
-### 成功状态 (2xx)
-
-| 状态码 | 说明 |
-|-------|------|
-| 200 | 操作成功 |
-| 201 | 创建成功 |
-
-### 客户端错误 (4xx)
-
-| 状态码 | 说明 |
-|-------|------|
-| 400 | 操作失败/参数错误 |
-| 401 | 未授权，请登录 |
-| 403 | 无权限访问 |
-| 404 | 资源不存在 |
-| 422 | 参数校验失败 |
-| 429 | 请求过于频繁 |
-
-### 服务端错误 (5xx)
-
-| 状态码 | 说明 |
-|-------|------|
-| 500 | 服务器内部错误 |
-| 503 | 服务暂不可用 |
-
-### 业务错误 (10000+)
-
-| 状态码 | 说明 |
-|-------|------|
-| 10000 | 业务处理失败 |
-| 10001 | 数据不存在 |
-| 10002 | 数据已存在 |
-| 10003 | 数据状态异常 |
-| 10004 | 操作过于频繁 |
-
-## 全局异常处理
-
-自动处理以下异常：
-
-- `BizException` - 业务异常
-- `MethodArgumentNotValidException` - 参数校验异常
-- `BindException` - 参数绑定异常
-- `HttpRequestMethodNotSupportedException` - 请求方法不支持
-- `NoHandlerFoundException` - 404 异常
-- `IllegalArgumentException` - 非法参数
-- `NullPointerException` - 空指针异常
-- `Exception` - 其他未捕获异常
-
-## 注意事项
-
-- ✅ 确保 `GlobalExceptionHandler` 被 Spring 扫描到
-- ✅ `SpringContextHolder` 需要在 Spring 容器中注册
-- ✅ 建议配合 `@Validated` 实现参数校验
-- ✅ 业务异常使用 `BizException`，系统异常使用标准异常
-
-## 依赖版本
-
-| 依赖 | 版本 |
-|------|------|
-| Spring Framework | 6.x |
-| Spring Boot | 3.1.11 |
-| JDK | 21+ |
-
-## 📄 License
-
-MIT License - 详见 [LICENSE](../LICENSE) 文件
+- `@OperationLog` does not record request parameters unless `recordParams = true`.
+- `@Retry` uses synchronous sleep in the current thread.
+- For production observability and retry governance, prefer the application's tracing, metrics, queue, and client-resilience stack.

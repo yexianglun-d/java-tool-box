@@ -5,6 +5,9 @@ import com.undernine.utils.redis.cache.CacheOptions;
 import com.undernine.utils.redis.cache.CacheValueCodec;
 import com.undernine.utils.redis.cache.LogicalExpireCacheOptions;
 import com.undernine.utils.redis.cache.LogicalExpireCacheTemplate;
+import com.undernine.utils.redis.lock.DistributedLockTemplate;
+import com.undernine.utils.redis.ratelimit.RedisRateLimitStore;
+import com.undernine.utils.redis.repeat.RedisRepeatSubmitStore;
 import com.undernine.utils.spring.aspect.PreventRepeatAspect;
 import com.undernine.utils.spring.aspect.RateLimitAspect;
 import com.undernine.utils.spring.context.CurrentTenantProvider;
@@ -102,6 +105,84 @@ class UnderUtilsAutoConfigurationTest {
     }
 
     @Test
+    void shouldUseRedisStoresWhenConfiguredAndRedissonExists() {
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withPropertyValues(
+                        "under.utils.web.rate-limit.store=redis",
+                        "under.utils.web.repeat-submit.store=redis"
+                )
+                .run(context -> {
+                    assertThat(context).hasSingleBean(RateLimitStore.class);
+                    assertThat(context).hasSingleBean(RepeatSubmitStore.class);
+                    assertThat(context.getBean(RateLimitStore.class)).isInstanceOf(RedisRateLimitStore.class);
+                    assertThat(context.getBean(RepeatSubmitStore.class)).isInstanceOf(RedisRepeatSubmitStore.class);
+                    assertThat(context).hasSingleBean(DistributedLockTemplate.class);
+                    assertThat(context).hasSingleBean(RateLimitAspect.class);
+                    assertThat(context).hasSingleBean(PreventRepeatAspect.class);
+                });
+    }
+
+    @Test
+    void shouldFailWhenRedisStoresAreRequestedWithoutRedissonClient() {
+        contextRunner
+                .withPropertyValues(
+                        "under.utils.web.rate-limit.store=redis",
+                        "under.utils.web.repeat-submit.store=redis"
+                )
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void shouldBackOffRateLimitStoreWhenUserStoreExists() {
+        RateLimitStore customStore = (key, limit, window) -> true;
+
+        contextRunner
+                .withBean(RateLimitStore.class, () -> customStore)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(RateLimitStore.class);
+                    assertThat(context.getBean(RateLimitStore.class)).isSameAs(customStore);
+                    assertThat(context).hasSingleBean(RateLimitAspect.class);
+                });
+    }
+
+    @Test
+    void shouldBackOffRepeatSubmitStoreWhenUserStoreExists() {
+        RepeatSubmitStore customStore = new RepeatSubmitStore() {
+            @Override
+            public boolean acquire(String key, Duration ttl) {
+                return true;
+            }
+
+            @Override
+            public void release(String key) {
+            }
+        };
+
+        contextRunner
+                .withBean(RepeatSubmitStore.class, () -> customStore)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(RepeatSubmitStore.class);
+                    assertThat(context.getBean(RepeatSubmitStore.class)).isSameAs(customStore);
+                    assertThat(context).hasSingleBean(PreventRepeatAspect.class);
+                });
+    }
+
+    @Test
+    void shouldBackOffDistributedLockTemplateWhenUserTemplateExists() {
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        DistributedLockTemplate customTemplate = new DistributedLockTemplate(redissonClient, "custom:lock:");
+
+        contextRunner
+                .withBean(RedissonClient.class, () -> redissonClient)
+                .withBean(DistributedLockTemplate.class, () -> customTemplate)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(DistributedLockTemplate.class);
+                    assertThat(context.getBean(DistributedLockTemplate.class)).isSameAs(customTemplate);
+                });
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void shouldAutoConfigureRedisCacheTemplateWhenRedissonExists() {
         contextRunner
@@ -180,6 +261,41 @@ class UnderUtilsAutoConfigurationTest {
                     assertThat(context).hasSingleBean(CacheAsideTemplate.class);
                     assertThat(context.getBean(CacheAsideTemplate.class)).isSameAs(customTemplate);
                     assertThat(context).doesNotHaveBean(CacheOptions.class);
+                });
+    }
+
+    @Test
+    void shouldBackOffLogicalCacheOptionsWhenUserOptionsExist() {
+        LogicalExpireCacheOptions customOptions = LogicalExpireCacheOptions.builder()
+                .logicalTtl(Duration.ofSeconds(20))
+                .physicalTtl(Duration.ofMinutes(2))
+                .refreshExecutor(Runnable::run)
+                .build();
+
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withBean(LogicalExpireCacheOptions.class, () -> customOptions)
+                .withPropertyValues("under.utils.redis.logical-cache.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(LogicalExpireCacheOptions.class);
+                    assertThat(context.getBean(LogicalExpireCacheOptions.class)).isSameAs(customOptions);
+                    assertThat(context).hasSingleBean(LogicalExpireCacheTemplate.class);
+                });
+    }
+
+    @Test
+    void shouldBackOffLogicalCacheOptionsAndTemplateWhenUserTemplateExists() {
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        LogicalExpireCacheTemplate customTemplate = new LogicalExpireCacheTemplate(redissonClient);
+
+        contextRunner
+                .withBean(RedissonClient.class, () -> redissonClient)
+                .withBean(LogicalExpireCacheTemplate.class, () -> customTemplate)
+                .withPropertyValues("under.utils.redis.logical-cache.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(LogicalExpireCacheTemplate.class);
+                    assertThat(context.getBean(LogicalExpireCacheTemplate.class)).isSameAs(customTemplate);
+                    assertThat(context).doesNotHaveBean(LogicalExpireCacheOptions.class);
                 });
     }
 

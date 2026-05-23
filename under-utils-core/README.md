@@ -1,26 +1,32 @@
 # Under-Utils Core
 
-`under-utils-core` 是 Under-Utils 的低耦合基础模块。它不再按“常用工具大全”扩张，也不定位为 Hutool、Apache Commons 或 Guava 的替代品。
+Low-coupling primitives used by other Under-Utils modules.
 
-本模块现有静态工具会保留兼容维护，避免影响历史调用；新增能力必须符合根 README 的工程模式准入标准：复杂性高、重复实现成本高、边界清晰，并且不能只是对 JDK 或成熟三方库的轻量包装。
+This module is not a general helper-method collection. Some historical static helpers remain for compatibility, but new additions should avoid overlap with the JDK, Spring, Hutool, Apache Commons, and Guava.
 
-## 模块边界
+## Current Boundary
 
-| 分类 | 状态 | 说明 |
-|------|------|------|
-| `IdGenerator` | 主线保留 | 雪花算法 ID 生成器，适合需要本地生成趋势递增 ID 的场景 |
-| `MoneyUtils` | 主线保留 | 固化 BigDecimal 金额计算、分/元转换和默认舍入语义 |
-| `JsonUtils` | 兼容维护 | 使用内置 Jackson `ObjectMapper` 的历史入口，新项目建议使用应用自己的 mapper/codec |
-| `StringUtils` / `CollectionUtils` / `LocalDateTimeUtils` / `ValidationUtils` / `UUIDUtils` | 兼容维护 | 与 JDK、Apache Commons、Guava、Bean Validation 或 Hutool 能力明显重叠，不再新增方法 |
-| `MD5Utils` / `SHA256Utils` / `AESUtils` | 兼容维护 | 安全敏感历史工具，不再作为推荐加密/摘要入口 |
+| API | Status | Notes |
+|-----|--------|-------|
+| `IdGenerator` | Active | Snowflake-style local ID generator. Requires unique worker/datacenter ids per node. |
+| `MoneyUtils` | Active | Common BigDecimal money operations and yuan/fen conversion with fixed rounding behavior. |
+| `JsonUtils` | Compatibility | Uses a module-owned `ObjectMapper`. Applications with their own Jackson configuration should prefer their own mapper or codec. |
+| `StringUtils`, `CollectionUtils`, `LocalDateTimeUtils`, `ValidationUtils`, `UUIDUtils` | Compatibility | Existing methods are kept, but this is not an expansion path. |
+| `MD5Utils`, `SHA256Utils`, `AESUtils` | Compatibility | Security-sensitive historical helpers. New security work should use application-approved crypto and key-management policy. |
 
-## 使用示例
+## Dependency
 
-### 雪花 ID
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+## Snowflake IDs
 
 ```java
-import com.undernine.utils.core.id.IdGenerator;
-
 IdGenerator generator = new IdGenerator(1, 1);
 
 long id = generator.nextId();
@@ -32,88 +38,50 @@ long datacenterId = info.getDatacenterId();
 long workerId = info.getWorkerId();
 ```
 
-注意：
+Notes:
 
-- `datacenterId` 和 `workerId` 范围均为 `0-31`。
-- 该实现依赖系统时钟，发生时钟回拨时会拒绝生成 ID。
-- 多节点部署时必须保证节点标识唯一。
+- `datacenterId` and `workerId` must be in `0..31`.
+- The generator depends on system clock monotonicity and rejects clock rollback.
+- Multi-node deployments must allocate node ids outside this library.
 
-### 金额计算
+## Money Helpers
 
 ```java
-import com.undernine.utils.core.money.MoneyUtils;
-
-import java.math.BigDecimal;
-
 Long fen = MoneyUtils.yuan2Fen(new BigDecimal("10.50"));
 BigDecimal yuan = MoneyUtils.fen2Yuan(1050L);
 
 BigDecimal total = MoneyUtils.add(
-    new BigDecimal("10.50"),
-    new BigDecimal("20.30"),
-    new BigDecimal("5.00")
+        new BigDecimal("10.50"),
+        new BigDecimal("20.30")
 );
 
 BigDecimal avg = MoneyUtils.divide(total, new BigDecimal("3"));
 String display = MoneyUtils.formatWithSymbol(total);
 ```
 
-注意：
+Defaults:
 
-- 默认金额小数位为 `2`。
-- 默认舍入模式为 `RoundingMode.HALF_UP`。
-- 更复杂的币种、税费、会计科目或多精度场景，应封装业务自己的金额模型。
+- Scale: `2`.
+- Rounding: `RoundingMode.HALF_UP`.
 
-### JSON 兼容入口
+For multi-currency, tax, accounting, or precision-sensitive domains, define an application money model instead of relying on generic helpers.
+
+## JSON Compatibility Helper
 
 ```java
-import com.undernine.utils.core.json.JsonUtils;
-
 String json = JsonUtils.toJson(payload);
 Payload parsed = JsonUtils.fromJson(json, Payload.class);
 ```
 
-注意：
+`JsonUtils.getObjectMapper()` returns a shared mapper and should not be reconfigured by callers.
 
-- `JsonUtils` 使用模块内置单例 `ObjectMapper`。
-- Spring Boot 或复杂应用应优先注入应用自己的 `ObjectMapper`，避免序列化配置分叉。
-- `JsonUtils.getObjectMapper()` 返回共享实例，不建议修改其配置。
+## Crypto Notes
 
-## 兼容维护工具
+- `MD5Utils` is not suitable for password storage, signatures, or security checks.
+- `SHA256Utils` is a digest helper, not a password hashing solution.
+- `AESUtils` does not provide key rotation, KMS integration, ciphertext versioning, or authenticated encryption policy.
+- `AESUtils.encryptECB` and `AESUtils.decryptECB` are retained only for old callers. Do not use ECB mode in new code.
 
-以下类仍可使用，但不会继续扩展为工具方法集合：
+## Contribution Rule
 
-- `StringUtils`
-- `CollectionUtils`
-- `LocalDateTimeUtils`
-- `ValidationUtils`
-- `UUIDUtils`
-- `MD5Utils`
-- `SHA256Utils`
-- `AESUtils`
-
-安全相关注意：
-
-- `MD5Utils` 仅适合历史兼容或非安全校验，不适合密码、签名或安全校验。
-- `SHA256Utils` 是摘要工具，不能替代 BCrypt、PBKDF2、Argon2 等密码存储方案。
-- `AESUtils` 不提供认证加密、密钥轮换、KMS 集成或密文版本治理；新代码应优先使用 AES/GCM、JDK JCA 或统一加密服务。
-- `AESUtils.encryptECB` 和 `AESUtils.decryptECB` 仅保留历史兼容，新代码不得使用 ECB 模式。
-
-## 依赖配置
-
-```xml
-<dependency>
-    <groupId>io.github.yexianglun-d</groupId>
-    <artifactId>under-utils-core</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-## 贡献规则
-
-- 不新增 `XxxUtils.isEmpty`、`DateUtils.format`、`CollectionUtils.map` 这类低复杂度通用方法。
-- 不复制 Hutool、Apache Commons、Guava、JDK 已成熟覆盖的工具 API。
-- 新增能力必须说明工程场景、失败语义、线程/并发边界和测试覆盖。
-- 安全相关能力必须明确算法限制、密钥管理方式和不适用场景。
-
-更多规则请参考项目根目录的 [CONTRIBUTING.md](../CONTRIBUTING.md)。
+Do not add low-complexity helper methods here. New core APIs should define a reusable engineering boundary, failure behavior, and tests.

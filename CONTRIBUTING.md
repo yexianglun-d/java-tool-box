@@ -1,71 +1,95 @@
 # Contributing
 
-感谢你愿意参与 Under-Utils。这个项目的核心目标不是做大而全工具箱，而是沉淀复杂、重复、跨项目复用的工程模式封装。
+Thanks for taking the time to improve Under-Utils.
 
-## Contribution Scope
+This project accepts code that packages repeated engineering patterns. It does not accept generic helper-method growth for its own sake.
 
-适合提交的内容：
+## Project Fit
 
-- 能在多个业务项目复用的工程能力，例如上下文传播、限流防重、分布式锁、缓存重建、OpenAPI 调用、安全分页、导入任务模板。
-- 对现有模块的 bug 修复、测试补充、文档改进和示例完善。
-- 能降低接入复杂度、增强失败语义或改善可观测性的改动。
+A feature is a good fit when it:
 
-不建议提交的内容：
+- Solves a repeated infrastructure problem across services.
+- Has a clear module boundary and does not embed one application's business rules.
+- Defines failure behavior, thread-safety assumptions, and external dependency requirements.
+- Can be tested with unit tests or reproducible integration tests.
+- Does not duplicate mature JDK, Spring, Hutool, Apache Commons, or Guava APIs.
 
-- Hutool、Apache Commons、Guava 已成熟覆盖的低复杂度工具方法。
-- 只服务单个业务线的强业务规则。
-- 没有清晰边界、没有测试、没有失败语义的快捷封装。
-- 与现有模块职责冲突的新模块或重复 API。
+Examples of suitable areas:
 
-## Before You Start
+- Request context propagation.
+- Rate limiting and duplicate-submit protection.
+- Redis locks and cache rebuild templates.
+- OpenAPI client governance.
+- Safe pagination and audit filling.
+- Import task workflows.
 
-较大的功能建议先创建 issue，说明：
+Examples that usually do not belong here:
 
-- 你要解决的重复场景。
-- 为什么现有 JDK、Spring、Hutool、Apache Commons、Guava 或项目现有模块不能直接覆盖。
-- API 边界、失败语义、线程安全或外部依赖假设。
-- 计划放入哪个模块，以及是否需要 starter 自动装配。
+- `StringUtils.isBlank`, `DateUtils.format`, `CollectionUtils.map`, or similar small helpers.
+- A workflow tied to one product domain such as orders, payments, membership, or marketing.
+- A wrapper with no defined error handling or tests.
+
+## Before Starting
+
+Open an issue first for non-trivial work. Include:
+
+- The repeated scenario you want to solve.
+- Why existing libraries or current modules are not enough.
+- Proposed module, public API, configuration keys, and failure semantics.
+- Runtime assumptions such as Redis, database, thread pool, clock, or network behavior.
+- Test plan.
+
+Small fixes, tests, and documentation improvements can go straight to a PR.
 
 ## Local Setup
 
-要求：
+Requirements:
 
 - Java 21
 - Maven 3.9+
-- Docker，用于运行 `integration-tests` profile 下的 Testcontainers 集成测试
+- Docker only for Testcontainers integration tests
 
-常用命令：
+Common commands:
 
 ```bash
 mvn -DskipTests compile
 mvn test
-mvn -pl under-utils-samples -am test
 mvn -Prelease -DskipTests package
-mvn -s docs/central-dry-run-settings.xml -Prelease,central-publish -Dcentral.publishing.server.id=central-dry-run -Dcentral.skipPublishing=true -Dgpg.skip=true -DskipTests deploy
 ```
 
-`under-utils-test` 是 Testcontainers 集成验证模块，不进入默认构建。如需运行：
+Integration tests:
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test
 ```
 
-## Pull Request Checklist
+Central Portal dry run:
 
-提交 PR 前请确认：
+```bash
+mvn -s docs/central-dry-run-settings.xml \
+  -Prelease,central-publish \
+  -Dcentral.publishing.server.id=central-dry-run \
+  -Dcentral.skipPublishing=true \
+  -Dgpg.skip=true \
+  -DskipTests \
+  deploy
+```
 
-- 变更有明确模块归属，没有把业务规则硬编码进公共模块。
-- 新增 public API 有必要的 JavaDoc 或 README 示例。
-- 新增能力包含单元测试；涉及外部系统的能力提供可复现的集成验证方式。
-- 默认 `mvn test` 不依赖本地 Redis、MySQL、Docker 等外部环境。
-- `mvn -Prelease -DskipTests package` 可以正常生成 sources 与 javadocs。
-- 如果变更发布配置，`mvn -s docs/central-dry-run-settings.xml -Prelease,central-publish -Dcentral.publishing.server.id=central-dry-run -Dcentral.skipPublishing=true -Dgpg.skip=true -DskipTests deploy` 可以正常完成 Central 发布链路 dry run。
-- README、CHANGELOG 或模块文档已按需更新。
-- 没有提交 IDE 临时文件、构建产物、个人路径或内部报告。
+## Pull Requests
 
-## Commit Message
+Before requesting review, check that:
 
-提交信息建议使用简洁中文，说明变更结果，例如：
+- The change has a clear module owner.
+- Public APIs are documented where the behavior is not obvious.
+- Behavior changes include tests.
+- Default `mvn test` does not require Redis, MySQL, Docker, or private infrastructure.
+- `mvn -Prelease -DskipTests package` still generates sources and javadocs.
+- README, module docs, or `CHANGELOG.md` are updated for user-facing changes.
+- No build output, local path, token, private key, internal report, or production log is committed.
+
+## Commit Messages
+
+Chinese commit messages are fine. Keep them short and outcome-focused:
 
 ```text
 完善 Redis 缓存模板文档
@@ -73,12 +97,12 @@ mvn -Pintegration-tests -pl under-utils-test -am test
 补充 MyBatis 安全分页测试
 ```
 
-## Review Principles
+## Review Focus
 
-维护者会重点关注：
+Maintainers will mainly check:
 
-- 这个能力是否符合项目定位。
-- API 是否清晰、稳定、可测试。
-- 是否引入不必要的依赖或自动装配副作用。
-- 失败语义、资源释放、并发边界是否明确。
-- 是否会和现有成熟工具库形成低价值重复。
+- Whether the change fits the project scope.
+- Whether the API can stay stable.
+- Whether dependencies and auto-configuration have acceptable side effects.
+- Whether failure handling, resource release, and concurrency boundaries are explicit.
+- Whether the change avoids low-value overlap with existing utility libraries.

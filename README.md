@@ -2,70 +2,61 @@
 
 [![Java](https://img.shields.io/badge/Java-21-blue.svg)](#requirements)
 [![Maven](https://img.shields.io/badge/Maven-3.9%2B-C71A36.svg)](#requirements)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1.x-6DB33F.svg)](#module-matrix)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1.x-6DB33F.svg)](#requirements)
 [![CI](https://github.com/yexianglun-d/java-tool-box/actions/workflows/ci.yml/badge.svg)](https://github.com/yexianglun-d/java-tool-box/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.yexianglun-d/under-utils-starter.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.yexianglun-d/under-utils-starter)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包。它不定位为 Hutool、Apache Commons 或 Guava 的替代品，也不追求堆叠大量低复杂度静态工具方法；项目更关注业务系统里反复出现、实现细节多、容易写散的工程能力，例如请求操作上下文、幂等与限流、分布式锁、缓存重建、OpenAPI 调用、安全分页排序、审计填充和导入任务模板。
+Under-Utils provides reusable Java 21 / Spring Boot building blocks for infrastructure code that tends to be rewritten across business services.
 
-当前稳定版本为 `1.0.0`，已发布到 Maven Central。重要变更见 [CHANGELOG.md](CHANGELOG.md)，公开路线图见 [ROADMAP.md](ROADMAP.md)。
+The project is intentionally not a Hutool, Apache Commons, or Guava replacement. New code should solve a repeated engineering problem with real behavior to test: request context propagation, rate limiting, duplicate-submit guards, Redis locks, cache rebuilds, OpenAPI client governance, safe pagination, audit filling, and import workflows.
 
-## Project Scope
+Current stable version: `1.0.0`.
 
-适合进入 Under-Utils 的能力通常具备这些特征：
+## Scope
 
-| 标准 | 要求 |
-|------|------|
-| 复杂性 | 内部包含流程编排、状态管理、异常边界、资源释放、并发控制或外部系统交互 |
-| 重复性 | 能在多个业务项目或多个模块中复用，能减少明显重复代码 |
-| 边界清晰 | 有明确输入输出和职责边界，不把单一业务规则硬编码进公共模块 |
-| 可测试 | 核心分支可以通过单元测试或集成测试验证，异常路径可覆盖 |
-| 不冲突 | 不重复建设 Hutool、Apache Commons、Guava 已成熟覆盖的基础工具方法 |
-| 可演进 | API 命名稳定，配置项可解释，后续扩展不需要频繁破坏调用方 |
+Code belongs in this repository when it has a clear reuse boundary and hides enough repeated complexity to justify a library API.
 
-不建议新增的能力：
+Good candidates:
 
-- `StringUtils.isBlank`、`DateUtils.format`、`CollectionUtils.isEmpty` 这类通用小工具方法。
-- 只服务单个业务线、带强业务语义的流程。
-- 依赖不稳定外部系统且无法抽象边界的封装。
-- 没有测试、没有失败语义、只有“方便一下”的快捷方法。
+- Cross-service infrastructure patterns, not one application's business rules.
+- Behavior with explicit failure semantics, resource boundaries, and tests.
+- APIs that can remain stable after release.
+- Integrations that keep external dependencies behind small, documented interfaces.
 
-`under-utils-core` 中已有的历史基础工具会保持兼容维护，但新增能力会按上面的准入标准收口，避免项目继续向“大而全工具箱”扩张。
+Poor candidates:
 
-## Module Matrix
+- Small helpers already covered by the JDK, Spring, Hutool, Apache Commons, or Guava.
+- One-off business flows tied to a single product line.
+- Convenience wrappers that do not define error handling, concurrency behavior, or test coverage.
 
-| 模块 | 定位 | 典型能力 |
-|------|------|----------|
-| `under-utils-bom` | 统一依赖版本管理 | Spring Boot、MyBatis-Plus、Redisson、OkHttp、Jackson 等版本收口 |
-| `under-utils-core` | 低耦合基础能力承载层 | `IdGenerator`、`MoneyUtils` 等主线保留能力；历史静态工具仅兼容维护 |
-| `under-utils-spring` | Spring Web 横切能力 | `OperationContext`、上下文传播、`@RateLimit`、`@PreventRepeat`、`OperationKeyResolver` |
-| `under-utils-redis` | Redis 工程模式 | `DistributedLockTemplate`、Redis 限流/防重、`CacheAsideTemplate`、`LogicalExpireCacheTemplate` |
-| `under-utils-http` | HTTP / OpenAPI 客户端 | `OpenApiClient`、token 注入、请求签名、trace/idempotency header、业务错误解码、重试 |
-| `under-utils-mybatis` | MyBatis-Plus 增强 | `SafePageQuery`、`SortFieldMapping`、`AuditorProvider`、`DefaultMetaObjectHandler`、分页结果 |
-| `under-utils-biz` | 可复用业务流程模板 | `ImportTaskTemplate`、`CsvImportRowReader`、逐行解析、校验失败收集、导入统计 |
-| `under-utils-starter` | Spring Boot 自动装配 | Web 横切、Redis 状态存储、分布式锁、缓存模板、逻辑过期缓存自动配置 |
-| `under-utils-samples` | 可运行示例工程 | starter 接入、上下文传播、限流防重、OpenAPI、本地导入、Redis 可选示例 |
-| `under-utils-test` | Testcontainers 集成验证模块 | 通过临时 MySQL 容器验证跨模块能力，使用 `integration-tests` profile 启用，不进入默认构建 |
+`under-utils-core` still contains historical helper classes for compatibility. They are not the direction for new features.
+
+## Modules
+
+| Module | Purpose |
+|--------|---------|
+| `under-utils-bom` | Dependency version alignment for Under-Utils modules and related libraries. |
+| `under-utils-core` | Low-coupling primitives such as snowflake IDs and money helpers; historical static helpers are compatibility-only. |
+| `under-utils-spring` | Spring Web context propagation, rate-limit and duplicate-submit abstractions, result and exception helpers, JSON masking. |
+| `under-utils-redis` | Redisson-backed locks, distributed rate-limit/duplicate-submit stores, cache-aside, and logical-expire cache templates. |
+| `under-utils-http` | HTTP convenience APIs and OpenAPI client governance: token injection, signing hooks, trace/idempotency headers, error decoding, retry. |
+| `under-utils-mybatis` | MyBatis-Plus helpers for safe pagination, sort-field whitelisting, audit filling, and page results. |
+| `under-utils-biz` | Reusable workflow templates, currently focused on CSV import row processing and validation result collection. |
+| `under-utils-starter` | Spring Boot auto-configuration for the Spring and Redis modules. |
+| `under-utils-samples` | Runnable Spring Boot sample application. Not published as a Maven library artifact. |
+| `under-utils-test` | Testcontainers integration tests. Enabled only through the `integration-tests` Maven profile. |
 
 ## Requirements
 
 - Java 21
 - Maven 3.9+
 - Spring Boot 3.1.x
-- 可选：Docker，用于运行 samples 的 Redis 示例环境，以及 `under-utils-test` Testcontainers 集成验证
+- Docker, only for Testcontainers integration tests and the Redis sample environment
 
 ## Installation
 
-Under-Utils 已发布到 Maven Central。源码构建用于本地开发和验证：
-
-```bash
-git clone https://github.com/yexianglun-d/java-tool-box.git
-cd java-tool-box
-mvn clean install
-```
-
-业务项目推荐先引入 BOM，再按需引入 starter 或单模块依赖：
+Use the BOM first, then add the modules you need:
 
 ```xml
 <dependencyManagement>
@@ -88,46 +79,17 @@ mvn clean install
 </dependencies>
 ```
 
-## Release Verification
-
-发布构件可以通过 `release` profile 本地验证，该 profile 会为参与构建的 jar 模块生成 sources 与 javadocs：
+For local development:
 
 ```bash
-mvn -Prelease -DskipTests package
+git clone https://github.com/yexianglun-d/java-tool-box.git
+cd java-tool-box
+mvn test
 ```
 
-GPG 签名已预留为独立 profile，不会在默认构建或 release 构建中自动执行。需要签名时显式启用：
+## Starter Example
 
-```bash
-mvn -Prelease,sign-artifacts -Dgpg.sign=true -DskipTests verify
-```
-
-Central Portal 发布链路通过 `central-publish` profile 管理，默认跳过上传，可用于验证 deploy 生命周期不会误走默认仓库发布：
-
-```bash
-mvn -s docs/central-dry-run-settings.xml \
-  -Prelease,central-publish \
-  -Dcentral.publishing.server.id=central-dry-run \
-  -Dcentral.skipPublishing=true \
-  -Dgpg.skip=true \
-  -DskipTests \
-  deploy
-```
-
-完整发布步骤见 [Release Guide](docs/RELEASE.md)。`under-utils-samples` 是示例工程，默认参与构建验证，但已从发布构件中排除。
-
-## Quick Start
-
-starter 会在条件满足时自动装配：
-
-- `OperationContextFilter`、`OperationContextTaskDecorator`
-- `RateLimitAspect`、`PreventRepeatAspect`
-- local / redis 两种 `RateLimitStore`、`RepeatSubmitStore`
-- `DistributedLockTemplate`
-- `CacheAsideTemplate`
-- `LogicalExpireCacheTemplate`
-
-典型配置：
+The starter uses local in-memory stores by default. Switch to Redis only when the application provides a `RedissonClient`.
 
 ```yaml
 under:
@@ -144,7 +106,6 @@ under:
         store: redis
     redis:
       lock-enabled: true
-      lock-key-prefix: "order:lock:"
       cache:
         enabled: true
         ttl: 5m
@@ -161,21 +122,11 @@ under:
         key-prefix: "app:logical-cache:"
 ```
 
-如果限流、防重提交使用 Redis 存储，业务项目需要提供 `RedissonClient`。如果不配置 `store: redis`，默认使用本地内存存储，适合单实例或测试环境。
+Rate limiting and duplicate-submit guards fail closed by throwing `BizException` with the annotation message. Local stores are JVM-local; multi-instance deployments should use Redis or a custom `RateLimitStore` / `RepeatSubmitStore`.
 
-限流和防重复提交的失败语义是显式业务拒绝：`@RateLimit` 超过窗口额度、`@PreventRepeat` 在窗口内重复登记时都会抛出 `BizException`，消息来自注解的 `message` 属性。本地存储不跨 JVM 共享状态，集群环境必须切换到 Redis 或提供自定义 `RateLimitStore` / `RepeatSubmitStore`。
+## Usage
 
-运行示例工程：
-
-```bash
-mvn -pl under-utils-samples -am spring-boot:run
-```
-
-默认端口为 `18080`，无 Redis/MySQL 也可以启动基础示例。Redis 场景、接口清单和请求样例见 [under-utils-samples/README.md](under-utils-samples/README.md)。更完整的上手步骤见 [QUICK_START.md](QUICK_START.md)。
-
-## Usage Examples
-
-请求上下文与异步传播：
+Request context propagation:
 
 ```java
 OperationContext context = OperationContextHolder.getContext();
@@ -183,11 +134,10 @@ String traceId = context == null ? null : context.getTraceId();
 
 Runnable task = OperationContextSnapshot.capture().wrap(() -> {
     OperationContext asyncContext = OperationContextHolder.getContext();
-    // 在异步线程继续使用 traceId、userId、tenantId
 });
 ```
 
-限流与防重复提交：
+Rate limiting and duplicate-submit guard:
 
 ```java
 @RateLimit(limit = 10, period = 60, message = "请求过于频繁")
@@ -203,21 +153,7 @@ public Long createOrder(@RequestBody CreateOrderCommand command) {
 }
 ```
 
-`@RateLimit.limit <= 0` 会拒绝所有请求，`period <= 0` 会按 1 秒窗口处理。`@PreventRepeat.timeout <= 0` 会按最小 1ms 处理；方法成功后 key 保持到窗口过期，方法抛异常时默认释放 key，便于用户修正后重试。
-
-分布式锁：
-
-```java
-Long orderId = distributedLockTemplate.execute(
-        "order:create:" + command.requestNo(),
-        1,
-        30,
-        TimeUnit.SECONDS,
-        () -> orderService.create(command)
-);
-```
-
-Cache-Aside：
+Redis cache-aside:
 
 ```java
 UserProfile profile = cacheAsideTemplate.get(
@@ -227,7 +163,7 @@ UserProfile profile = cacheAsideTemplate.get(
 );
 ```
 
-安全分页排序：
+Safe pagination:
 
 ```java
 SortFieldMapping mapping = SortFieldMapping.builder()
@@ -239,35 +175,40 @@ SafePageQuery query = SafePageQuery.of(page, size)
         .orderByDesc("createdAt");
 ```
 
-## Development
+## Samples
 
-常用命令：
+```bash
+mvn -pl under-utils-samples -am spring-boot:run
+```
+
+The sample app starts on port `18080` and does not require Redis or MySQL by default. Redis examples and request snippets are documented in [under-utils-samples/README.md](under-utils-samples/README.md).
+
+## Verification
+
+Default checks:
 
 ```bash
 mvn -DskipTests compile
 mvn test
-mvn -pl under-utils-samples -am test
+```
+
+Release artifact check:
+
+```bash
 mvn -Prelease -DskipTests package
 ```
 
-`under-utils-test` 通过 Testcontainers 启动临时 MySQL 容器，不进入默认父工程构建。具备 Docker 环境后可运行：
+Testcontainers integration tests:
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test
 ```
 
-详细说明见 [under-utils-test/README.md](under-utils-test/README.md)。
+Publishing notes are maintained in [docs/RELEASE.md](docs/RELEASE.md).
 
-## Community
+## Contributing
 
-- 贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
-- 行为准则：[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- 安全漏洞报告：[SECURITY.md](SECURITY.md)
-- 变更记录：[CHANGELOG.md](CHANGELOG.md)
-- 公开路线图：[ROADMAP.md](ROADMAP.md)
-- API 审计：[docs/API_REVIEW.md](docs/API_REVIEW.md)
-
-提交功能前建议先开 issue 说明场景、边界和复用价值。新增能力需要附带测试，并说明为什么不属于 Hutool、Apache Commons 或 Guava 已覆盖的低复杂度通用工具。
+Before opening a PR for a new feature, please read [CONTRIBUTING.md](CONTRIBUTING.md). The main question is whether the change belongs in a shared engineering-pattern library rather than in an application, framework, or existing utility library.
 
 ## License
 

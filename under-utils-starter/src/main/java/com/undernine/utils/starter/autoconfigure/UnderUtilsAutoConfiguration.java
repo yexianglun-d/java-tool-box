@@ -232,7 +232,7 @@ public class UnderUtilsAutoConfiguration {
         }
 
         @Bean
-        @ConditionalOnMissingBean
+        @ConditionalOnMissingBean({LogicalExpireCacheOptions.class, LogicalExpireCacheTemplate.class})
         @ConditionalOnProperty(prefix = "under.utils.redis.logical-cache", name = "enabled", havingValue = "true")
         public LogicalExpireCacheOptions logicalExpireCacheOptions(
                 UnderUtilsProperties properties,

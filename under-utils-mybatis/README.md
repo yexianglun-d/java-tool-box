@@ -1,24 +1,10 @@
-# Under-Utils MyBatis 模块
+# Under-Utils MyBatis
 
-> MyBatis-Plus 增强工具集，开箱即用的企业级数据访问层解决方案
+MyBatis-Plus support for audit fields, logical delete conventions, safe pagination, and sort-field whitelisting.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yexianglun-d/java-tool-box)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE)
+The module assumes the application already uses MyBatis-Plus. It does not hide MyBatis-Plus; it adds a small set of project-level defaults and safer request-facing pagination APIs.
 
-## ✨ 核心特性
-
-| 特性 | 说明 | 优势 |
-|------|------|------|
-| 🚀 **BaseEntity** | 统一基础实体类 | 包含 ID、时间戳、操作人、逻辑删除等通用字段 |
-| 🔄 **自动填充** | 元数据自动填充 | 创建/更新时间、操作人自动记录，无需手动设置 |
-| 📄 **安全分页** | SafePageQuery/SortFieldMapping/PageResult | 前端排序字段白名单映射，避免 raw column 进入 ORDER BY |
-| 🗑️ **逻辑删除** | 自动过滤已删除数据 | 删除操作变更新，数据可追溯可恢复 |
-| 🔒 **安全防护** | 防止全表更新/删除 | 避免误操作导致的数据灾难 |
-| 🎯 **Lambda 查询** | 类型安全的条件构造 | 编译时检查，重构友好 |
-
-## 快速开始
-
-### 1. 添加依赖
+## Dependency
 
 ```xml
 <dependency>
@@ -28,61 +14,19 @@
 </dependency>
 ```
 
-### 2. 配置数据源
+## Main APIs
 
-**application.yml**
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/your_db?useUnicode=true&characterEncoding=utf8
-    username: root
-    password: your_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+| API | Purpose |
+|-----|---------|
+| `BaseEntity` | Common `id`, create/update time, create/update user, and logical delete fields. |
+| `DefaultMetaObjectHandler` | Fills audit fields during insert and update. |
+| `AuditorProvider` | Supplies the current audit user id. |
+| `SafePageQuery` | Request-facing pagination model that avoids raw database columns. |
+| `SortFieldMapping` | Maps public sort fields to allowed database columns. |
+| `PageResult` | Small response wrapper around MyBatis-Plus pages. |
+| `MybatisPlusConfig` | Factory for common MyBatis-Plus interceptor setup. |
 
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 打印 SQL
-  global-config:
-    db-config:
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-```
-
-### 3. 创建实体类
-
-**继承 BaseEntity 即可获得通用字段**
-
-```java
-@Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("sys_user")
-public class SysUser extends BaseEntity {
-    private String username;
-    private String email;
-    private String phone;
-    private Integer status;  // 0-禁用 1-启用
-}
-```
-
-**对应数据库表**
-
-```sql
-CREATE TABLE sys_user (
-  id BIGINT PRIMARY KEY COMMENT '主键',
-  username VARCHAR(50) NOT NULL COMMENT '用户名',
-  email VARCHAR(100) COMMENT '邮箱',
-  phone VARCHAR(20) COMMENT '手机号',
-  status INT DEFAULT 1 COMMENT '状态',
-  create_time DATETIME COMMENT '创建时间',
-  update_time DATETIME COMMENT '更新时间',
-  create_by BIGINT COMMENT '创建人',
-  update_by BIGINT COMMENT '更新人',
-  deleted INT DEFAULT 0 COMMENT '删除标记'
-) COMMENT='用户表';
-```
-
-### 4. 配置 MyBatis-Plus
+## Basic Setup
 
 ```java
 @Configuration
@@ -94,214 +38,120 @@ public class MybatisConfiguration {
     }
 
     @Bean
-    public MetaObjectHandler metaObjectHandler() {
-        return new DefaultMetaObjectHandler() {
-            @Override
-            protected Long getUserId() {
-                // TODO: 从 Spring Security 获取当前用户 ID
-                // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                // return ((UserDetails) auth.getPrincipal()).getId();
-                return 1L; // 测试默认值
-            }
-        };
+    public AuditorProvider auditorProvider() {
+        return () -> 1001L;
+    }
+
+    @Bean
+    public DefaultMetaObjectHandler metaObjectHandler(AuditorProvider auditorProvider) {
+        return new DefaultMetaObjectHandler(auditorProvider);
     }
 }
 ```
 
-### 5. 创建 Mapper
+Typical MyBatis-Plus logical delete configuration:
 
-```java
-@Mapper
-public interface SysUserMapper extends BaseMapper<SysUser> {
-    // 继承 BaseMapper 即可，无需写任何方法
-}
+```yaml
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 ```
 
-## 📖 使用示例
-
-### CRUD 操作
-
-```java
-@Service
-@RequiredArgsConstructor
-public class SysUserService {
-    
-    private final SysUserMapper userMapper;
-    
-    // ✅ 创建（ID、创建时间、创建人自动填充）
-    public Long create(SysUser user) {
-        userMapper.insert(user);
-        return user.getId();
-    }
-    
-    // ✅ 更新（更新时间、更新人自动填充）
-    public void update(SysUser user) {
-        userMapper.updateById(user);
-    }
-    
-    // ✅ 逻辑删除（只更新 deleted 字段）
-    public void delete(Long id) {
-        userMapper.deleteById(id);
-    }
-    
-    // ✅ 查询（自动过滤 deleted=1 的记录）
-    public SysUser getById(Long id) {
-        return userMapper.selectById(id);
-    }
-}
-```
-
-### 条件查询
-
-```java
-// Lambda 查询（类型安全）
-public List<SysUser> findActiveUsers(String keyword) {
-    return userMapper.selectList(
-        new LambdaQueryWrapper<SysUser>()
-            .eq(SysUser::getStatus, 1)
-            .like(StringUtils.hasText(keyword), SysUser::getUsername, keyword)
-            .orderByDesc(SysUser::getCreateTime)
-    );
-}
-```
-
-### 分页查询
-
-```java
-public PageResult<SysUser> pageUsers(SafePageQuery pageQuery, String keyword) {
-    SortFieldMapping mapping = SortFieldMapping.builder()
-        .add("createdAt", "create_time")
-        .add("username", "username")
-        .build();
-
-    LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
-        .like(StringUtils.hasText(keyword), SysUser::getUsername, keyword);
-    
-    IPage<SysUser> page = userMapper.selectPage(pageQuery.buildPage(mapping), wrapper);
-    return PageResult.of(page);
-}
-```
-
-**Controller 调用**
-
-```java
-@GetMapping("/users")
-public PageResult<SysUser> page(SafePageQuery pageQuery, String keyword) {
-    return userService.pageUsers(pageQuery, keyword);
-}
-
-// 请求: GET /users?current=1&size=10&orders[0].field=createdAt&orders[0].asc=false&keyword=admin
-```
-
-**返回示例**
-
-```json
-{
-  "records": [{"id": 123, "username": "admin", "createTime": "2024-12-03T10:00:00"}],
-  "total": 1,
-  "current": 1,
-  "size": 10,
-  "pages": 1
-}
-```
-
-## 🔧 高级特性
-
-### 乐观锁
+## Entity
 
 ```java
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("sys_user")
 public class SysUser extends BaseEntity {
-    @Version  // 添加版本号字段
-    private Integer version;
-    // ...
-}
 
-// 更新时自动使用乐观锁
-// SQL: UPDATE sys_user SET ..., version = version + 1 WHERE id = ? AND version = ?
-userMapper.updateById(user);
+    private String username;
+    private String email;
+    private Integer status;
+}
 ```
 
-### 自定义排序
+Matching table fields:
+
+```sql
+CREATE TABLE sys_user (
+  id BIGINT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  email VARCHAR(100),
+  status INT DEFAULT 1,
+  create_time DATETIME,
+  update_time DATETIME,
+  create_by BIGINT,
+  update_by BIGINT,
+  deleted INT DEFAULT 0
+);
+```
+
+## Safe Pagination
+
+Expose public sort names instead of database column names:
 
 ```java
 SortFieldMapping mapping = SortFieldMapping.builder()
-    .add("createdAt", "create_time")
-    .add("status", "status")
-    .add("username", "username")
-    .build();
+        .add("createdAt", "create_time")
+        .add("username", "username")
+        .add("status", "status")
+        .build();
 
-// 单字段排序
-SafePageQuery.of(1L, 10L).orderByDesc("createdAt").buildPage(mapping)
+SafePageQuery pageQuery = SafePageQuery.of(1L, 20L)
+        .orderByDesc("createdAt");
 
-// 多字段排序
-SafePageQuery.of(1L, 10L)
-    .orderByDesc("status")
-    .orderByAsc("username")
-    .buildPage(mapping)
+IPage<SysUser> page = userMapper.selectPage(
+        pageQuery.buildPage(mapping),
+        new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getStatus, 1)
+);
+
+PageResult<SysUser> result = PageResult.of(page);
 ```
 
-### 获取当前用户
+`SafePageQuery` ignores sort fields that are not present in `SortFieldMapping`. This prevents raw request values from reaching `ORDER BY`.
 
-**方式 1：从 ThreadLocal 获取**
+`PageQuery` remains for compatibility but is not recommended for request input.
+
+## Audit Fields
+
+`DefaultMetaObjectHandler` fills:
+
+- `createTime` and `createBy` on insert.
+- `updateTime` and `updateBy` on insert and update.
+- `deleted` on insert when it is null.
+
+Provide an `AuditorProvider` from your security context:
+
 ```java
-@Override
-protected Long getUserId() {
-    return UserContext.getCurrentUserId();
+@Bean
+public AuditorProvider auditorProvider() {
+    return () -> {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof YourUserDetails user)) {
+            return null;
+        }
+        return user.getId();
+    };
 }
 ```
 
-**方式 2：从 Spring Security 获取**
-```java
-@Override
-protected Long getUserId() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth != null && auth.getPrincipal() instanceof UserDetails) {
-        return ((YourUserDetails) auth.getPrincipal()).getId();
-    }
-    return null;
-}
-```
+## Integration Tests
 
-## ⚠️ 注意事项
+MySQL-backed integration coverage lives in `under-utils-test` and runs through Testcontainers:
 
-| 项目 | 说明 |
-|------|------|
-| 🔤 **字段命名** | 数据库使用下划线（`create_time`），Java 使用驼峰（`createTime`），自动映射 |
-| 🗑️ **逻辑删除** | `deleted` 字段必须为 `INT` 类型，0=未删除，1=已删除 |
-| 📄 **分页限制** | 默认单页最大 1000 条，防止大数据量查询 |
-| ↕️ **排序入参** | Web 入参推荐 `SafePageQuery`，通过 `SortFieldMapping` 映射前端字段到数据库列名 |
-| 🚫 **安全防护** | 禁止无条件的全表 UPDATE/DELETE 操作 |
-| 🆔 **主键生成** | 使用雪花算法，无需数据库自增 |
-
-## 🧪 测试用例
-
-Testcontainers 集成验证用例位于 `under-utils-test` 模块。该模块会启动临时 MySQL 容器，不进入默认构建链路：
-- ✅ BaseEntity 自动填充测试
-- ✅ 分页查询测试
-- ✅ 逻辑删除测试
-- ✅ 条件查询测试
-- ✅ 更新自动填充测试
-
-运行测试：
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=MybatisIntegrationTest
 ```
 
-## 📦 依赖版本
+The default Maven build does not start MySQL or Docker.
 
-| 依赖 | 版本 |
-|------|------|
-| Spring Boot | 3.1.11 |
-| MyBatis-Plus | 3.5.7 |
-| JDK | 21+ |
+## Notes
 
-## 📚 相关文档
-
-- [MyBatis-Plus 官方文档](https://baomidou.com/)
-- [项目整体规范](../README.md)
-
-## 📄 License
-
-MIT License - 详见 [LICENSE](../LICENSE) 文件
+- Keep `deleted` aligned with the configured MyBatis-Plus logical delete field.
+- Prefer `SafePageQuery` for web/API input.
+- Keep database-specific behavior in application code or a dedicated module; this module only provides reusable MyBatis-Plus helpers.

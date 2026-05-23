@@ -89,7 +89,16 @@
 - `main` 分支进入 `1.0.1-SNAPSHOT` 开发周期，避免重复发布 Maven Central 已存在的 `1.0.0` 坐标。
 - 发布后文档改为面向 Maven Central 使用，不再要求业务项目先本地 `mvn clean install`。
 
+## 第八轮结论
+
+### Docs And Post-Release Test Coverage
+
+- README、Quick Start、贡献指南、发布指南、路线图和模块 README 改为更接近社区维护文档的写法：少形容词，优先说明边界、安装、运行命令、失败语义和维护约束。
+- 为 `under-utils-redis`、`under-utils-starter` 和 `under-utils-biz` 补齐模块 README，避免发布到 Maven Central 后缺少模块级入口说明。
+- `under-utils-starter` 自动装配测试覆盖 Redis store 切换、缺少 `RedissonClient` 的失败路径，以及用户自定义 store、lock template、cache options/template 的退让行为。
+- `LogicalExpireCacheOptions` 自动配置增加对用户自定义 `LogicalExpireCacheTemplate` 的退让，避免自定义模板场景下继续创建无用默认 options。
+- `under-utils-test` 增加 Redis Testcontainers 集成测试，覆盖 cache-aside 命中复用、空值占位缓存和逻辑过期缓存后台刷新。
+
 ## 后续待审
 
-- 补齐 starter 自动装配和 Redis cache 模板的 Testcontainers 集成测试。
 - 补充发布后版本兼容策略和弃用策略。

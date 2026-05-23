@@ -6,8 +6,16 @@
 
 ### Changed
 
+- 重写 README、Quick Start、贡献指南、发布指南、路线图和模块 README，去除营销化表达，改为 GitHub 开源项目常见的边界、安装、示例和维护说明。
+- 补充 `under-utils-redis`、`under-utils-starter`、`under-utils-biz` 模块 README。
 - 发布后更新 README、Quick Start、Roadmap 和 API Review，改为面向 Maven Central 已发布版本的使用说明。
 - `main` 分支 Maven 版本进入 `1.0.1-SNAPSHOT` 开发周期，避免重复发布已存在的 `1.0.0` 构件。
+- `under-utils-starter` 在用户自定义 `LogicalExpireCacheTemplate` 时不再继续创建默认 `LogicalExpireCacheOptions`。
+
+### Added
+
+- `under-utils-starter` 自动装配测试补充 Redis store 切换、缺少 `RedissonClient` 的失败路径、用户自定义 store/lock/logical-cache Bean 退让行为。
+- `under-utils-test` 新增 Redis Testcontainers 集成测试，覆盖 `CacheAsideTemplate` 命中复用、空值占位缓存和 `LogicalExpireCacheTemplate` 后台刷新。
 
 ## [1.0.0] - 2026-05-23
 
