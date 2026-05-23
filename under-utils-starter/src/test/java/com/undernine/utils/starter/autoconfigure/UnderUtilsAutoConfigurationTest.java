@@ -1,6 +1,8 @@
 package com.undernine.utils.starter.autoconfigure;
 
 import com.undernine.utils.redis.cache.CacheAsideTemplate;
+import com.undernine.utils.redis.cache.CacheOperationEvent;
+import com.undernine.utils.redis.cache.CacheOperationObserver;
 import com.undernine.utils.redis.cache.CacheOptions;
 import com.undernine.utils.redis.cache.CacheValueCodec;
 import com.undernine.utils.redis.cache.LogicalExpireCacheOptions;
@@ -21,6 +23,7 @@ import com.undernine.utils.spring.ratelimit.RateLimitStore;
 import com.undernine.utils.spring.repeat.LocalRepeatSubmitStore;
 import com.undernine.utils.spring.repeat.RepeatSubmitStore;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.RBucket;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -29,9 +32,14 @@ import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * UnderUtilsAutoConfiguration 测试。
@@ -261,6 +269,36 @@ class UnderUtilsAutoConfigurationTest {
                     assertThat(context).hasSingleBean(CacheAsideTemplate.class);
                     assertThat(context.getBean(CacheAsideTemplate.class)).isSameAs(customTemplate);
                     assertThat(context).doesNotHaveBean(CacheOptions.class);
+                });
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldInjectCacheOperationObserverIntoCacheAsideTemplate() {
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        RBucket<String> bucket = mock(RBucket.class);
+        AtomicInteger writeEvents = new AtomicInteger();
+        CacheOperationObserver observer = new CacheOperationObserver() {
+            @Override
+            public void onWrite(CacheOperationEvent event) {
+                writeEvents.incrementAndGet();
+            }
+        };
+
+        when(redissonClient.<String>getBucket(anyString())).thenReturn(bucket);
+        when(bucket.get()).thenReturn(null);
+        doAnswer(invocation -> null).when(bucket).set(anyString(), any(Duration.class));
+
+        contextRunner
+                .withBean(RedissonClient.class, () -> redissonClient)
+                .withBean(CacheOperationObserver.class, () -> observer)
+                .withPropertyValues("under.utils.redis.cache.rebuild-lock-enabled=false")
+                .run(context -> {
+                    CacheAsideTemplate template = context.getBean(CacheAsideTemplate.class);
+                    String value = template.getOrLoad("observer", String.class, key -> "fresh");
+
+                    assertThat(value).isEqualTo("fresh");
+                    assertThat(writeEvents).hasValue(1);
                 });
     }
 

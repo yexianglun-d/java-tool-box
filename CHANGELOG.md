@@ -16,6 +16,12 @@
 
 ### Added
 
+- `under-utils-biz` 新增异步导入任务模板、进度快照、进度监听器和行级错误 CSV 导出工具。
+- `under-utils-redis` 新增 `CacheOperationObserver`、`CacheOperationEvent` 和 `CacheOperationType`，覆盖 cache-aside 与 logical-cache 的命中、未命中、加载、写入、重建锁和后台刷新观测事件。
+- `under-utils-http` 新增 `RefreshingAccessTokenProvider`，支持 access token 本地缓存、提前刷新和并发刷新收敛。
+- `under-utils-samples` 新增异步导入提交/查询/错误导出接口、OpenAPI token 刷新与业务错误解码示例，以及 `custom-store` profile 下的自定义 `RateLimitStore`、`RepeatSubmitStore`、`CacheValueCodec` 和 `CacheOperationObserver` 示例。
+- `under-utils-mybatis` README 补充多数据源下 MyBatis-Plus interceptor 与审计填充配置示例。
+- 新增 patch/minor 发布说明模板，统一后续 GitHub Release Notes 编写结构。
 - 新增 `docs/COMPATIBILITY.md`，明确 1.x 版本兼容策略、public API 范围、破坏性变更定义、弃用流程和配置 key 迁移规则。
 - `under-utils-starter` 自动装配测试补充 Redis store 切换、缺少 `RedissonClient` 的失败路径、用户自定义 store/lock/logical-cache Bean 退让行为。
 - `under-utils-test` 新增 Redis Testcontainers 集成测试，覆盖 `CacheAsideTemplate` 命中复用、空值占位缓存和 `LogicalExpireCacheTemplate` 后台刷新。

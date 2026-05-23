@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * 逻辑过期缓存访问模板。
@@ -28,6 +29,7 @@ public class LogicalExpireCacheTemplate {
     private final RedissonClient redissonClient;
     private final CacheValueCodec valueCodec;
     private final LogicalExpireCacheOptions defaultOptions;
+    private final CacheOperationObserver operationObserver;
 
     public LogicalExpireCacheTemplate(RedissonClient redissonClient) {
         this(redissonClient, new JacksonCacheValueCodec(), LogicalExpireCacheOptions.defaults());
@@ -42,9 +44,19 @@ public class LogicalExpireCacheTemplate {
         CacheValueCodec valueCodec,
         LogicalExpireCacheOptions defaultOptions
     ) {
+        this(redissonClient, valueCodec, defaultOptions, CacheOperationObserver.noop());
+    }
+
+    public LogicalExpireCacheTemplate(
+        RedissonClient redissonClient,
+        CacheValueCodec valueCodec,
+        LogicalExpireCacheOptions defaultOptions,
+        CacheOperationObserver operationObserver
+    ) {
         this.redissonClient = Objects.requireNonNull(redissonClient, "redissonClient must not be null");
         this.valueCodec = Objects.requireNonNull(valueCodec, "valueCodec must not be null");
         this.defaultOptions = Objects.requireNonNull(defaultOptions, "defaultOptions must not be null");
+        this.operationObserver = operationObserver == null ? CacheOperationObserver.noop() : operationObserver;
     }
 
     public <T, E extends Throwable> T getOrLoad(
@@ -71,8 +83,10 @@ public class LogicalExpireCacheTemplate {
 
         CacheLookup<T> cached = readCache(bucket, valueType);
         if (!cached.hit()) {
+            observe(observer -> observer.onMiss(event(normalizedKey, cacheKey, false)));
             return loadMissingWithLock(normalizedKey, cacheKey, bucket, valueType, effectiveOptions, loader);
         }
+        observe(observer -> observer.onHit(event(normalizedKey, cacheKey, cached.value() == null)));
         if (!cached.expired()) {
             return cached.value();
         }
@@ -115,20 +129,24 @@ public class LogicalExpireCacheTemplate {
                 TimeUnit.MILLISECONDS
             );
             if (!locked) {
+                observe(observer -> observer.onLockRejected(event(key, cacheKey, false)));
                 CacheLookup<T> cachedAfterWait = readCache(bucket, valueType);
                 if (cachedAfterWait.hit()) {
+                    observe(observer -> observer.onHit(event(key, cacheKey, cachedAfterWait.value() == null)));
                     triggerRefreshIfExpired(key, cacheKey, bucket, valueType, options, loader, cachedAfterWait);
                     return cachedAfterWait.value();
                 }
                 throw new CacheRebuildLockException("Failed to acquire logical cache rebuild lock: " + cacheKey);
             }
+            observe(observer -> observer.onLockAcquired(event(key, cacheKey, false)));
 
             CacheLookup<T> cachedAfterLock = readCache(bucket, valueType);
             if (cachedAfterLock.hit()) {
+                observe(observer -> observer.onHit(event(key, cacheKey, cachedAfterLock.value() == null)));
                 triggerRefreshIfExpired(key, cacheKey, bucket, valueType, options, loader, cachedAfterLock);
                 return cachedAfterLock.value();
             }
-            return loadAndCache(key, bucket, options, loader);
+            return loadAndCache(key, cacheKey, bucket, options, loader);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new CacheRebuildLockException("Interrupted while acquiring logical cache rebuild lock: " + cacheKey, e);
@@ -162,9 +180,13 @@ public class LogicalExpireCacheTemplate {
         CacheLoadFunction<T, E> loader
     ) {
         try {
+            observe(observer -> observer.onRefreshSubmitted(event(key, cacheKey, false)));
             options.refreshExecutor().execute(() -> {
                 try {
-                    refreshWithLock(key, cacheKey, bucket, valueType, options, loader);
+                    boolean refreshed = refreshWithLock(key, cacheKey, bucket, valueType, options, loader);
+                    if (refreshed) {
+                        observe(observer -> observer.onRefreshSuccess(event(key, cacheKey, false)));
+                    }
                 } catch (Throwable error) {
                     handleRefreshFailure(key, cacheKey, options, error);
                 }
@@ -174,7 +196,7 @@ public class LogicalExpireCacheTemplate {
         }
     }
 
-    private <T, E extends Throwable> void refreshWithLock(
+    private <T, E extends Throwable> boolean refreshWithLock(
         String key,
         String cacheKey,
         RBucket<String> bucket,
@@ -191,14 +213,17 @@ public class LogicalExpireCacheTemplate {
                 TimeUnit.MILLISECONDS
             );
             if (!locked) {
-                return;
+                observe(observer -> observer.onLockRejected(event(key, cacheKey, false)));
+                return false;
             }
+            observe(observer -> observer.onLockAcquired(event(key, cacheKey, false)));
 
             CacheLookup<T> cachedAfterLock = readCache(bucket, valueType);
             if (cachedAfterLock.hit() && !cachedAfterLock.expired()) {
-                return;
+                return false;
             }
-            loadAndCache(key, bucket, options, loader);
+            loadAndCache(key, cacheKey, bucket, options, loader);
+            return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new CacheRebuildLockException("Interrupted while refreshing logical cache: " + cacheKey, e);
@@ -211,11 +236,21 @@ public class LogicalExpireCacheTemplate {
 
     private <T, E extends Throwable> T loadAndCache(
         String key,
+        String cacheKey,
         RBucket<String> bucket,
         LogicalExpireCacheOptions options,
         CacheLoadFunction<T, E> loader
     ) throws E {
-        T loaded = loader.load(key);
+        long startedAt = System.nanoTime();
+        T loaded;
+        try {
+            loaded = loader.load(key);
+            observe(observer -> observer.onLoadSuccess(timedEvent(key, cacheKey, loaded == null, startedAt)));
+        } catch (Throwable error) {
+            observe(observer -> observer.onLoadFailure(failedEvent(key, cacheKey, startedAt, error)));
+            throwAs(error);
+            return null;
+        }
         if (loaded == null && !options.cacheNull()) {
             bucket.delete();
             return null;
@@ -235,6 +270,7 @@ public class LogicalExpireCacheTemplate {
             "encoded logical cache payload must not be null"
         );
         bucket.set(VALUE_PREFIX + encodedPayload, options.physicalTtl());
+        observe(observer -> observer.onWrite(event(key, cacheKey, loaded == null)));
         return loaded;
     }
 
@@ -264,6 +300,7 @@ public class LogicalExpireCacheTemplate {
         Throwable error
     ) {
         log.warn("Failed to refresh logical cache for key {} ({})", key, cacheKey, error);
+        observe(observer -> observer.onRefreshFailure(failedEvent(key, cacheKey, 0L, error)));
         LogicalExpireCacheRefreshFailureHandler failureHandler = options.refreshFailureHandler();
         if (failureHandler == null) {
             return;
@@ -285,6 +322,33 @@ public class LogicalExpireCacheTemplate {
             throw new IllegalArgumentException("cache key must not be blank");
         }
         return key.trim();
+    }
+
+    private CacheOperationEvent event(String key, String cacheKey, boolean nullValue) {
+        return CacheOperationEvent.of(CacheOperationType.LOGICAL_EXPIRE, key, cacheKey, nullValue);
+    }
+
+    private CacheOperationEvent timedEvent(String key, String cacheKey, boolean nullValue, long startedAt) {
+        return CacheOperationEvent.timed(CacheOperationType.LOGICAL_EXPIRE, key, cacheKey, nullValue,
+                System.nanoTime() - startedAt);
+    }
+
+    private CacheOperationEvent failedEvent(String key, String cacheKey, long startedAt, Throwable error) {
+        long durationNanos = startedAt <= 0L ? 0L : System.nanoTime() - startedAt;
+        return CacheOperationEvent.failed(CacheOperationType.LOGICAL_EXPIRE, key, cacheKey, durationNanos, error);
+    }
+
+    private void observe(Consumer<CacheOperationObserver> consumer) {
+        try {
+            consumer.accept(operationObserver);
+        } catch (RuntimeException ex) {
+            log.warn("Cache operation observer failed", ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <E extends Throwable> void throwAs(Throwable error) throws E {
+        throw (E) error;
     }
 
     private record CacheLookup<T>(boolean hit, T value, long logicalExpireAt) {

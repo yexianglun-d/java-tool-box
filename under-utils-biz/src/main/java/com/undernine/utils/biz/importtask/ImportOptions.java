@@ -19,11 +19,15 @@ public final class ImportOptions {
     private final boolean failFast;
     private final int maxErrors;
     private final boolean skipBlankRows;
+    private final ImportProgressListener progressListener;
 
     private ImportOptions(Builder builder) {
         this.failFast = builder.failFast;
         this.maxErrors = builder.maxErrors;
         this.skipBlankRows = builder.skipBlankRows;
+        this.progressListener = builder.progressListener == null
+                ? ImportProgressListener.noop()
+                : builder.progressListener;
     }
 
     /**
@@ -42,6 +46,19 @@ public final class ImportOptions {
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * 基于当前选项创建构建器。
+     *
+     * @return 构建器
+     */
+    public Builder toBuilder() {
+        return builder()
+                .failFast(failFast)
+                .maxErrors(maxErrors)
+                .skipBlankRows(skipBlankRows)
+                .progressListener(progressListener);
     }
 
     /**
@@ -71,6 +88,15 @@ public final class ImportOptions {
         return skipBlankRows;
     }
 
+    /**
+     * 获取导入进度监听器。
+     *
+     * @return 进度监听器
+     */
+    public ImportProgressListener getProgressListener() {
+        return progressListener;
+    }
+
     boolean hasErrorLimit() {
         return maxErrors > UNLIMITED_ERRORS;
     }
@@ -87,6 +113,7 @@ public final class ImportOptions {
         private boolean failFast;
         private int maxErrors = UNLIMITED_ERRORS;
         private boolean skipBlankRows = true;
+        private ImportProgressListener progressListener;
 
         private Builder() {
         }
@@ -124,6 +151,17 @@ public final class ImportOptions {
          */
         public Builder skipBlankRows(boolean skipBlankRows) {
             this.skipBlankRows = skipBlankRows;
+            return this;
+        }
+
+        /**
+         * 设置进度监听器。监听器异常会被模板记录并忽略，不影响导入主流程。
+         *
+         * @param progressListener 进度监听器
+         * @return 当前构建器
+         */
+        public Builder progressListener(ImportProgressListener progressListener) {
+            this.progressListener = progressListener;
             return this;
         }
 

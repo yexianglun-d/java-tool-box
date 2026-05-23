@@ -3,11 +3,14 @@ package com.undernine.utils.redis.cache;
 import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Cache-aside 访问模板。
@@ -21,12 +24,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class CacheAsideTemplate {
 
+    private static final Logger log = LoggerFactory.getLogger(CacheAsideTemplate.class);
+
     private static final String NULL_VALUE = "__UNDER_UTILS_CACHE_NULL_V1__";
     private static final String VALUE_PREFIX = "__UNDER_UTILS_CACHE_VALUE_V1__:";
 
     private final RedissonClient redissonClient;
     private final CacheValueCodec valueCodec;
     private final CacheOptions defaultOptions;
+    private final CacheOperationObserver operationObserver;
 
     public CacheAsideTemplate(RedissonClient redissonClient) {
         this(redissonClient, new JacksonCacheValueCodec(), CacheOptions.defaults());
@@ -37,9 +43,15 @@ public class CacheAsideTemplate {
     }
 
     public CacheAsideTemplate(RedissonClient redissonClient, CacheValueCodec valueCodec, CacheOptions defaultOptions) {
+        this(redissonClient, valueCodec, defaultOptions, CacheOperationObserver.noop());
+    }
+
+    public CacheAsideTemplate(RedissonClient redissonClient, CacheValueCodec valueCodec, CacheOptions defaultOptions,
+                              CacheOperationObserver operationObserver) {
         this.redissonClient = Objects.requireNonNull(redissonClient, "redissonClient must not be null");
         this.valueCodec = Objects.requireNonNull(valueCodec, "valueCodec must not be null");
         this.defaultOptions = Objects.requireNonNull(defaultOptions, "defaultOptions must not be null");
+        this.operationObserver = operationObserver == null ? CacheOperationObserver.noop() : operationObserver;
     }
 
     public <T, E extends Throwable> T getOrLoad(
@@ -66,11 +78,13 @@ public class CacheAsideTemplate {
 
         CacheLookup<T> cached = readCache(bucket, valueType);
         if (cached.hit()) {
+            observe(observer -> observer.onHit(event(normalizedKey, cacheKey, cached.value() == null)));
             return cached.value();
         }
+        observe(observer -> observer.onMiss(event(normalizedKey, cacheKey, false)));
 
         if (!effectiveOptions.rebuildLockEnabled()) {
-            return loadAndCache(normalizedKey, bucket, effectiveOptions, loader);
+            return loadAndCache(normalizedKey, cacheKey, bucket, effectiveOptions, loader);
         }
 
         return rebuildWithLock(normalizedKey, cacheKey, bucket, valueType, effectiveOptions, loader);
@@ -110,18 +124,22 @@ public class CacheAsideTemplate {
                 TimeUnit.MILLISECONDS
             );
             if (!locked) {
+                observe(observer -> observer.onLockRejected(event(key, cacheKey, false)));
                 CacheLookup<T> cachedAfterWait = readCache(bucket, valueType);
                 if (cachedAfterWait.hit()) {
+                    observe(observer -> observer.onHit(event(key, cacheKey, cachedAfterWait.value() == null)));
                     return cachedAfterWait.value();
                 }
                 throw new CacheRebuildLockException("Failed to acquire cache rebuild lock: " + cacheKey);
             }
+            observe(observer -> observer.onLockAcquired(event(key, cacheKey, false)));
 
             CacheLookup<T> cachedAfterLock = readCache(bucket, valueType);
             if (cachedAfterLock.hit()) {
+                observe(observer -> observer.onHit(event(key, cacheKey, cachedAfterLock.value() == null)));
                 return cachedAfterLock.value();
             }
-            return loadAndCache(key, bucket, options, loader);
+            return loadAndCache(key, cacheKey, bucket, options, loader);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new CacheRebuildLockException("Interrupted while acquiring cache rebuild lock: " + cacheKey, e);
@@ -134,20 +152,32 @@ public class CacheAsideTemplate {
 
     private <T, E extends Throwable> T loadAndCache(
         String key,
+        String cacheKey,
         RBucket<String> bucket,
         CacheOptions options,
         CacheLoadFunction<T, E> loader
     ) throws E {
-        T loaded = loader.load(key);
+        long startedAt = System.nanoTime();
+        T loaded;
+        try {
+            loaded = loader.load(key);
+            observe(observer -> observer.onLoadSuccess(timedEvent(key, cacheKey, loaded == null, startedAt)));
+        } catch (Throwable error) {
+            observe(observer -> observer.onLoadFailure(failedEvent(key, cacheKey, startedAt, error)));
+            throwAs(error);
+            return null;
+        }
         if (loaded == null) {
             if (options.cacheNull()) {
                 bucket.set(NULL_VALUE, ttlWithJitter(options.nullTtl(), options.jitter()));
+                observe(observer -> observer.onWrite(event(key, cacheKey, true)));
             }
             return null;
         }
 
         String payload = Objects.requireNonNull(valueCodec.encode(loaded), "encoded cache value must not be null");
         bucket.set(VALUE_PREFIX + payload, ttlWithJitter(options.ttl(), options.jitter()));
+        observe(observer -> observer.onWrite(event(key, cacheKey, false)));
         return loaded;
     }
 
@@ -183,6 +213,33 @@ public class CacheAsideTemplate {
         }
         long extraMillis = ThreadLocalRandom.current().nextLong(jitterMillis + 1L);
         return ttl.plusMillis(extraMillis);
+    }
+
+    private CacheOperationEvent event(String key, String cacheKey, boolean nullValue) {
+        return CacheOperationEvent.of(CacheOperationType.CACHE_ASIDE, key, cacheKey, nullValue);
+    }
+
+    private CacheOperationEvent timedEvent(String key, String cacheKey, boolean nullValue, long startedAt) {
+        return CacheOperationEvent.timed(CacheOperationType.CACHE_ASIDE, key, cacheKey, nullValue,
+                System.nanoTime() - startedAt);
+    }
+
+    private CacheOperationEvent failedEvent(String key, String cacheKey, long startedAt, Throwable error) {
+        return CacheOperationEvent.failed(CacheOperationType.CACHE_ASIDE, key, cacheKey,
+                System.nanoTime() - startedAt, error);
+    }
+
+    private void observe(Consumer<CacheOperationObserver> consumer) {
+        try {
+            consumer.accept(operationObserver);
+        } catch (RuntimeException ex) {
+            log.warn("Cache operation observer failed", ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <E extends Throwable> void throwAs(Throwable error) throws E {
+        throw (E) error;
     }
 
     private record CacheLookup<T>(boolean hit, T value) {

@@ -22,13 +22,14 @@
 2. `validate`
 3. `process`
 
-模板负责收集行级错误并返回导入统计。
+模板负责收集行级错误并返回导入统计。需要查询进度时，可以通过 `ImportOptions.progressListener` 接收快照。
 
 ```java
 ImportTaskTemplate template = ImportTaskTemplate.create(
         ImportOptions.builder()
                 .skipBlankRows(true)
                 .maxErrors(100)
+                .progressListener(progress -> progressService.update(progress))
                 .build()
 );
 
@@ -78,6 +79,40 @@ try (Reader reader = Files.newBufferedReader(path)) {
 ```
 
 CSV 解析保持小而可预测。Excel、大文件流式导入等场景，建议业务项目自行解析文件，再把行数据交给 `ImportTaskTemplate`。
+
+## 异步导入
+
+`AsyncImportTaskTemplate` 使用业务传入的 `Executor` 执行后台导入，并在当前 JVM 内保存任务进度、完成结果或任务级失败。
+
+```java
+AsyncImportTaskTemplate asyncTemplate = new AsyncImportTaskTemplate(executor);
+
+String taskId = asyncTemplate.submit("user-import-20260523", rows, handler);
+
+ImportProgress progress = asyncTemplate.findProgress(taskId)
+        .orElseThrow();
+
+ImportResult result = asyncTemplate.findResult(taskId)
+        .orElse(null);
+```
+
+默认状态存储是内存 Map，适合单实例后台任务或示例工程。生产环境如果需要跨实例查询、重启恢复或任务审计，应通过 `ImportProgressListener` 将进度写入数据库、Redis 或消息系统。
+
+## 错误导出
+
+行级错误可以导出为 CSV，供接口直接返回或写入对象存储：
+
+```java
+String csv = ImportErrorExporter.toCsv(result.getRowErrors());
+```
+
+CSV 字段为：
+
+- `rowNumber`
+- `field`
+- `errorCode`
+- `message`
+- `rawRowSummary`
 
 ## 失败语义
 

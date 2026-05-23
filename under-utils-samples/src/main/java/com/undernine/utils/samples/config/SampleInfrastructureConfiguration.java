@@ -1,5 +1,6 @@
 package com.undernine.utils.samples.config;
 
+import com.undernine.utils.biz.importtask.AsyncImportTaskTemplate;
 import com.undernine.utils.mybatis.handler.AuditorProvider;
 import com.undernine.utils.spring.context.CurrentTenantProvider;
 import com.undernine.utils.spring.context.CurrentUserProvider;
@@ -53,6 +54,11 @@ public class SampleInfrastructureConfiguration {
     @Bean(destroyMethod = "shutdown")
     public ExecutorService sampleExecutorService() {
         return Executors.newFixedThreadPool(2);
+    }
+
+    @Bean
+    public AsyncImportTaskTemplate sampleAsyncImportTaskTemplate(ExecutorService sampleExecutorService) {
+        return new AsyncImportTaskTemplate(sampleExecutorService);
     }
 
     private static String headerOrDefault(HttpServletRequest request, String headerName, String defaultValue) {

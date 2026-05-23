@@ -39,10 +39,10 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 | `under-utils-bom` | 统一管理 Under-Utils 模块和相关依赖版本。 |
 | `under-utils-core` | 低耦合基础能力，例如雪花 ID、金额工具；历史静态工具仅做兼容维护。 |
 | `under-utils-spring` | Spring Web 上下文传播、限流/防重抽象、返回结果、异常处理和 JSON 脱敏。 |
-| `under-utils-redis` | 基于 Redisson 的分布式锁、限流/防重存储、cache-aside 和逻辑过期缓存模板。 |
-| `under-utils-http` | HTTP 便捷调用与 OpenAPI 客户端治理，包括 token、签名、trace/idempotency header、错误解码和重试。 |
+| `under-utils-redis` | 基于 Redisson 的分布式锁、限流/防重存储、cache-aside、逻辑过期缓存模板和缓存观测 SPI。 |
+| `under-utils-http` | HTTP 便捷调用与 OpenAPI 客户端治理，包括 token 刷新、签名、trace/idempotency header、错误解码和重试。 |
 | `under-utils-mybatis` | MyBatis-Plus 安全分页、排序白名单、审计填充和分页结果封装。 |
-| `under-utils-biz` | 可复用业务流程模板，目前主要是 CSV 导入行处理和校验结果收集。 |
+| `under-utils-biz` | 可复用业务流程模板，目前主要是 CSV 导入、异步导入进度查询和错误导出。 |
 | `under-utils-starter` | Spring Boot 自动装配入口。 |
 | `under-utils-samples` | 可运行示例工程，不作为正式 Maven 库构件发布。 |
 | `under-utils-test` | Testcontainers 集成测试模块，仅通过 `integration-tests` profile 启用。 |
@@ -161,6 +161,14 @@ UserProfile profile = cacheAsideTemplate.get(
         UserProfile.class,
         () -> userRepository.findProfile(userId)
 );
+```
+
+异步导入任务：
+
+```java
+AsyncImportTaskTemplate importTasks = new AsyncImportTaskTemplate(executor);
+String taskId = importTasks.submit(rows, handler);
+ImportProgress progress = importTasks.findProgress(taskId).orElseThrow();
 ```
 
 安全分页：

@@ -41,10 +41,23 @@ curl -X POST http://localhost:18080/samples/import/users \
   -H 'Content-Type: text/plain' \
   --data-binary $'username,phone\nAlice,13800000000\n,13900000000\nBob,'
 
+TASK_ID=$(curl -s -X POST http://localhost:18080/samples/import/users/async \
+  -H 'Content-Type: text/plain' \
+  --data-binary $'username,phone\nAlice,13800000000\n,13900000000\nBob,' \
+  | sed -E 's/.*"taskId":"([^"]+)".*/\1/')
+
+curl "http://localhost:18080/samples/import/tasks/${TASK_ID}"
+curl "http://localhost:18080/samples/import/tasks/${TASK_ID}/errors.csv"
+
 curl -X POST http://localhost:18080/samples/openapi/orders \
   -H 'Content-Type: application/json' \
   -H 'X-Trace-Id: trace-openapi' \
   -d '{"requestNo":"req-openapi-1","skuId":"sku-1","quantity":1}'
+
+curl -X POST http://localhost:18080/samples/openapi/orders/envelope \
+  -H 'Content-Type: application/json' \
+  -H 'X-Trace-Id: trace-openapi' \
+  -d '{"requestNo":"req-openapi-2","skuId":"sku-1","quantity":0}'
 ```
 
 ## Redis Profile
@@ -88,3 +101,20 @@ curl http://localhost:18080/samples/redis/logical-cache
 cd under-utils-samples
 docker compose down
 ```
+
+## 自定义存储 Profile
+
+`custom-store` profile 展示如何替换 starter 的状态存储和缓存编解码边界：
+
+```bash
+mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=custom-store
+```
+
+该 profile 提供：
+
+- 自定义 `RateLimitStore`
+- 自定义 `RepeatSubmitStore`
+- 自定义 `CacheValueCodec`
+- 自定义 `CacheOperationObserver`
+
+这些实现只用于演示 SPI 接入方式，不建议直接作为生产存储实现。

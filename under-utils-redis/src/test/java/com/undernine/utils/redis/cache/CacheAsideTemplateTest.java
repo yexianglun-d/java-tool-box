@@ -158,10 +158,61 @@ class CacheAsideTemplateTest {
         assertThat(loadCount).hasValue(1);
     }
 
+    @Test
+    void getOrLoadPublishesObserverEvents() {
+        CacheHarness harness = CacheHarness.create();
+        RecordingObserver observer = new RecordingObserver();
+        CacheAsideTemplate template = new CacheAsideTemplate(
+                harness.redissonClient(),
+                new JacksonCacheValueCodec(),
+                optionsWithoutLock().build(),
+                observer
+        );
+
+        String first = template.getOrLoad("user:observer", String.class, key -> "fresh");
+        String second = template.getOrLoad("user:observer", String.class, key -> "should-not-load");
+
+        assertThat(first).isEqualTo("fresh");
+        assertThat(second).isEqualTo("fresh");
+        assertThat(observer.events()).contains("miss:user:observer:false",
+                "loadSuccess:user:observer:false",
+                "write:user:observer:false",
+                "hit:user:observer:false");
+    }
+
     private static CacheOptions.Builder optionsWithoutLock() {
         return CacheOptions.builder()
             .keyPrefix("cache:")
             .rebuildLockEnabled(false);
+    }
+
+    private static final class RecordingObserver implements CacheOperationObserver {
+
+        private final List<String> events = new ArrayList<>();
+
+        @Override
+        public void onHit(CacheOperationEvent event) {
+            events.add("hit:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onMiss(CacheOperationEvent event) {
+            events.add("miss:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onLoadSuccess(CacheOperationEvent event) {
+            events.add("loadSuccess:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onWrite(CacheOperationEvent event) {
+            events.add("write:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        List<String> events() {
+            return events;
+        }
     }
 
     private record CacheHarness(

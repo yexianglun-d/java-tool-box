@@ -140,6 +140,33 @@ public AuditorProvider auditorProvider() {
 }
 ```
 
+## 多数据源场景
+
+多数据源项目通常应为每个 `SqlSessionFactory` 单独配置 MyBatis-Plus interceptor，不建议把数据源选择逻辑放进本模块。
+
+```java
+@Configuration
+public class MultiDatasourceMybatisConfiguration {
+
+    @Bean
+    public MybatisPlusInterceptor mysqlInterceptor() {
+        return MybatisPlusConfig.mybatisPlusInterceptor(DbType.MYSQL);
+    }
+
+    @Bean
+    public MybatisPlusInterceptor postgresInterceptor() {
+        return MybatisPlusConfig.mybatisPlusInterceptor(DbType.POSTGRE_SQL);
+    }
+
+    @Bean
+    public DefaultMetaObjectHandler metaObjectHandler(AuditorProvider auditorProvider) {
+        return new DefaultMetaObjectHandler(auditorProvider);
+    }
+}
+```
+
+审计用户仍通过一个 `AuditorProvider` 提供。不同数据源的字段命名、逻辑删除值和 mapper 扫描范围，应留在业务项目自己的 MyBatis 配置里。
+
 ## 集成测试
 
 MySQL 集成测试位于 `under-utils-test`，通过 Testcontainers 运行：

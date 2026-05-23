@@ -24,6 +24,7 @@
 | `CacheAsideTemplate` | cache-aside 读穿模板，支持空值缓存、TTL 抖动和重建锁。 |
 | `LogicalExpireCacheTemplate` | 热点 key 缓存模板，逻辑过期后先返回旧值并后台刷新。 |
 | `CacheValueCodec` | cache 模板共享的序列化边界。 |
+| `CacheOperationObserver` | 缓存命中、未命中、加载、写入、锁和刷新事件观测 SPI。 |
 
 ## 分布式锁
 
@@ -110,6 +111,28 @@ under:
 ```
 
 Redis 或 Redisson 异常不会被吞掉。如果业务需要 fail-open 或兜底策略，请在应用内提供自定义 store。
+
+## 缓存观测
+
+业务项目可以实现 `CacheOperationObserver`，把缓存行为接入指标、日志或链路追踪。
+
+```java
+CacheOperationObserver observer = new CacheOperationObserver() {
+    @Override
+    public void onHit(CacheOperationEvent event) {
+        metrics.counter("cache.hit", "type", event.getOperationType().name()).increment();
+    }
+
+    @Override
+    public void onLoadFailure(CacheOperationEvent event) {
+        log.warn("cache load failed: {}", event.getCacheKey(), event.getError());
+    }
+};
+
+CacheAsideTemplate template = new CacheAsideTemplate(redissonClient, codec, options, observer);
+```
+
+在 starter 中，只要应用声明一个 `CacheOperationObserver` Bean，cache-aside 和 logical-cache 模板都会自动接入。observer 抛出的运行时异常会被模板记录并忽略，不影响缓存主流程。
 
 ## 集成测试
 

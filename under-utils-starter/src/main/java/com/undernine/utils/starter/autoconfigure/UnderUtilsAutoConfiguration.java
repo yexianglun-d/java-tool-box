@@ -2,6 +2,7 @@ package com.undernine.utils.starter.autoconfigure;
 
 import com.undernine.utils.redis.lock.DistributedLockTemplate;
 import com.undernine.utils.redis.cache.CacheAsideTemplate;
+import com.undernine.utils.redis.cache.CacheOperationObserver;
 import com.undernine.utils.redis.cache.CacheOptions;
 import com.undernine.utils.redis.cache.CacheValueCodec;
 import com.undernine.utils.redis.cache.JacksonCacheValueCodec;
@@ -213,8 +214,10 @@ public class UnderUtilsAutoConfiguration {
         @ConditionalOnProperty(prefix = "under.utils.redis.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
         public CacheAsideTemplate cacheAsideTemplate(RedissonClient redissonClient,
                                                      CacheValueCodec cacheValueCodec,
-                                                     CacheOptions cacheOptions) {
-            return new CacheAsideTemplate(redissonClient, cacheValueCodec, cacheOptions);
+                                                     CacheOptions cacheOptions,
+                                                     ObjectProvider<CacheOperationObserver> operationObserver) {
+            return new CacheAsideTemplate(redissonClient, cacheValueCodec, cacheOptions,
+                    operationObserver.getIfAvailable(CacheOperationObserver::noop));
         }
 
         @Bean(name = "underUtilsLogicalCacheRefreshExecutor", destroyMethod = "shutdown")
@@ -257,8 +260,10 @@ public class UnderUtilsAutoConfiguration {
         @ConditionalOnProperty(prefix = "under.utils.redis.logical-cache", name = "enabled", havingValue = "true")
         public LogicalExpireCacheTemplate logicalExpireCacheTemplate(RedissonClient redissonClient,
                                                                      CacheValueCodec cacheValueCodec,
-                                                                     LogicalExpireCacheOptions logicalExpireCacheOptions) {
-            return new LogicalExpireCacheTemplate(redissonClient, cacheValueCodec, logicalExpireCacheOptions);
+                                                                     LogicalExpireCacheOptions logicalExpireCacheOptions,
+                                                                     ObjectProvider<CacheOperationObserver> operationObserver) {
+            return new LogicalExpireCacheTemplate(redissonClient, cacheValueCodec, logicalExpireCacheOptions,
+                    operationObserver.getIfAvailable(CacheOperationObserver::noop));
         }
     }
 }

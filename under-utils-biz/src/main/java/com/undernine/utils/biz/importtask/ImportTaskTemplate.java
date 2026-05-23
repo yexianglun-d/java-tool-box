@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 导入任务模板。
@@ -17,6 +20,8 @@ import java.util.Objects;
  * @since 1.0.0
  */
 public final class ImportTaskTemplate {
+
+    private static final Logger log = LoggerFactory.getLogger(ImportTaskTemplate.class);
 
     private final ImportOptions options;
 
@@ -103,39 +108,50 @@ public final class ImportTaskTemplate {
         Objects.requireNonNull(rows, "rows must not be null");
         Objects.requireNonNull(handler, "handler must not be null");
 
-        ImportAccumulator accumulator = new ImportAccumulator();
-        Iterator<R> iterator = iterator(rows);
+        ImportAccumulator accumulator = new ImportAccumulator(Instant.now());
+        notifyProgress(accumulator, ImportTaskStatus.RUNNING, null);
+        try {
+            Iterator<R> iterator = iterator(rows);
 
-        while (hasNext(iterator)) {
-            R rawRow = next(iterator);
-            accumulator.totalCount++;
-            ImportRowContext context = new ImportRowContext(accumulator.totalCount);
+            while (hasNext(iterator)) {
+                R rawRow = next(iterator);
+                accumulator.totalCount++;
+                ImportRowContext context = new ImportRowContext(accumulator.totalCount);
 
-            if (options.isSkipBlankRows() && isBlankRow(handler, rawRow)) {
-                accumulator.skippedCount++;
-                continue;
+                if (options.isSkipBlankRows() && isBlankRow(handler, rawRow)) {
+                    accumulator.skippedCount++;
+                    notifyProgress(accumulator, ImportTaskStatus.RUNNING, null);
+                    continue;
+                }
+
+                RowOutcome outcome = processRow(rawRow, context, handler);
+                if (outcome.isSuccess()) {
+                    accumulator.successCount++;
+                    notifyProgress(accumulator, ImportTaskStatus.RUNNING, null);
+                    continue;
+                }
+
+                accumulator.failureCount++;
+                addErrors(accumulator.rowErrors, outcome.getErrors());
+                notifyProgress(accumulator, ImportTaskStatus.RUNNING, null);
+                if (shouldStop(accumulator)) {
+                    break;
+                }
             }
 
-            RowOutcome outcome = processRow(rawRow, context, handler);
-            if (outcome.isSuccess()) {
-                accumulator.successCount++;
-                continue;
-            }
-
-            accumulator.failureCount++;
-            addErrors(accumulator.rowErrors, outcome.getErrors());
-            if (shouldStop(accumulator)) {
-                break;
-            }
+            ImportResult result = new ImportResult(
+                    accumulator.totalCount,
+                    accumulator.successCount,
+                    accumulator.failureCount,
+                    accumulator.skippedCount,
+                    accumulator.rowErrors
+            );
+            notifyProgress(accumulator, ImportTaskStatus.COMPLETED, null);
+            return result;
+        } catch (RuntimeException ex) {
+            notifyProgress(accumulator, ImportTaskStatus.FAILED, failureMessage(ex));
+            throw ex;
         }
-
-        return new ImportResult(
-                accumulator.totalCount,
-                accumulator.successCount,
-                accumulator.failureCount,
-                accumulator.skippedCount,
-                accumulator.rowErrors
-        );
     }
 
     /**
@@ -293,13 +309,45 @@ public final class ImportTaskTemplate {
         return options.isFailFast() || options.isErrorLimitReached(accumulator.rowErrors.size());
     }
 
+    private void notifyProgress(ImportAccumulator accumulator, ImportTaskStatus status, String failureMessage) {
+        ImportProgress progress = new ImportProgress(
+                null,
+                status,
+                accumulator.totalCount,
+                accumulator.successCount,
+                accumulator.failureCount,
+                accumulator.skippedCount,
+                accumulator.rowErrors.size(),
+                accumulator.startedAt,
+                status == ImportTaskStatus.RUNNING ? null : Instant.now(),
+                failureMessage
+        );
+        try {
+            options.getProgressListener().onProgress(progress);
+        } catch (RuntimeException ex) {
+            log.warn("Import progress listener failed", ex);
+        }
+    }
+
+    private String failureMessage(RuntimeException ex) {
+        if (ex.getMessage() != null && !ex.getMessage().isBlank()) {
+            return ex.getMessage();
+        }
+        return ex.getClass().getSimpleName();
+    }
+
     private static final class ImportAccumulator {
 
+        private final Instant startedAt;
         private int totalCount;
         private int successCount;
         private int failureCount;
         private int skippedCount;
         private final List<ImportRowError> rowErrors = new ArrayList<>();
+
+        private ImportAccumulator(Instant startedAt) {
+            this.startedAt = startedAt;
+        }
     }
 
     private static final class RowOutcome {

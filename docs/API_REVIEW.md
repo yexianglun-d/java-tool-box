@@ -117,6 +117,17 @@
 - 保留必要英文技术名词和代码标识，例如 Maven Central、public API、starter、SPI、Release Notes。
 - Issue/PR 模板同步改为中文，降低中文贡献者提交成本。
 
+## 第十一轮结论
+
+### 1.0.1 增强 API
+
+- `under-utils-biz` 新增 `AsyncImportTaskTemplate`、`ImportProgress`、`ImportProgressListener`、`ImportTaskStatus` 和 `ImportErrorExporter`。这些 API 只新增能力，不改变同步 `ImportTaskTemplate` 的既有返回结果和失败语义。
+- `ImportOptions` 增加 `progressListener` 和 `toBuilder()`，默认 listener 为 no-op；listener 运行时异常会被记录并忽略，不影响导入主流程。
+- `AsyncImportTaskTemplate` 默认使用 JVM 内存保存任务状态。跨实例查询、重启恢复和任务审计不进入默认实现，应由业务项目通过 `ImportProgressListener` 持久化。
+- `under-utils-redis` 新增缓存观测 SPI：`CacheOperationObserver`、`CacheOperationEvent` 和 `CacheOperationType`。模板构造器新增 observer 重载，旧构造器继续可用并使用 no-op observer。
+- starter 在存在 `CacheOperationObserver` Bean 时自动注入 cache-aside 与 logical-cache 模板，不新增默认 Bean，避免污染应用上下文。
+- `under-utils-http` 新增 `RefreshingAccessTokenProvider`。它只负责当前 JVM 内 token 缓存、提前刷新和并发收敛；分布式 token 共享和刷新失败兜底仍属于业务实现边界。
+
 ## 后续待审
 
-- 补充 patch/minor 发布说明模板。
+- Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

@@ -191,6 +191,36 @@ class LogicalExpireCacheTemplateTest {
         assertThat(refreshLoadCount).hasValue(1);
     }
 
+    @Test
+    void getOrLoadPublishesObserverEventsForMissAndRefresh() throws Exception {
+        CacheHarness harness = CacheHarness.create();
+        RecordingObserver observer = new RecordingObserver();
+        TrackingExecutor refreshExecutor = new TrackingExecutor();
+        LogicalExpireCacheTemplate template = new LogicalExpireCacheTemplate(
+                harness.redissonClient(),
+                new JacksonCacheValueCodec(),
+                options(refreshExecutor)
+                        .logicalTtl(Duration.ofMillis(10))
+                        .physicalTtl(Duration.ofSeconds(30))
+                        .build(),
+                observer
+        );
+
+        String oldValue = template.getOrLoad("hot:observer", String.class, key -> "old");
+        waitUntilLogicallyExpired();
+        String returned = template.getOrLoad("hot:observer", String.class, key -> "fresh");
+
+        assertThat(oldValue).isEqualTo("old");
+        assertThat(returned).isEqualTo("old");
+        assertThat(observer.events()).contains("miss:hot:observer:false",
+                "loadSuccess:hot:observer:false",
+                "write:hot:observer:false",
+                "hit:hot:observer:false",
+                "refreshSubmitted:hot:observer:false",
+                "refreshSuccess:hot:observer:false");
+        assertThat(refreshExecutor.executeCount()).hasValue(1);
+    }
+
     private static LogicalExpireCacheOptions.Builder options(Executor refreshExecutor) {
         return LogicalExpireCacheOptions.builder()
             .keyPrefix("logical-cache:")
@@ -217,6 +247,45 @@ class LogicalExpireCacheTemplateTest {
 
         AtomicInteger executeCount() {
             return executeCount;
+        }
+    }
+
+    private static final class RecordingObserver implements CacheOperationObserver {
+
+        private final List<String> events = new ArrayList<>();
+
+        @Override
+        public void onHit(CacheOperationEvent event) {
+            events.add("hit:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onMiss(CacheOperationEvent event) {
+            events.add("miss:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onLoadSuccess(CacheOperationEvent event) {
+            events.add("loadSuccess:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onWrite(CacheOperationEvent event) {
+            events.add("write:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onRefreshSubmitted(CacheOperationEvent event) {
+            events.add("refreshSubmitted:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        @Override
+        public void onRefreshSuccess(CacheOperationEvent event) {
+            events.add("refreshSuccess:" + event.getKey() + ":" + event.isNullValue());
+        }
+
+        List<String> events() {
+            return events;
         }
     }
 

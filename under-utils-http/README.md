@@ -6,6 +6,7 @@
 
 - `HttpRequest`、`HttpResponse`、`HttpUtils`：直接 HTTP 调用。
 - `OpenApiClient`：封装开放平台常见治理能力，例如 token 注入、签名、trace header、幂等 key、业务错误解码和重试决策。
+- `RefreshingAccessTokenProvider`：封装 access token 本地缓存、提前刷新和并发收敛。
 
 ## 依赖
 
@@ -98,6 +99,23 @@ OpenApiResponse<OrderResult> response = client.execute(
         OrderResult.class
 );
 ```
+
+token 有有效期时，可以使用 `RefreshingAccessTokenProvider`：
+
+```java
+AccessTokenProvider tokenProvider = new RefreshingAccessTokenProvider(
+        request -> {
+            TokenResponse token = tokenGateway.refreshToken();
+            return RefreshingAccessTokenProvider.AccessToken.of(
+                    token.accessToken(),
+                    token.expiresAt()
+            );
+        },
+        Duration.ofSeconds(30)
+);
+```
+
+`refreshAhead` 表示到期前多久开始刷新。该实现只负责当前 JVM 内的 token 缓存；多实例共享、分布式锁、持久化和上游刷新失败兜底应由业务项目在 `TokenFetcher` 中处理。
 
 `OpenApiResponse` 会区分 HTTP 响应和治理层结果：
 

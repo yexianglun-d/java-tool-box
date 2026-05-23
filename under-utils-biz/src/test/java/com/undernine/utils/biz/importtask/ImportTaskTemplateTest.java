@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -170,6 +173,111 @@ class ImportTaskTemplateTest {
         assertThatThrownBy(() -> template.execute(List.of("row"), handler))
                 .isInstanceOf(ImportTaskException.class)
                 .hasMessage("import configuration missing");
+    }
+
+    @Test
+    void execute_reportsProgressWithoutChangingImportResult() {
+        List<ImportProgress> progresses = new ArrayList<>();
+        ImportTaskTemplate template = ImportTaskTemplate.create(ImportOptions.builder()
+                .progressListener(progresses::add)
+                .build());
+
+        ImportResult result = template.execute(List.of("apple,10", ",0"), new CsvItemHandler(new ArrayList<>()));
+
+        assertThat(result.getTotalCount()).isEqualTo(2);
+        assertThat(progresses).isNotEmpty();
+        assertThat(progresses.get(0).getStatus()).isEqualTo(ImportTaskStatus.RUNNING);
+        assertThat(progresses.get(progresses.size() - 1).getStatus()).isEqualTo(ImportTaskStatus.COMPLETED);
+        assertThat(progresses.get(progresses.size() - 1).getErrorCount()).isEqualTo(2);
+    }
+
+    @Test
+    void asyncTemplateStoresResultAndProgress() {
+        Executor directExecutor = Runnable::run;
+        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(directExecutor);
+
+        String taskId = template.submit("task-1", List.of("apple,10", ",0"), new CsvItemHandler(new ArrayList<>()));
+
+        assertThat(taskId).isEqualTo("task-1");
+        assertThat(template.findProgress("task-1")).hasValueSatisfying(progress -> {
+            assertThat(progress.getTaskId()).isEqualTo("task-1");
+            assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.COMPLETED);
+            assertThat(progress.getTotalCount()).isEqualTo(2);
+            assertThat(progress.getErrorCount()).isEqualTo(2);
+        });
+        assertThat(template.findResult("task-1")).hasValueSatisfying(result -> {
+            assertThat(result.getSuccessCount()).isEqualTo(1);
+            assertThat(result.getFailureCount()).isEqualTo(1);
+        });
+        assertThat(template.findFailure("task-1")).isEmpty();
+    }
+
+    @Test
+    void asyncTemplateStoresTaskFailure() {
+        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(Runnable::run);
+        ImportRowHandler<String, String> handler = new ImportRowHandler<>() {
+            @Override
+            public String parse(String rawRow, ImportRowContext context) {
+                throw new ImportTaskException("reader configuration missing");
+            }
+
+            @Override
+            public void process(String row, ImportRowContext context) {
+            }
+        };
+
+        template.submit("failed-task", List.of("row"), handler);
+
+        assertThat(template.findProgress("failed-task")).hasValueSatisfying(progress -> {
+            assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.FAILED);
+            assertThat(progress.getFailureMessage()).isEqualTo("reader configuration missing");
+        });
+        assertThat(template.findResult("failed-task")).isEmpty();
+        assertThat(template.findFailure("failed-task")).hasValueSatisfying(error ->
+                assertThat(error).isInstanceOf(ImportTaskException.class));
+    }
+
+    @Test
+    void asyncTemplateMarksTaskFailedWhenExecutorRejects() {
+        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(command -> {
+            throw new RejectedExecutionException("queue full");
+        });
+
+        assertThatThrownBy(() -> template.submit("rejected-task", List.of("apple,10"),
+                new CsvItemHandler(new ArrayList<>())))
+                .isInstanceOf(RejectedExecutionException.class)
+                .hasMessage("queue full");
+
+        assertThat(template.findProgress("rejected-task")).hasValueSatisfying(progress -> {
+            assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.FAILED);
+            assertThat(progress.getFailureMessage()).isEqualTo("queue full");
+        });
+    }
+
+    @Test
+    void errorExporterWritesCsvWithEscaping() {
+        String csv = ImportErrorExporter.toCsv(List.of(
+                new ImportRowError(2, "name", "NAME_INVALID", "contains, comma", "Alice,\"A\"")
+        ));
+
+        assertThat(csv).isEqualTo("rowNumber,field,errorCode,message,rawRowSummary\n"
+                + "2,name,NAME_INVALID,\"contains, comma\",\"Alice,\"\"A\"\"\"\n");
+    }
+
+    @Test
+    void progressListenerFailureDoesNotBreakImport() {
+        AtomicInteger callbackCount = new AtomicInteger();
+        ImportTaskTemplate template = ImportTaskTemplate.create(ImportOptions.builder()
+                .progressListener(progress -> {
+                    callbackCount.incrementAndGet();
+                    throw new IllegalStateException("metrics down");
+                })
+                .build());
+
+        ImportResult result = template.execute(List.of("apple,10"), new CsvItemHandler(new ArrayList<>()));
+
+        assertThat(result.isAllSuccess()).isTrue();
+        assertThat(callbackCount).hasPositiveValue();
     }
 
     private record Item(String name, int quantity) {
