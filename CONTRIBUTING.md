@@ -36,6 +36,7 @@ Open an issue first for non-trivial work. Include:
 - The repeated scenario you want to solve.
 - Why existing libraries or current modules are not enough.
 - Proposed module, public API, configuration keys, and failure semantics.
+- Compatibility impact: patch-compatible, minor-compatible, breaking, or deprecation-only.
 - Runtime assumptions such as Redis, database, thread pool, clock, or network behavior.
 - Test plan.
 
@@ -81,6 +82,9 @@ Before requesting review, check that:
 
 - The change has a clear module owner.
 - Public APIs are documented where the behavior is not obvious.
+- Public API changes follow [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+- Breaking changes are avoided outside major releases unless a documented safety or security exception applies.
+- Deprecated APIs include a replacement or migration note.
 - Behavior changes include tests.
 - Default `mvn test` does not require Redis, MySQL, Docker, or private infrastructure.
 - `mvn -Prelease -DskipTests package` still generates sources and javadocs.
@@ -103,6 +107,7 @@ Maintainers will mainly check:
 
 - Whether the change fits the project scope.
 - Whether the API can stay stable.
+- Whether the compatibility impact is correctly classified.
 - Whether dependencies and auto-configuration have acceptable side effects.
 - Whether failure handling, resource release, and concurrency boundaries are explicit.
 - Whether the change avoids low-value overlap with existing utility libraries.

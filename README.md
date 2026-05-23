@@ -210,6 +210,8 @@ Publishing notes are maintained in [docs/RELEASE.md](docs/RELEASE.md).
 
 Before opening a PR for a new feature, please read [CONTRIBUTING.md](CONTRIBUTING.md). The main question is whether the change belongs in a shared engineering-pattern library rather than in an application, framework, or existing utility library.
 
+Public API changes follow [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). Patch and minor releases should remain source-compatible unless a documented safety or security exception requires otherwise.
+
 ## License
 
 Under-Utils is released under the [MIT License](LICENSE).

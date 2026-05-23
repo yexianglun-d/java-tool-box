@@ -99,6 +99,16 @@
 - `LogicalExpireCacheOptions` 自动配置增加对用户自定义 `LogicalExpireCacheTemplate` 的退让，避免自定义模板场景下继续创建无用默认 options。
 - `under-utils-test` 增加 Redis Testcontainers 集成测试，覆盖 cache-aside 命中复用、空值占位缓存和逻辑过期缓存后台刷新。
 
+## 第九轮结论
+
+### Compatibility Policy
+
+- 新增 `docs/COMPATIBILITY.md`，明确 `1.0.x`、`1.x.0` 和 `2.0.0` 的版本语义，patch/minor 版本默认保持源码兼容。
+- 明确 public API 范围：Maven 坐标、public/protected Java API、注解属性、`under.utils.*` 配置 key、starter 自动装配 Bean、SPI 接口和已文档化的失败语义。
+- 明确破坏性变更定义：删除/重命名 public API、修改签名或默认值、改变 starter 默认副作用、无迁移改变缓存 payload、改变 key/锁/缓存/错误解码语义等。
+- 明确弃用流程：使用 `@Deprecated(since = "x.y.z", forRemoval = false)`，JavaDoc 说明替代方案，默认保留到下一 major 版本，并在 CHANGELOG/API Review 中记录。
+- 将兼容性影响接入 README、CONTRIBUTING、PR 模板和 Feature Request 模板，后续 user-facing 变更需要显式标注 patch-compatible、minor-compatible、deprecation 或 breaking。
+
 ## 后续待审
 
-- 补充发布后版本兼容策略和弃用策略。
+- 补充 patch/minor release notes 模板。

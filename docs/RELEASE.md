@@ -16,6 +16,7 @@ Official references:
 - Central Portal user token.
 - GPG private key, public key published to a supported key server, and passphrase.
 - Updated `CHANGELOG.md`, README, samples, and API review notes for the release.
+- Compatibility impact reviewed against `docs/COMPATIBILITY.md`, including deprecations and migration notes.
 
 Never commit Central tokens, GPG private keys, passphrases, or generated release bundles.
 

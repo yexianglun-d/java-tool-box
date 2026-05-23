@@ -18,6 +18,10 @@ assignees: ""
 
 <!-- Describe the target module, main classes, configuration, and failure semantics. -->
 
+## Compatibility Impact
+
+<!-- Is this patch-compatible, minor-compatible, deprecation-only, breaking, or internal-only? -->
+
 ## Reuse Boundary
 
 <!-- Which projects or modules can reuse this? What should stay outside this library? -->

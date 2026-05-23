@@ -11,9 +11,11 @@
 - 发布后更新 README、Quick Start、Roadmap 和 API Review，改为面向 Maven Central 已发布版本的使用说明。
 - `main` 分支 Maven 版本进入 `1.0.1-SNAPSHOT` 开发周期，避免重复发布已存在的 `1.0.0` 构件。
 - `under-utils-starter` 在用户自定义 `LogicalExpireCacheTemplate` 时不再继续创建默认 `LogicalExpireCacheOptions`。
+- README、CONTRIBUTING、Pull Request 模板和 Feature Request 模板接入兼容性影响说明，要求 user-facing 变更显式判断 patch/minor/deprecation/breaking 影响。
 
 ### Added
 
+- 新增 `docs/COMPATIBILITY.md`，明确 1.x 版本兼容策略、public API 范围、破坏性变更定义、弃用流程和配置 key 迁移规则。
 - `under-utils-starter` 自动装配测试补充 Redis store 切换、缺少 `RedissonClient` 的失败路径、用户自定义 store/lock/logical-cache Bean 退让行为。
 - `under-utils-test` 新增 Redis Testcontainers 集成测试，覆盖 `CacheAsideTemplate` 命中复用、空值占位缓存和 `LogicalExpireCacheTemplate` 后台刷新。
 

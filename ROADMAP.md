@@ -15,12 +15,13 @@ This roadmap is a working document. Priorities may change based on issues, real 
 - Reworked public docs into community-style maintenance docs with module-level READMEs for Redis, starter, and biz.
 - Added starter auto-configuration tests for Redis store switching and user bean backoff.
 - Added Redis Testcontainers coverage for cache-aside and logical-expire cache behavior.
+- Added a compatibility policy for public API changes, deprecations, configuration migrations, and release notes.
 
 ## Near Term
 
-- Write a compatibility policy for public API changes, deprecations, and release cadence.
 - Keep API review notes current when configuration keys, exceptions, or starter defaults change.
 - Add targeted examples for custom `RateLimitStore`, `RepeatSubmitStore`, and `CacheValueCodec`.
+- Add release-note templates for patch and minor releases.
 
 ## Later
 
