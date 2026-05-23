@@ -1,10 +1,10 @@
 # Under-Utils MyBatis
 
-MyBatis-Plus support for audit fields, logical delete conventions, safe pagination, and sort-field whitelisting.
+MyBatis-Plus 支持模块，提供审计字段、逻辑删除约定、安全分页和排序字段白名单。
 
-The module assumes the application already uses MyBatis-Plus. It does not hide MyBatis-Plus; it adds a small set of project-level defaults and safer request-facing pagination APIs.
+本模块假设业务项目已经使用 MyBatis-Plus。它不会隐藏 MyBatis-Plus，而是在项目级默认能力和 Web 入参安全方面做少量补充。
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -14,19 +14,19 @@ The module assumes the application already uses MyBatis-Plus. It does not hide M
 </dependency>
 ```
 
-## Main APIs
+## 主要 API
 
-| API | Purpose |
-|-----|---------|
-| `BaseEntity` | Common `id`, create/update time, create/update user, and logical delete fields. |
-| `DefaultMetaObjectHandler` | Fills audit fields during insert and update. |
-| `AuditorProvider` | Supplies the current audit user id. |
-| `SafePageQuery` | Request-facing pagination model that avoids raw database columns. |
-| `SortFieldMapping` | Maps public sort fields to allowed database columns. |
-| `PageResult` | Small response wrapper around MyBatis-Plus pages. |
-| `MybatisPlusConfig` | Factory for common MyBatis-Plus interceptor setup. |
+| API | 说明 |
+|-----|------|
+| `BaseEntity` | 通用 `id`、创建/更新时间、创建/更新人、逻辑删除字段。 |
+| `DefaultMetaObjectHandler` | insert/update 时填充审计字段。 |
+| `AuditorProvider` | 提供当前审计用户 ID。 |
+| `SafePageQuery` | 面向请求入参的分页模型，避免暴露数据库列名。 |
+| `SortFieldMapping` | 将公开排序字段映射到允许的数据库列。 |
+| `PageResult` | 基于 MyBatis-Plus page 的轻量响应封装。 |
+| `MybatisPlusConfig` | 常用 MyBatis-Plus interceptor 工厂。 |
 
-## Basic Setup
+## 基础配置
 
 ```java
 @Configuration
@@ -49,7 +49,7 @@ public class MybatisConfiguration {
 }
 ```
 
-Typical MyBatis-Plus logical delete configuration:
+典型逻辑删除配置：
 
 ```yaml
 mybatis-plus:
@@ -60,7 +60,7 @@ mybatis-plus:
       logic-not-delete-value: 0
 ```
 
-## Entity
+## 实体
 
 ```java
 @Data
@@ -74,7 +74,7 @@ public class SysUser extends BaseEntity {
 }
 ```
 
-Matching table fields:
+对应表字段：
 
 ```sql
 CREATE TABLE sys_user (
@@ -90,9 +90,9 @@ CREATE TABLE sys_user (
 );
 ```
 
-## Safe Pagination
+## 安全分页
 
-Expose public sort names instead of database column names:
+对外暴露排序字段名，不暴露数据库列名：
 
 ```java
 SortFieldMapping mapping = SortFieldMapping.builder()
@@ -113,19 +113,19 @@ IPage<SysUser> page = userMapper.selectPage(
 PageResult<SysUser> result = PageResult.of(page);
 ```
 
-`SafePageQuery` ignores sort fields that are not present in `SortFieldMapping`. This prevents raw request values from reaching `ORDER BY`.
+`SafePageQuery` 会忽略不在 `SortFieldMapping` 中的排序字段，避免请求原始值进入 `ORDER BY`。
 
-`PageQuery` remains for compatibility but is not recommended for request input.
+`PageQuery` 仍保留用于兼容，但不建议作为 Web 入参。
 
-## Audit Fields
+## 审计字段
 
-`DefaultMetaObjectHandler` fills:
+`DefaultMetaObjectHandler` 会填充：
 
-- `createTime` and `createBy` on insert.
-- `updateTime` and `updateBy` on insert and update.
-- `deleted` on insert when it is null.
+- insert 时填充 `createTime` 和 `createBy`。
+- insert/update 时填充 `updateTime` 和 `updateBy`。
+- insert 时如果 `deleted` 为空，填充默认未删除值。
 
-Provide an `AuditorProvider` from your security context:
+可以从安全上下文提供审计用户：
 
 ```java
 @Bean
@@ -140,18 +140,18 @@ public AuditorProvider auditorProvider() {
 }
 ```
 
-## Integration Tests
+## 集成测试
 
-MySQL-backed integration coverage lives in `under-utils-test` and runs through Testcontainers:
+MySQL 集成测试位于 `under-utils-test`，通过 Testcontainers 运行：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=MybatisIntegrationTest
 ```
 
-The default Maven build does not start MySQL or Docker.
+默认 Maven 构建不会启动 MySQL 或 Docker。
 
-## Notes
+## 注意事项
 
-- Keep `deleted` aligned with the configured MyBatis-Plus logical delete field.
-- Prefer `SafePageQuery` for web/API input.
-- Keep database-specific behavior in application code or a dedicated module; this module only provides reusable MyBatis-Plus helpers.
+- `deleted` 字段需要与 MyBatis-Plus 逻辑删除配置保持一致。
+- Web/API 入参优先使用 `SafePageQuery`。
+- 数据库特定行为应放在应用或专门模块中，本模块只提供可复用 MyBatis-Plus 辅助能力。

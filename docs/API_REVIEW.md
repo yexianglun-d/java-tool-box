@@ -91,9 +91,9 @@
 
 ## 第八轮结论
 
-### Docs And Post-Release Test Coverage
+### 文档与发布后测试覆盖
 
-- README、Quick Start、贡献指南、发布指南、路线图和模块 README 改为更接近社区维护文档的写法：少形容词，优先说明边界、安装、运行命令、失败语义和维护约束。
+- README、快速开始、贡献指南、发布指南、路线图和模块 README 改为更接近社区维护文档的写法：少形容词，优先说明边界、安装、运行命令、失败语义和维护约束。
 - 为 `under-utils-redis`、`under-utils-starter` 和 `under-utils-biz` 补齐模块 README，避免发布到 Maven Central 后缺少模块级入口说明。
 - `under-utils-starter` 自动装配测试覆盖 Redis store 切换、缺少 `RedissonClient` 的失败路径，以及用户自定义 store、lock template、cache options/template 的退让行为。
 - `LogicalExpireCacheOptions` 自动配置增加对用户自定义 `LogicalExpireCacheTemplate` 的退让，避免自定义模板场景下继续创建无用默认 options。
@@ -101,14 +101,22 @@
 
 ## 第九轮结论
 
-### Compatibility Policy
+### 兼容性策略
 
 - 新增 `docs/COMPATIBILITY.md`，明确 `1.0.x`、`1.x.0` 和 `2.0.0` 的版本语义，patch/minor 版本默认保持源码兼容。
 - 明确 public API 范围：Maven 坐标、public/protected Java API、注解属性、`under.utils.*` 配置 key、starter 自动装配 Bean、SPI 接口和已文档化的失败语义。
 - 明确破坏性变更定义：删除/重命名 public API、修改签名或默认值、改变 starter 默认副作用、无迁移改变缓存 payload、改变 key/锁/缓存/错误解码语义等。
 - 明确弃用流程：使用 `@Deprecated(since = "x.y.z", forRemoval = false)`，JavaDoc 说明替代方案，默认保留到下一 major 版本，并在 CHANGELOG/API Review 中记录。
-- 将兼容性影响接入 README、CONTRIBUTING、PR 模板和 Feature Request 模板，后续 user-facing 变更需要显式标注 patch-compatible、minor-compatible、deprecation 或 breaking。
+- 将兼容性影响接入 README、贡献指南、PR 模板和功能建议模板，后续面向用户的变更需要显式标注 patch-compatible、minor-compatible、deprecation 或 breaking。
+
+## 第十轮结论
+
+### 文档语言
+
+- 对外文档统一使用中文，保留 GitHub 开源项目常见的信息结构：边界、安装、配置、示例、兼容性、测试和贡献规则。
+- 保留必要英文技术名词和代码标识，例如 Maven Central、public API、starter、SPI、Release Notes。
+- Issue/PR 模板同步改为中文，降低中文贡献者提交成本。
 
 ## 后续待审
 
-- 补充 patch/minor release notes 模板。
+- 补充 patch/minor 发布说明模板。

@@ -1,4 +1,4 @@
-# Changelog
+# 变更日志
 
 本文件记录 Under-Utils 的重要变更。
 
@@ -6,12 +6,13 @@
 
 ### Changed
 
-- 重写 README、Quick Start、贡献指南、发布指南、路线图和模块 README，去除营销化表达，改为 GitHub 开源项目常见的边界、安装、示例和维护说明。
+- 对外文档统一改回中文表达，保留 GitHub 开源项目常见结构和维护语气。
+- 重写 README、快速开始、贡献指南、发布指南、路线图和模块 README，去除营销化表达，改为 GitHub 开源项目常见的边界、安装、示例和维护说明。
 - 补充 `under-utils-redis`、`under-utils-starter`、`under-utils-biz` 模块 README。
-- 发布后更新 README、Quick Start、Roadmap 和 API Review，改为面向 Maven Central 已发布版本的使用说明。
+- 发布后更新 README、快速开始、路线图和 API Review，改为面向 Maven Central 已发布版本的使用说明。
 - `main` 分支 Maven 版本进入 `1.0.1-SNAPSHOT` 开发周期，避免重复发布已存在的 `1.0.0` 构件。
 - `under-utils-starter` 在用户自定义 `LogicalExpireCacheTemplate` 时不再继续创建默认 `LogicalExpireCacheOptions`。
-- README、CONTRIBUTING、Pull Request 模板和 Feature Request 模板接入兼容性影响说明，要求 user-facing 变更显式判断 patch/minor/deprecation/breaking 影响。
+- README、贡献指南、Pull Request 模板和功能建议模板接入兼容性影响说明，要求面向用户的变更显式判断 patch/minor/deprecation/breaking 影响。
 
 ### Added
 

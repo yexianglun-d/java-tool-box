@@ -1,10 +1,10 @@
 # Under-Utils Redis
 
-Redisson-backed infrastructure patterns used by Spring applications and the starter.
+基于 Redisson 的基础设施模式模块，供 Spring 应用和 starter 使用。
 
-The module expects the application to provide a configured `RedissonClient`. It does not create Redis connections on its own.
+本模块要求业务项目提供已配置的 `RedissonClient`，不会自行创建 Redis 连接。
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -14,18 +14,18 @@ The module expects the application to provide a configured `RedissonClient`. It 
 </dependency>
 ```
 
-## Main APIs
+## 主要 API
 
-| API | Purpose |
-|-----|---------|
-| `DistributedLockTemplate` | Executes a callback under a Redisson lock and releases it safely. |
-| `RedisRateLimitStore` | Distributed `RateLimitStore` implementation. |
-| `RedisRepeatSubmitStore` | Distributed `RepeatSubmitStore` implementation. |
-| `CacheAsideTemplate` | Cache-aside read-through template with null caching, TTL jitter, and rebuild lock. |
-| `LogicalExpireCacheTemplate` | Hot-key cache template that returns stale values while refreshing in the background. |
-| `CacheValueCodec` | Serialization boundary shared by cache templates. |
+| API | 说明 |
+|-----|------|
+| `DistributedLockTemplate` | 在 Redisson lock 下执行回调，并确保释放锁。 |
+| `RedisRateLimitStore` | 分布式 `RateLimitStore` 实现。 |
+| `RedisRepeatSubmitStore` | 分布式 `RepeatSubmitStore` 实现。 |
+| `CacheAsideTemplate` | cache-aside 读穿模板，支持空值缓存、TTL 抖动和重建锁。 |
+| `LogicalExpireCacheTemplate` | 热点 key 缓存模板，逻辑过期后先返回旧值并后台刷新。 |
+| `CacheValueCodec` | cache 模板共享的序列化边界。 |
 
-## Distributed Lock
+## 分布式锁
 
 ```java
 Long orderId = distributedLockTemplate.execute(
@@ -37,7 +37,7 @@ Long orderId = distributedLockTemplate.execute(
 );
 ```
 
-If the lock cannot be acquired, the template throws `DistributedLockException`.
+无法获取锁时，模板抛出 `DistributedLockException`。
 
 ## Cache-Aside
 
@@ -59,15 +59,15 @@ UserProfile profile = cacheAsideTemplate.getOrLoad(
 );
 ```
 
-Behavior:
+行为：
 
-- A cache hit returns without calling the loader.
-- A null load result can be cached with a shorter TTL.
-- Jitter is added to reduce synchronized expiry.
-- The rebuild lock limits cache stampede on misses.
-- Loader exceptions propagate and do not write cache.
+- 缓存命中时不调用 loader。
+- loader 返回 null 时，可以用更短 TTL 缓存空值占位。
+- TTL jitter 用于降低集中失效。
+- 重建锁用于降低缓存击穿。
+- loader 异常会向外传播，不写入缓存。
 
-## Logical Expire Cache
+## 逻辑过期缓存
 
 ```java
 LogicalExpireCacheOptions options = LogicalExpireCacheOptions.builder()
@@ -85,19 +85,19 @@ ProductView view = logicalExpireCacheTemplate.getOrLoad(
 );
 ```
 
-Behavior:
+行为：
 
-- Missing keys are loaded synchronously.
-- Fresh cached values are returned directly.
-- Logically expired values are returned immediately and refreshed in the background.
-- `physicalTtl` must be greater than `logicalTtl`, otherwise the old value cannot serve as a stale fallback.
-- Refresh failures are reported through `LogicalExpireCacheRefreshFailureHandler` when configured.
+- key 不存在时同步加载。
+- 逻辑未过期时直接返回缓存值。
+- 逻辑过期时立即返回旧值，并提交后台刷新。
+- `physicalTtl` 必须大于 `logicalTtl`，否则旧值无法作为兜底窗口。
+- 配置 `LogicalExpireCacheRefreshFailureHandler` 后，后台刷新失败会回调处理器。
 
-## Rate Limit And Duplicate Submit Stores
+## 限流和防重复提交 store
 
-`RedisRateLimitStore` and `RedisRepeatSubmitStore` implement the store interfaces from `under-utils-spring`.
+`RedisRateLimitStore` 和 `RedisRepeatSubmitStore` 实现了 `under-utils-spring` 中的 store 接口。
 
-They are usually wired by `under-utils-starter` when:
+通常由 `under-utils-starter` 在以下配置下装配：
 
 ```yaml
 under:
@@ -109,11 +109,11 @@ under:
         store: redis
 ```
 
-Redis or Redisson failures are not swallowed. If your service should fail open or use a fallback path, provide a custom store implementation in the application.
+Redis 或 Redisson 异常不会被吞掉。如果业务需要 fail-open 或兜底策略，请在应用内提供自定义 store。
 
-## Integration Tests
+## 集成测试
 
-Redis-backed cache behavior is covered from the `under-utils-test` module with Testcontainers:
+Redis 缓存模板的真实 Redis 行为由 `under-utils-test` 通过 Testcontainers 覆盖：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=RedisCacheTemplateIntegrationTest

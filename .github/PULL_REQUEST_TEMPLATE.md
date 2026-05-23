@@ -1,36 +1,36 @@
-## Summary
+## 摘要
 
 - 
 
-## Type
+## 类型
 
-- [ ] Bug fix
-- [ ] New engineering pattern
-- [ ] Documentation
-- [ ] Refactor
-- [ ] Test
-- [ ] Build/CI
+- [ ] Bug 修复
+- [ ] 新工程模式能力
+- [ ] 文档
+- [ ] 重构
+- [ ] 测试
+- [ ] 构建/CI
 
-## Scope
+## 影响范围
 
-- Affected modules:
-- Public API changes:
-- Compatibility impact: <!-- patch-compatible / minor-compatible / deprecation / breaking / none -->
-- External dependencies or runtime assumptions:
+- 影响模块：
+- public API 变更：
+- 兼容性影响：<!-- patch-compatible / minor-compatible / deprecation / breaking / none -->
+- 外部依赖或运行时假设：
 
-## Checklist
+## 检查项
 
-- [ ] This change fits the Under-Utils project scope and is not a generic Hutool-style utility addition.
-- [ ] Public API changes follow `docs/COMPATIBILITY.md`.
-- [ ] Breaking changes are avoided, or the exception and migration path are documented.
-- [ ] Deprecated APIs include replacement or migration notes.
-- [ ] Tests were added or updated where behavior changed.
-- [ ] Default `mvn test` does not require Redis, MySQL, Docker, or other external services.
-- [ ] Documentation or `CHANGELOG.md` was updated when user-facing behavior changed.
-- [ ] No build outputs, local paths, credentials, or internal reports are included.
+- [ ] 变更符合 Under-Utils 项目边界，不是 Hutool 式通用工具方法扩张。
+- [ ] public API 变更遵循 `docs/COMPATIBILITY.md`。
+- [ ] 已避免破坏性变更，或已说明例外原因和迁移路径。
+- [ ] deprecated API 已提供替代方案或迁移说明。
+- [ ] 行为变更已补充或更新测试。
+- [ ] 默认 `mvn test` 不依赖 Redis、MySQL、Docker 或其他外部服务。
+- [ ] 面向用户的变更已更新文档或 `CHANGELOG.md`。
+- [ ] 未提交构建产物、本地路径、凭据或内部报告。
 
-## Verification
+## 验证
 
 ```bash
-# Paste commands you ran here
+# 粘贴本次执行过的命令
 ```

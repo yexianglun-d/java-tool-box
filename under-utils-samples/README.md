@@ -1,20 +1,20 @@
 # Under-Utils Samples
 
-Runnable Spring Boot sample application for Under-Utils.
+Under-Utils 的 Spring Boot 可运行示例工程。
 
-The default profile does not require Redis or a database. It covers request context propagation, local rate limit and duplicate-submit guards, OpenAPI client usage, safe pagination request building, and CSV import workflow.
+默认 profile 不需要 Redis 或数据库，覆盖请求上下文传播、本地限流/防重提交、OpenAPI 客户端用法、安全分页参数构建和 CSV 导入流程。
 
-## Start
+## 启动
 
-From the repository root:
+从仓库根目录执行：
 
 ```bash
 mvn -pl under-utils-samples -am spring-boot:run
 ```
 
-Default port: `18080`.
+默认端口：`18080`。
 
-## Requests
+## 请求样例
 
 ```bash
 curl http://localhost:18080/samples/context/current \
@@ -49,21 +49,21 @@ curl -X POST http://localhost:18080/samples/openapi/orders \
 
 ## Redis Profile
 
-Start Redis:
+启动 Redis：
 
 ```bash
 cd under-utils-samples
 docker compose up -d
 ```
 
-Run the app with the `redis` profile:
+启用 `redis` profile 运行应用：
 
 ```bash
 cd ..
 mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=redis
 ```
 
-The profile creates a sample `RedissonClient` from:
+该 profile 会根据以下配置创建示例 `RedissonClient`：
 
 ```yaml
 samples:
@@ -73,7 +73,7 @@ samples:
     password:
 ```
 
-Redis endpoints:
+Redis 相关接口：
 
 ```bash
 curl http://localhost:18080/samples/redis/status
@@ -82,7 +82,7 @@ curl http://localhost:18080/samples/redis/cache-aside
 curl http://localhost:18080/samples/redis/logical-cache
 ```
 
-Stop Redis:
+停止 Redis：
 
 ```bash
 cd under-utils-samples

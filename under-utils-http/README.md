@@ -1,13 +1,13 @@
 # Under-Utils HTTP
 
-HTTP helpers and OpenAPI client governance built on OkHttp.
+基于 OkHttp 的 HTTP 调用和 OpenAPI 客户端治理模块。
 
-The module has two layers:
+模块分为两层：
 
-- `HttpRequest`, `HttpResponse`, and `HttpUtils` for direct HTTP calls.
-- `OpenApiClient` for repeated open-platform concerns such as token injection, signing, trace headers, idempotency keys, business error decoding, and retry decisions.
+- `HttpRequest`、`HttpResponse`、`HttpUtils`：直接 HTTP 调用。
+- `OpenApiClient`：封装开放平台常见治理能力，例如 token 注入、签名、trace header、幂等 key、业务错误解码和重试决策。
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -17,7 +17,7 @@ The module has two layers:
 </dependency>
 ```
 
-## Direct HTTP Calls
+## 直接 HTTP 调用
 
 ```java
 HttpResponse response = HttpRequest.builder()
@@ -33,7 +33,7 @@ if (response.isSuccess()) {
 }
 ```
 
-POST JSON:
+POST JSON：
 
 ```java
 HttpResponse response = HttpRequest.builder()
@@ -45,14 +45,14 @@ HttpResponse response = HttpRequest.builder()
         .execute();
 ```
 
-Convenience API:
+便捷 API：
 
 ```java
 String body = HttpUtils.get("https://api.example.com/users");
 String created = HttpUtils.postJson("https://api.example.com/orders", command);
 ```
 
-Global defaults:
+全局默认配置：
 
 ```java
 HttpConfig config = HttpConfig.builder()
@@ -66,9 +66,9 @@ HttpConfig config = HttpConfig.builder()
 HttpUtils.setDefaultConfig(config);
 ```
 
-## OpenAPI Client
+## OpenAPI 客户端
 
-Use `DefaultOpenApiClient` when each request needs consistent platform-level behavior.
+当每次调用都需要统一 token、签名、幂等和业务错误处理时，使用 `DefaultOpenApiClient`。
 
 ```java
 OpenApiClient client = new DefaultOpenApiClient(
@@ -79,9 +79,10 @@ OpenApiClient client = new DefaultOpenApiClient(
                 .retryInterval(300)
                 .build(),
         request -> tokenService.getAccessToken(),
-        request -> request
-                .header("X-Sign", signer.sign(request))
-                .query("timestamp", String.valueOf(System.currentTimeMillis())),
+        request -> {
+            request.header("X-Sign", signer.sign(request));
+            request.query("timestamp", String.valueOf(System.currentTimeMillis()));
+        },
         ApiErrorDecoder.httpStatus()
 );
 
@@ -98,15 +99,15 @@ OpenApiResponse<OrderResult> response = client.execute(
 );
 ```
 
-`OpenApiResponse` separates transport status from the client governance result:
+`OpenApiResponse` 会区分 HTTP 响应和治理层结果：
 
-- `success` is the decoded result after HTTP status and business error handling.
-- `statusCode` is the HTTP status code, or `0` when no response was received.
-- `errorCode`, `errorMessage`, and `retryable` come from the configured `ApiErrorDecoder`.
+- `success` 是经过 HTTP 状态和业务错误解码后的结果。
+- `statusCode` 是 HTTP 状态码；没有拿到响应时为 `0`。
+- `errorCode`、`errorMessage`、`retryable` 来自配置的 `ApiErrorDecoder`。
 
-## Business Error Decoding
+## 业务错误解码
 
-Many open platforms return HTTP 200 with a business error code. Implement `ApiErrorDecoder` to keep that rule out of service methods.
+很多开放平台会用 HTTP 200 返回业务错误码。可以通过 `ApiErrorDecoder` 把规则从业务方法中移出。
 
 ```java
 ApiErrorDecoder decoder = (request, httpResponse) -> {
@@ -131,11 +132,11 @@ ApiErrorDecoder decoder = (request, httpResponse) -> {
 };
 ```
 
-Retry is only attempted when the decoded error is marked retryable and the configured retry budget allows it.
+只有解码结果标记为 `retryable`，并且还有重试预算时，客户端才会重试。
 
-## Exceptions
+## 异常
 
-Direct HTTP APIs throw module exceptions for network and timeout failures:
+直接 HTTP API 会针对网络和超时失败抛出模块异常：
 
 ```java
 try {
@@ -149,9 +150,9 @@ try {
 }
 ```
 
-## Notes
+## 注意事项
 
-- Do not disable SSL verification in production.
-- Keep retry disabled or conservative for non-idempotent requests.
-- Set timeouts per upstream. A shared global default should be a baseline, not the only control.
-- Use `OpenApiClient` when token, signing, idempotency, trace, and business error rules would otherwise be repeated in every service method.
+- 生产环境不要关闭 SSL 校验。
+- 非幂等请求应关闭或谨慎配置重试。
+- 超时时间应按上游接口特点配置，全局默认只作为基线。
+- 当 token、签名、幂等、trace 和业务错误处理在多个 service 方法中重复出现时，优先使用 `OpenApiClient`。

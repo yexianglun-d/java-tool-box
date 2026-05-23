@@ -1,38 +1,38 @@
-# Roadmap
+# 路线图
 
-This roadmap is a working document. Priorities may change based on issues, real usage, and maintenance cost.
+本路线图用于说明 Under-Utils 的演进方向。优先级会根据 issue、真实使用反馈和维护成本调整。
 
-## Done
+## 已完成
 
-- Published `v1.0.0` to Maven Central under `io.github.yexianglun-d`.
-- Added GitHub Actions CI for compile, default tests, and Testcontainers integration tests.
-- Added Central Portal release workflow, GPG signing profile, sources and javadocs generation.
-- Removed placeholder modules, empty placeholder classes, and obsolete internal planning documents.
-- Clarified that Under-Utils is not a Hutool-style general utility collection.
-- Moved Docker-dependent integration checks into `under-utils-test` behind the `integration-tests` profile.
-- Kept `under-utils-samples` runnable without Redis or MySQL by default.
-- Added GitHub community files: license, contributing guide, security policy, code of conduct, issue templates, and PR template.
-- Reworked public docs into community-style maintenance docs with module-level READMEs for Redis, starter, and biz.
-- Added starter auto-configuration tests for Redis store switching and user bean backoff.
-- Added Redis Testcontainers coverage for cache-aside and logical-expire cache behavior.
-- Added a compatibility policy for public API changes, deprecations, configuration migrations, and release notes.
+- `v1.0.0` 已发布到 Maven Central，坐标命名空间为 `io.github.yexianglun-d`。
+- GitHub Actions CI 覆盖默认编译、默认测试和 Testcontainers 集成测试。
+- 接入 Central Portal 发布流程、GPG 签名 profile、sources 和 javadocs 生成。
+- 清理占位模块、空占位类和过时内部规划文档。
+- 明确 Under-Utils 不做 Hutool 式通用工具集合。
+- 将依赖 Docker 的集成测试收口到 `under-utils-test`，通过 `integration-tests` profile 启用。
+- 保证 `under-utils-samples` 默认无 Redis/MySQL 也能启动。
+- 补齐 GitHub 社区文件：许可证、贡献指南、安全策略、行为准则、Issue 模板和 PR 模板。
+- 将公开文档收敛为社区维护文档写法，并补齐 Redis、starter、biz 模块 README。
+- 补充 starter 自动装配测试，覆盖 Redis store 切换和用户自定义 Bean 退让。
+- 补充 Redis Testcontainers 测试，覆盖 cache-aside 和逻辑过期缓存行为。
+- 补充 public API 兼容性策略，明确变更、弃用、配置迁移和 Release Notes 要求。
 
-## Near Term
+## 近期计划
 
-- Keep API review notes current when configuration keys, exceptions, or starter defaults change.
-- Add targeted examples for custom `RateLimitStore`, `RepeatSubmitStore`, and `CacheValueCodec`.
-- Add release-note templates for patch and minor releases.
+- 持续维护 API Review，配置 key、异常语义和 starter 默认行为发生变化时同步记录。
+- 补充自定义 `RateLimitStore`、`RepeatSubmitStore`、`CacheValueCodec` 的示例。
+- 补充 patch/minor Release Notes 模板。
 
-## Later
+## 后续方向
 
-- Improve Redis cache observability around refresh failures, lock waits, null caching, and logical expiry.
-- Expand OpenAPI examples for signing, idempotency, token refresh, and business error decoding.
-- Add MyBatis examples for audit filling and multi-database assumptions.
-- Extend the import workflow around async execution, progress query, and error export.
-- Continue shrinking historical `under-utils-core` helper growth.
+- 改进 Redis 缓存模板可观测性，包括刷新失败、锁等待、空值缓存和逻辑过期状态。
+- 扩展 OpenAPI 示例：签名、幂等、token 刷新和业务错误解码。
+- 补充 MyBatis 审计填充和多数据库假设示例。
+- 扩展导入任务模板的异步执行、进度查询和错误导出能力。
+- 继续收缩 `under-utils-core` 历史工具方法的扩张倾向。
 
-## Non-Goals
+## 非目标
 
-- Rebuilding Hutool, Apache Commons, Guava, or JDK helpers.
-- Adding modules to increase package count without a tested reuse boundary.
-- Encoding product-specific domains such as order, payment, marketing, or membership workflows.
+- 重建 Hutool、Apache Commons、Guava 或 JDK 已成熟覆盖的工具方法。
+- 为了模块数量而新增没有测试复用边界的模块。
+- 写入订单、支付、营销、会员等产品域专属流程。

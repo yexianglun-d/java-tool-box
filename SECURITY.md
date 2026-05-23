@@ -1,29 +1,29 @@
-# Security Policy
+# 安全策略
 
-## Supported Versions
+## 支持版本
 
-Security fixes are applied to `main` first and are included in the next patch release when the affected code has already been published.
+安全修复会先进入 `main`。如果受影响代码已经发布，修复会进入下一个 patch 版本。
 
-| Version | Supported |
-|---------|-----------|
-| `main` | Yes |
-| `1.0.x` | Best effort |
+| 版本线 | 支持策略 |
+|--------|----------|
+| `main` | 支持 |
+| `1.0.x` | 尽力维护 |
 
-## Reporting A Vulnerability
+## 报告安全问题
 
-Do not post exploit details, secrets, internal addresses, production logs, or working payloads in public issues.
+请不要在公开 issue 中粘贴漏洞利用细节、密钥、内部地址、生产日志或可直接复现攻击的 payload。
 
-Preferred reporting path:
+推荐方式：
 
-1. Use GitHub Security Advisories if private reporting is available.
-2. If private reporting is not available, open a public issue that only says you need to report a security problem. A maintainer will move the discussion to a private channel.
+1. 如果仓库启用了 GitHub Security Advisories，请通过私有安全公告报告。
+2. 如果暂未启用私有报告，请创建一个不包含漏洞细节的公开 issue，只说明需要私下报告安全问题；维护者会转到私有渠道沟通。
 
-Helpful information:
+报告时建议提供：
 
-- Affected module and version.
-- Vulnerability type and impact.
-- Minimal reproduction or failing test.
-- Known mitigation.
-- Whether the issue appears to be exploited in public.
+- 受影响模块和版本。
+- 漏洞类型和影响范围。
+- 最小复现步骤或失败测试。
+- 已知缓解方案。
+- 是否已发现公开利用迹象。
 
-Maintainers will confirm the report, assess impact, prepare a fix, and document the result in release notes or the changelog.
+维护者会确认问题、评估影响、准备修复，并在 Release Notes 或 `CHANGELOG.md` 中说明结果。

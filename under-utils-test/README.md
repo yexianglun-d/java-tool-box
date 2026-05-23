@@ -1,42 +1,42 @@
 # Under-Utils Test
 
-Integration test module for behavior that needs real external services.
+集成测试模块，用于验证需要真实外部服务的行为。
 
-This module is excluded from the default Maven reactor because it starts Docker containers through Testcontainers. It is not a user-facing sample app and is not published as a library module.
+该模块不进入默认 Maven reactor，因为它会通过 Testcontainers 启动 Docker 容器。它不是对外示例工程，也不作为库模块发布。
 
-## What It Covers
+## 覆盖范围
 
-- MyBatis-Plus behavior against MySQL.
-- Redis cache templates against Redis.
-- Cross-module integration checks that should not depend on a developer's local services.
+- MyBatis-Plus 与真实 MySQL 的集成行为。
+- Redis 缓存模板与真实 Redis 的集成行为。
+- 不应依赖开发者本地服务的跨模块集成检查。
 
-## Requirements
+## 环境要求
 
 - Java 21
 - Maven 3.9+
 - Docker
 
-## Run
+## 运行
 
-All integration tests:
+全部集成测试：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test
 ```
 
-MyBatis only:
+仅 MyBatis：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=MybatisIntegrationTest
 ```
 
-Redis cache templates only:
+仅 Redis 缓存模板：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test -Dtest=RedisCacheTemplateIntegrationTest
 ```
 
-If Docker is unavailable, use the default build instead:
+如果本机没有 Docker，使用默认构建即可：
 
 ```bash
 mvn test

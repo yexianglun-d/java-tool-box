@@ -1,35 +1,35 @@
 ---
-name: Feature request
-about: Propose a reusable engineering-pattern capability
+name: 功能建议
+about: 提出一个可复用工程模式能力
 title: "[Feature] "
 labels: enhancement
 assignees: ""
 ---
 
-## Scenario
+## 场景
 
-<!-- What repeated engineering problem does this solve? -->
+<!-- 这个能力解决什么重复工程问题？ -->
 
-## Why This Belongs In Under-Utils
+## 为什么适合 Under-Utils
 
-<!-- Explain why JDK, Spring, Hutool, Apache Commons, Guava, or existing modules do not cover it well enough. -->
+<!-- 说明为什么 JDK、Spring、Hutool、Apache Commons、Guava 或现有模块不能直接覆盖。 -->
 
-## Proposed API / Module
+## 计划 API / 模块
 
-<!-- Describe the target module, main classes, configuration, and failure semantics. -->
+<!-- 描述目标模块、主要类、配置项和失败语义。 -->
 
-## Compatibility Impact
+## 兼容性影响
 
-<!-- Is this patch-compatible, minor-compatible, deprecation-only, breaking, or internal-only? -->
+<!-- patch-compatible、minor-compatible、deprecation-only、breaking 还是 internal-only？ -->
 
-## Reuse Boundary
+## 复用边界
 
-<!-- Which projects or modules can reuse this? What should stay outside this library? -->
+<!-- 哪些项目或模块可以复用？哪些内容应留在业务项目内？ -->
 
-## Testing Plan
+## 测试计划
 
-<!-- Unit tests, integration tests, samples, or documentation needed. -->
+<!-- 单元测试、集成测试、samples 或文档。 -->
 
-## Alternatives Considered
+## 已考虑的替代方案
 
-<!-- Existing libraries or simpler approaches you considered. -->
+<!-- 已评估的现有库或更简单方案。 -->

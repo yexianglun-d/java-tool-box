@@ -1,10 +1,10 @@
 # Under-Utils Spring
 
-Spring Web support for request context propagation, rate limiting, duplicate-submit guards, result objects, exception handling, and JSON field masking.
+Spring Web 支持模块，提供请求上下文传播、限流、防重复提交、返回结果、异常处理和 JSON 字段脱敏。
 
-Prefer `under-utils-starter` when you want auto-configuration. Use this module directly when you want to wire only selected beans.
+如果需要自动装配，优先使用 `under-utils-starter`。直接使用本模块时，建议只显式注册需要的 Bean。
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -14,28 +14,28 @@ Prefer `under-utils-starter` when you want auto-configuration. Use this module d
 </dependency>
 ```
 
-## Main APIs
+## 主要 API
 
-| Area | APIs |
-|------|------|
-| Request context | `OperationContext`, `OperationContextFilter`, `OperationContextHolder`, `OperationContextSnapshot`, `OperationContextTaskDecorator` |
-| Identity SPI | `CurrentUserProvider`, `CurrentTenantProvider`, `TraceIdProvider`, `OperationContextCustomizer` |
-| Rate limit | `@RateLimit`, `RateLimitAspect`, `RateLimitStore`, `LocalRateLimitStore` |
-| Duplicate submit | `@PreventRepeat`, `PreventRepeatAspect`, `RepeatSubmitStore`, `LocalRepeatSubmitStore` |
-| Web response | `Result`, `ResultCode`, `BizException`, `GlobalExceptionHandler` |
-| JSON masking | `@Sensitive`, `SensitiveJsonSerializer`, `DesensitizeUtils` |
-| Compatibility AOP | `@OperationLog`, `@Retry`, `@TimeLog` and their aspects |
+| 领域 | API |
+|------|-----|
+| 请求上下文 | `OperationContext`、`OperationContextFilter`、`OperationContextHolder`、`OperationContextSnapshot`、`OperationContextTaskDecorator` |
+| 身份 SPI | `CurrentUserProvider`、`CurrentTenantProvider`、`TraceIdProvider`、`OperationContextCustomizer` |
+| 限流 | `@RateLimit`、`RateLimitAspect`、`RateLimitStore`、`LocalRateLimitStore` |
+| 防重复提交 | `@PreventRepeat`、`PreventRepeatAspect`、`RepeatSubmitStore`、`LocalRepeatSubmitStore` |
+| Web 响应 | `Result`、`ResultCode`、`BizException`、`GlobalExceptionHandler` |
+| JSON 脱敏 | `@Sensitive`、`SensitiveJsonSerializer`、`DesensitizeUtils` |
+| 兼容 AOP | `@OperationLog`、`@Retry`、`@TimeLog` 及对应切面 |
 
-## Request Context
+## 请求上下文
 
-`OperationContextFilter` reads request headers and stores a per-request context in `OperationContextHolder`.
+`OperationContextFilter` 从请求头读取上下文，并写入 `OperationContextHolder`。
 
 ```java
 OperationContext context = OperationContextHolder.getContext();
 String traceId = context == null ? null : context.getTraceId();
 ```
 
-For async work, capture and wrap the context:
+异步任务中可以捕获并恢复上下文：
 
 ```java
 Runnable task = OperationContextSnapshot.capture().wrap(() -> {
@@ -43,9 +43,9 @@ Runnable task = OperationContextSnapshot.capture().wrap(() -> {
 });
 ```
 
-`OperationContextTaskDecorator` can be attached to Spring task executors. The starter can configure it automatically unless the application already provides a `TaskDecorator`.
+`OperationContextTaskDecorator` 可挂到 Spring 线程池。使用 starter 时，如果业务项目没有自定义 `TaskDecorator`，可以自动装配。
 
-## Rate Limit And Duplicate Submit
+## 限流和防重复提交
 
 ```java
 @RateLimit(limit = 10, period = 60, message = "请求过于频繁")
@@ -61,29 +61,29 @@ public Long createOrder(@RequestBody CreateOrderCommand command) {
 }
 ```
 
-Runtime behavior:
+运行时行为：
 
-- `@RateLimit` throws `BizException` when quota is exceeded.
-- `limit <= 0` rejects all requests; `period <= 0` is treated as a 1-second window.
-- `@PreventRepeat` throws `BizException` when the same key is acquired again before expiry.
-- `timeout <= 0` is treated as the minimum 1ms window.
-- If `releaseOnFailure = true`, the duplicate-submit key is released when the business method throws.
+- `@RateLimit` 超过额度时抛出 `BizException`。
+- `limit <= 0` 表示拒绝所有请求；`period <= 0` 按 1 秒窗口处理。
+- `@PreventRepeat` 在 key 未过期前再次提交时抛出 `BizException`。
+- `timeout <= 0` 按最小 1ms 窗口处理。
+- `releaseOnFailure = true` 时，业务方法抛异常会释放防重 key。
 
-Key resolution:
+key 解析规则：
 
-- Empty `key` uses tenant, user, URI, method name, and method argument digest.
-- Non-empty `key` is parsed as SpEL. Available variables include `#args`, `#userId`, `#tenantId`, `#traceId`, `#requestUri`, and `#context`.
-- SpEL errors fall back to a deterministic key instead of interrupting the request.
+- `key` 为空时，使用租户、用户、URI、方法名和参数摘要生成默认 key。
+- `key` 非空时按 SpEL 解析，可用变量包括 `#args`、`#userId`、`#tenantId`、`#traceId`、`#requestUri`、`#context`。
+- SpEL 解析失败不会中断请求，会退回到确定性 key。
 
-Store selection:
+存储选择：
 
-- `LocalRateLimitStore` and `LocalRepeatSubmitStore` only protect the current JVM.
-- Multi-instance services should use Redis stores from `under-utils-redis` or provide custom stores.
-- Redis failures propagate unless a custom store implements fallback behavior.
+- `LocalRateLimitStore` 和 `LocalRepeatSubmitStore` 只保护当前 JVM。
+- 多实例服务应使用 `under-utils-redis` 提供的 Redis store，或自行实现 store。
+- Redis 异常默认向外传播；如需降级，应由业务自定义 store。
 
-Direct wiring requires `RateLimitAspect`, `PreventRepeatAspect`, `OperationKeyResolver`, and the relevant store beans. The starter is simpler for normal Spring Boot applications.
+直接接入时需要注册 `RateLimitAspect`、`PreventRepeatAspect`、`OperationKeyResolver` 和对应 store。普通 Spring Boot 应用使用 starter 更简单。
 
-## Result And Exceptions
+## 返回结果和异常处理
 
 ```java
 @RestController
@@ -97,7 +97,7 @@ public class UserController {
 }
 ```
 
-Register `GlobalExceptionHandler` if you want Under-Utils to convert `BizException`, validation errors, 404s, method mismatch errors, and uncaught exceptions into `Result`.
+如需统一异常响应，注册 `GlobalExceptionHandler`：
 
 ```java
 @Configuration
@@ -106,11 +106,9 @@ public class WebConfiguration {
 }
 ```
 
-`Result` is a small response model, not a requirement. Applications with an existing response contract can keep their own model and still use the context, rate-limit, and duplicate-submit pieces.
+`Result` 只是轻量响应模型，不是强制约束。已有统一响应模型的应用，可以继续使用自己的 contract，同时复用上下文、限流和防重能力。
 
-## Sensitive Fields
-
-Use `@Sensitive` with the provided Jackson serializer when a response field needs masking.
+## 敏感字段脱敏
 
 ```java
 public class UserView {
@@ -120,13 +118,13 @@ public class UserView {
 }
 ```
 
-Make sure the serializer is registered in your Jackson configuration or use the starter path that wires the expected infrastructure.
+使用时需要确保 Jackson 序列化器已注册，或通过 starter 接入相关基础设施。
 
-## Compatibility AOP
+## 兼容 AOP
 
-`@OperationLog`, `@Retry`, and `@TimeLog` are retained for compatibility and are not the main direction for new code. They are not automatically enabled by the starter.
+`@OperationLog`、`@Retry`、`@TimeLog` 保留用于兼容，不是新增能力主线。starter 不会自动启用它们。
 
-If you still need them, import the aspects explicitly:
+确需使用时，请显式导入：
 
 ```java
 @Configuration
@@ -140,8 +138,8 @@ public class LegacyAopConfiguration {
 }
 ```
 
-Notes:
+注意：
 
-- `@OperationLog` does not record request parameters unless `recordParams = true`.
-- `@Retry` uses synchronous sleep in the current thread.
-- For production observability and retry governance, prefer the application's tracing, metrics, queue, and client-resilience stack.
+- `@OperationLog` 默认不记录请求参数，除非显式设置 `recordParams = true`。
+- `@Retry` 使用当前线程同步 sleep。
+- 生产级观测和重试治理建议使用应用侧 tracing、metrics、队列或客户端治理组件。

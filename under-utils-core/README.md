@@ -1,20 +1,20 @@
 # Under-Utils Core
 
-Low-coupling primitives used by other Under-Utils modules.
+低耦合基础能力模块。
 
-This module is not a general helper-method collection. Some historical static helpers remain for compatibility, but new additions should avoid overlap with the JDK, Spring, Hutool, Apache Commons, and Guava.
+本模块不是通用工具方法集合。部分历史静态工具会继续保留用于兼容，但新增能力应避免与 JDK、Spring、Hutool、Apache Commons、Guava 重复。
 
-## Current Boundary
+## 当前边界
 
-| API | Status | Notes |
-|-----|--------|-------|
-| `IdGenerator` | Active | Snowflake-style local ID generator. Requires unique worker/datacenter ids per node. |
-| `MoneyUtils` | Active | Common BigDecimal money operations and yuan/fen conversion with fixed rounding behavior. |
-| `JsonUtils` | Compatibility | Uses a module-owned `ObjectMapper`. Applications with their own Jackson configuration should prefer their own mapper or codec. |
-| `StringUtils`, `CollectionUtils`, `LocalDateTimeUtils`, `ValidationUtils`, `UUIDUtils` | Compatibility | Existing methods are kept, but this is not an expansion path. |
-| `MD5Utils`, `SHA256Utils`, `AESUtils` | Compatibility | Security-sensitive historical helpers. New security work should use application-approved crypto and key-management policy. |
+| API | 状态 | 说明 |
+|-----|------|------|
+| `IdGenerator` | 主线维护 | 雪花风格本地 ID 生成器，多节点需要自行保证 worker/datacenter 唯一。 |
+| `MoneyUtils` | 主线维护 | 常见 BigDecimal 金额计算、分/元转换和固定舍入语义。 |
+| `JsonUtils` | 兼容维护 | 使用模块内置 `ObjectMapper`；复杂应用应优先使用自己的 mapper 或 codec。 |
+| `StringUtils`、`CollectionUtils`、`LocalDateTimeUtils`、`ValidationUtils`、`UUIDUtils` | 兼容维护 | 保留已有方法，不作为继续扩张方向。 |
+| `MD5Utils`、`SHA256Utils`、`AESUtils` | 兼容维护 | 安全敏感历史工具，新安全能力应走业务统一加密和密钥管理策略。 |
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -24,7 +24,7 @@ This module is not a general helper-method collection. Some historical static he
 </dependency>
 ```
 
-## Snowflake IDs
+## 雪花 ID
 
 ```java
 IdGenerator generator = new IdGenerator(1, 1);
@@ -38,13 +38,13 @@ long datacenterId = info.getDatacenterId();
 long workerId = info.getWorkerId();
 ```
 
-Notes:
+注意：
 
-- `datacenterId` and `workerId` must be in `0..31`.
-- The generator depends on system clock monotonicity and rejects clock rollback.
-- Multi-node deployments must allocate node ids outside this library.
+- `datacenterId` 和 `workerId` 取值范围为 `0..31`。
+- 生成器依赖系统时钟单调前进，发生时钟回拨会拒绝生成 ID。
+- 多节点部署时，节点 ID 分配不由本模块负责。
 
-## Money Helpers
+## 金额工具
 
 ```java
 Long fen = MoneyUtils.yuan2Fen(new BigDecimal("10.50"));
@@ -59,29 +59,29 @@ BigDecimal avg = MoneyUtils.divide(total, new BigDecimal("3"));
 String display = MoneyUtils.formatWithSymbol(total);
 ```
 
-Defaults:
+默认语义：
 
-- Scale: `2`.
-- Rounding: `RoundingMode.HALF_UP`.
+- 小数位：`2`。
+- 舍入模式：`RoundingMode.HALF_UP`。
 
-For multi-currency, tax, accounting, or precision-sensitive domains, define an application money model instead of relying on generic helpers.
+多币种、税费、会计科目或精度敏感场景，应在业务侧定义明确的金额模型。
 
-## JSON Compatibility Helper
+## JSON 兼容入口
 
 ```java
 String json = JsonUtils.toJson(payload);
 Payload parsed = JsonUtils.fromJson(json, Payload.class);
 ```
 
-`JsonUtils.getObjectMapper()` returns a shared mapper and should not be reconfigured by callers.
+`JsonUtils.getObjectMapper()` 返回共享 mapper，调用方不应修改其配置。
 
-## Crypto Notes
+## 加密相关说明
 
-- `MD5Utils` is not suitable for password storage, signatures, or security checks.
-- `SHA256Utils` is a digest helper, not a password hashing solution.
-- `AESUtils` does not provide key rotation, KMS integration, ciphertext versioning, or authenticated encryption policy.
-- `AESUtils.encryptECB` and `AESUtils.decryptECB` are retained only for old callers. Do not use ECB mode in new code.
+- `MD5Utils` 不适合密码存储、签名或安全校验。
+- `SHA256Utils` 是摘要工具，不是密码哈希方案。
+- `AESUtils` 不提供密钥轮换、KMS 集成、密文版本管理或认证加密策略。
+- `AESUtils.encryptECB` 和 `AESUtils.decryptECB` 仅保留历史兼容，新代码不要使用 ECB 模式。
 
-## Contribution Rule
+## 贡献规则
 
-Do not add low-complexity helper methods here. New core APIs should define a reusable engineering boundary, failure behavior, and tests.
+不要在本模块新增低复杂度工具方法。新增 core API 应定义清晰复用边界、失败行为和测试覆盖。

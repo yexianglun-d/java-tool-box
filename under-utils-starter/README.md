@@ -1,10 +1,10 @@
 # Under-Utils Starter
 
-Spring Boot auto-configuration for the Spring and Redis modules.
+Spring Boot 自动装配模块，用于接入 `under-utils-spring` 和 `under-utils-redis`。
 
-The starter backs off when the application provides its own infrastructure beans. It is the recommended entry point for Spring Boot services that want Under-Utils defaults without scanning every package manually.
+starter 会在业务项目提供同类基础设施 Bean 时自动退让。对于 Spring Boot 服务，这是推荐入口；不需要手动扫描整个包。
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -14,9 +14,9 @@ The starter backs off when the application provides its own infrastructure beans
 </dependency>
 ```
 
-## Auto-Configured Beans
+## 自动装配 Bean
 
-Default beans:
+默认 Bean：
 
 - `CurrentUserProvider`
 - `CurrentTenantProvider`
@@ -29,7 +29,7 @@ Default beans:
 - local `RateLimitStore`
 - local `RepeatSubmitStore`
 
-When a `RedissonClient` exists, Redis-backed beans can also be configured:
+存在 `RedissonClient` 时，可按配置启用 Redis 相关 Bean：
 
 - `RedisRateLimitStore`
 - `RedisRepeatSubmitStore`
@@ -40,9 +40,9 @@ When a `RedissonClient` exists, Redis-backed beans can also be configured:
 - `LogicalExpireCacheOptions`
 - `LogicalExpireCacheTemplate`
 
-## Configuration
+## 配置
 
-Local state stores:
+本地状态存储：
 
 ```yaml
 under:
@@ -59,7 +59,7 @@ under:
         store: local
 ```
 
-Redis state stores and cache templates:
+Redis 状态存储和缓存模板：
 
 ```yaml
 under:
@@ -83,9 +83,9 @@ under:
         physical-ttl: 30m
 ```
 
-## Backoff Rules
+## 退让规则
 
-The starter does not replace application beans for the same role. Common backoff points include:
+starter 不会替换业务项目中同角色 Bean。常见退让点：
 
 - `CurrentUserProvider`
 - `CurrentTenantProvider`
@@ -100,11 +100,11 @@ The starter does not replace application beans for the same role. Common backoff
 - `LogicalExpireCacheOptions`
 - `LogicalExpireCacheTemplate`
 
-This lets applications keep their own security context, key strategy, serialization codec, cache options, or fallback behavior.
+业务项目可以保留自己的安全上下文、key 策略、序列化 codec、缓存选项或降级策略。
 
-## Notes
+## 注意事项
 
-- Redis store selection requires a `RedissonClient`; the starter does not create one.
-- Local stores are useful for single-instance development and tests only.
-- Redis failures propagate through Redisson unless the application provides custom store beans.
-- `under.utils.redis.logical-cache.physical-ttl` must be greater than `logical-ttl`.
+- Redis store 需要业务项目提供 `RedissonClient`，starter 不负责创建连接。
+- local store 适合单实例开发和测试，不适合集群级保护。
+- Redis 异常默认通过 Redisson 向外传播，业务可以通过自定义 store 接管降级。
+- `under.utils.redis.logical-cache.physical-ttl` 必须大于 `logical-ttl`。

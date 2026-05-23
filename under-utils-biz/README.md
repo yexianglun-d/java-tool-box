@@ -1,10 +1,10 @@
 # Under-Utils Biz
 
-Reusable business-workflow templates.
+可复用业务流程模板模块。
 
-The module is for patterns that appear across applications but are still too domain-shaped for `core`. It should not contain product-specific models such as orders, payments, membership, or marketing rules.
+本模块用于放置跨应用反复出现、但又比 `core` 更接近业务流程形态的能力。它不应该包含订单、支付、会员、营销等产品域专属模型。
 
-## Dependency
+## 依赖
 
 ```xml
 <dependency>
@@ -14,15 +14,15 @@ The module is for patterns that appear across applications but are still too dom
 </dependency>
 ```
 
-## Import Task Template
+## 导入任务模板
 
-`ImportTaskTemplate` runs each row through three phases:
+`ImportTaskTemplate` 会让每一行依次经过三个阶段：
 
 1. `parse`
 2. `validate`
 3. `process`
 
-It collects row-level errors and returns import statistics.
+模板负责收集行级错误并返回导入统计。
 
 ```java
 ImportTaskTemplate template = ImportTaskTemplate.create(
@@ -66,7 +66,7 @@ ImportResult result = template.execute(rows, new ImportRowHandler<String, UserIm
 
 ## CSV Reader
 
-`CsvImportRowReader` parses CSV input into `CsvRow` and closes the reader after template execution:
+`CsvImportRowReader` 将 CSV 输入解析为 `CsvRow`，并在模板执行结束后关闭 reader：
 
 ```java
 try (Reader reader = Files.newBufferedReader(path)) {
@@ -77,24 +77,24 @@ try (Reader reader = Files.newBufferedReader(path)) {
 }
 ```
 
-CSV parsing is intentionally small and predictable. For Excel files, streaming uploads, or very large imports, keep file-specific parsing in the application and feed rows into `ImportTaskTemplate`.
+CSV 解析保持小而可预测。Excel、大文件流式导入等场景，建议业务项目自行解析文件，再把行数据交给 `ImportTaskTemplate`。
 
-## Failure Semantics
+## 失败语义
 
-- `RowValidationException` is converted to row errors.
-- Other parse, validate, or process exceptions are converted to row errors with phase-specific codes.
-- `ImportTaskException` is treated as a task-level failure and is propagated.
-- `failFast` stops after the first failed row.
-- `maxErrors` stops once the collected error count reaches the limit.
+- `RowValidationException` 会转换为行级错误。
+- parse、validate、process 阶段的其他异常会按阶段转换为行级错误。
+- `ImportTaskException` 视为任务级失败，直接向外传播。
+- `failFast` 会在首个失败行后停止。
+- `maxErrors` 会在收集错误数达到上限后停止。
 
-## Result Fields
+## 结果字段
 
-`ImportResult` reports:
+`ImportResult` 包含：
 
-- total row count
-- success count
-- failure count
-- skipped count
-- collected row errors
+- 总行数
+- 成功行数
+- 失败行数
+- 跳过行数
+- 行级错误列表
 
-Use the returned result to decide whether to commit, roll back, display a preview, or ask the user to fix and retry.
+调用方可以根据结果决定提交、回滚、展示预览，或要求用户修正后重试。

@@ -1,26 +1,26 @@
-# Release Guide
+# 发布指南
 
-Under-Utils publishes to Maven Central through Central Publisher Portal. The project does not use the legacy OSSRH / nexus-staging flow.
+Under-Utils 通过 Central Publisher Portal 发布到 Maven Central，不使用旧的 OSSRH / nexus-staging 流程。
 
-Official references:
+官方参考：
 
 - <https://central.sonatype.org/publish/publish-portal-maven/>
 - <https://central.sonatype.org/register/namespace/>
 - <https://central.sonatype.org/publish/requirements/>
 - <https://central.sonatype.org/publish/requirements/gpg/>
 
-## Prerequisites
+## 发布前准备
 
-- Central Portal account.
-- Verified namespace: `io.github.yexianglun-d`.
-- Central Portal user token.
-- GPG private key, public key published to a supported key server, and passphrase.
-- Updated `CHANGELOG.md`, README, samples, and API review notes for the release.
-- Compatibility impact reviewed against `docs/COMPATIBILITY.md`, including deprecations and migration notes.
+- Central Portal 账号。
+- 已验证 namespace：`io.github.yexianglun-d`。
+- Central Portal user token。
+- GPG 私钥、公钥已发布到 Central 支持的 key server，并安全保存 passphrase。
+- `CHANGELOG.md`、README、samples 和 API Review 已反映本次发布。
+- 已按 `docs/COMPATIBILITY.md` 检查兼容性影响，包括 deprecated API 和迁移说明。
 
-Never commit Central tokens, GPG private keys, passphrases, or generated release bundles.
+不要把 Central token、GPG 私钥、passphrase 或生成的发布 bundle 提交到仓库。
 
-## Local Checks
+## 本地检查
 
 ```bash
 mvn test
@@ -28,7 +28,7 @@ mvn -Prelease -DskipTests package
 mvn -Prelease,sign-artifacts -Dgpg.skip=true -DskipTests verify
 ```
 
-Central Portal dry run:
+Central Portal dry run：
 
 ```bash
 mvn -s docs/central-dry-run-settings.xml \
@@ -40,13 +40,13 @@ mvn -s docs/central-dry-run-settings.xml \
   deploy
 ```
 
-The `central-publish` profile skips upload by default. `docs/central-dry-run-settings.xml` only provides placeholder credentials because the Central plugin still requires a server entry during the deploy lifecycle.
+`central-publish` profile 默认跳过上传。`docs/central-dry-run-settings.xml` 只提供占位凭据，因为 Central 插件在 deploy 生命周期中仍需要读取 server 配置。
 
-`under-utils-samples` participates in build verification but is excluded from Central publication.
+`under-utils-samples` 参与构建验证，但不发布到 Maven Central。
 
-## Credentials
+## 凭据
 
-For local publishing, configure a `central` server in `~/.m2/settings.xml`:
+本地发布前，在 `~/.m2/settings.xml` 配置 `central` server：
 
 ```xml
 <settings>
@@ -60,11 +60,11 @@ For local publishing, configure a `central` server in `~/.m2/settings.xml`:
 </settings>
 ```
 
-The server id must match `central.publishing.server.id`.
+server id 必须与 `central.publishing.server.id` 保持一致。
 
-## Manual Publish
+## 手动发布
 
-Upload a bundle and wait for Central validation:
+上传 bundle 并等待 Central 校验：
 
 ```bash
 mvn -Prelease,sign-artifacts,central-publish \
@@ -76,19 +76,19 @@ mvn -Prelease,sign-artifacts,central-publish \
   deploy
 ```
 
-After validation, review the deployment in Central Portal and click Publish manually.
+校验通过后，进入 Central Portal 检查 deployment，再手动点击 Publish。
 
-Maven Central artifacts cannot be changed or removed after publishing. Fixes require a new version.
+Maven Central 已发布构件不能修改或删除，修复必须通过新版本发布。
 
 ## GitHub Actions
 
-`.github/workflows/release.yml` runs the same publish flow through a manual workflow dispatch.
+`.github/workflows/release.yml` 提供手动发布工作流。
 
-Required repository secrets:
+需要配置以下 repository secrets：
 
 - `CENTRAL_TOKEN_USERNAME`
 - `CENTRAL_TOKEN_PASSWORD`
 - `GPG_PRIVATE_KEY`
 - `GPG_PASSPHRASE`
 
-The workflow should stay attached to the protected `maven-central` environment. Use `validated` mode for normal releases so the final Publish click remains manual. Use `published` only when the version, namespace, signatures, changelog, and rollback plan are already confirmed.
+发布 workflow 应绑定受保护的 `maven-central` environment。常规发布使用 `validated` 模式，保留人工 Publish 步骤。只有在版本号、namespace、签名、changelog 和回滚策略都确认后，才使用 `published` 自动发布模式。

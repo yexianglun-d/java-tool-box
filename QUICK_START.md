@@ -1,16 +1,16 @@
-# Quick Start
+# 快速开始
 
-This guide covers the fastest path to use Under-Utils from Maven Central, run the sample app, and execute the local test suite.
+本文档说明如何从 Maven Central 引入 Under-Utils、运行示例工程，以及执行本地验证。
 
-## Requirements
+## 环境要求
 
 - Java 21
 - Maven 3.9+
-- Docker only if you run Testcontainers tests or Redis samples
+- Docker，仅在运行 Testcontainers 集成测试或 Redis 示例时需要
 
-## Add Dependencies
+## 添加依赖
 
-Use the BOM to keep module versions aligned:
+先引入 BOM，统一各模块版本：
 
 ```xml
 <dependencyManagement>
@@ -26,7 +26,7 @@ Use the BOM to keep module versions aligned:
 </dependencyManagement>
 ```
 
-For most Spring Boot applications, start with the starter:
+Spring Boot 项目通常从 starter 开始：
 
 ```xml
 <dependency>
@@ -35,7 +35,7 @@ For most Spring Boot applications, start with the starter:
 </dependency>
 ```
 
-Single-module dependencies also work:
+也可以只引入单个模块：
 
 ```xml
 <dependency>
@@ -49,9 +49,9 @@ Single-module dependencies also work:
 </dependency>
 ```
 
-## Starter Configuration
+## Starter 配置
 
-Local stores are the default and require no Redis:
+本地状态存储不需要 Redis：
 
 ```yaml
 under:
@@ -68,7 +68,7 @@ under:
         store: local
 ```
 
-For multi-instance services, provide a `RedissonClient` and switch the state stores to Redis:
+多实例服务应提供 `RedissonClient`，并切换到 Redis 存储：
 
 ```yaml
 under:
@@ -93,14 +93,14 @@ under:
         physical-ttl: 30m
 ```
 
-Important runtime behavior:
+运行时行为：
 
-- `@RateLimit` throws `BizException` when the window quota is exceeded.
-- `@PreventRepeat` throws `BizException` when the same key is submitted again inside the window.
-- Local stores are JVM-local and should not be used for cluster-wide protection.
-- Redisson failures propagate unless the application supplies a custom store with fallback behavior.
+- `@RateLimit` 超过窗口额度时抛出 `BizException`。
+- `@PreventRepeat` 在窗口内重复提交同一 key 时抛出 `BizException`。
+- local store 只在当前 JVM 内生效，不适合作为集群级保护。
+- Redisson 异常默认向外传播；如果业务需要降级，应提供自定义 store。
 
-## Run The Sample App
+## 运行示例工程
 
 ```bash
 git clone https://github.com/yexianglun-d/java-tool-box.git
@@ -108,11 +108,11 @@ cd java-tool-box
 mvn -pl under-utils-samples -am spring-boot:run
 ```
 
-Default port: `18080`.
+默认端口：`18080`。
 
-Request examples are listed in [under-utils-samples/README.md](under-utils-samples/README.md).
+请求样例见 [under-utils-samples/README.md](under-utils-samples/README.md)。
 
-Redis sample flow:
+Redis 示例流程：
 
 ```bash
 cd under-utils-samples
@@ -121,31 +121,31 @@ cd ..
 mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=redis
 ```
 
-## Build From Source
+## 源码构建
 
 ```bash
 mvn -DskipTests compile
 mvn test
 ```
 
-The default reactor does not include `under-utils-test`, because that module starts containers.
+默认 Maven reactor 不包含 `under-utils-test`，因为该模块会启动容器。
 
-Run integration tests explicitly:
+显式运行集成测试：
 
 ```bash
 mvn -Pintegration-tests -pl under-utils-test -am test
 ```
 
-Release artifact check:
+发布构件检查：
 
 ```bash
 mvn -Prelease -DskipTests package
 ```
 
-Central Portal publishing is documented in [docs/RELEASE.md](docs/RELEASE.md).
+Maven Central 发布流程见 [docs/RELEASE.md](docs/RELEASE.md)。
 
-## Troubleshooting
+## 常见问题
 
-- If the IDE misses modules, import the root `pom.xml` as a Maven project and refresh.
-- If dependency download is slow, configure a Maven mirror appropriate for your network.
-- If `under-utils-test` fails before tests start, check Docker availability first.
+- IDE 没识别模块时，先确认导入的是根目录 `pom.xml`，然后刷新 Maven。
+- 依赖下载慢时，可以配置适合当前网络环境的 Maven 镜像。
+- `under-utils-test` 在启动前失败时，优先确认 Docker 是否可用。
