@@ -136,6 +136,11 @@
 - 用户文档依赖版本同步更新为 `1.0.1`。
 - `CHANGELOG.md` 将当前 Unreleased 内容归档到 `1.0.1`，并新增 `docs/releases/v1.0.1.md` 作为 GitHub Release Notes 草稿。
 
+### 1.0.1 Release
+
+- `v1.0.1` 已发布到 Maven Central，发布源码 tag 固定在实际上传构件对应提交。
+- `main` 分支进入 `1.0.2-SNAPSHOT` 开发周期，避免重复发布 Maven Central 已存在的 `1.0.1` 坐标。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。
