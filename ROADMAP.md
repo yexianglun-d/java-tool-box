@@ -2,7 +2,7 @@
 
 本路线图用于公开说明 Under-Utils 的演进方向。具体优先级会根据 issue、真实业务复用场景和维护成本调整。
 
-## GitHub 首发前
+## 已完成：GitHub 首发与 1.0.0 发布
 
 - 清理过时的内部进度文档、占位代码和重复说明。
 - 补齐 `README.md`、`QUICK_START.md`、`CHANGELOG.md`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`。
@@ -12,14 +12,13 @@
 - 将 `under-utils-test` 迁移到 Testcontainers，让 CI 可以执行真实 MySQL 集成测试。
 - 补齐 Maven 发布元信息，建立 sources、javadocs 与可选 GPG 签名的发布构件验证链路。
 - 接入 Central Publisher Portal 发布插件，建立本地 bundle dry run 和手动发布工作流。
+- 发布 `v1.0.0` 到 Maven Central，并创建对应 Git tag 与 GitHub Release。
 
-## 首个稳定 Release
+## 发布后近期
 
-- 梳理 public API，减少发布后需要破坏性调整的命名和配置项。
-- 持续维护发布前 API 审计记录，优先处理类名冲突、配置 key、异常语义和高风险默认值。
-- 为核心工程模式能力补齐边界文档和失败语义说明。
-- 建立 GitHub Actions CI，覆盖默认 `mvn test`、编译检查和 markdown 基础检查。
-- Maven 坐标收敛为 GitHub namespace `io.github.yexianglun-d`，正式发布前完成 Central Portal token 和 GPG 私钥托管。
+- 持续维护 API 审计记录，优先处理配置 key、异常语义和高风险默认值。
+- 建立清晰的版本兼容策略，发布后避免无计划破坏 public API。
+- 补齐 starter 自动装配集成测试，覆盖 local / redis 状态存储切换和用户自定义 Bean 退让。
 - 扩大 Testcontainers 集成测试覆盖面，优先补齐 Redis 缓存模板和 starter 自动装配验证。
 
 ## 后续方向

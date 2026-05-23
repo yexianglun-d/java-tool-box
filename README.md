@@ -4,12 +4,12 @@
 [![Maven](https://img.shields.io/badge/Maven-3.9%2B-C71A36.svg)](#requirements)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1.x-6DB33F.svg)](#module-matrix)
 [![CI](https://github.com/yexianglun-d/java-tool-box/actions/workflows/ci.yml/badge.svg)](https://github.com/yexianglun-d/java-tool-box/actions/workflows/ci.yml)
-[![Status](https://img.shields.io/badge/Status-Pre--release-orange.svg)](CHANGELOG.md)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.yexianglun-d/under-utils-starter.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.yexianglun-d/under-utils-starter)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包。它不定位为 Hutool、Apache Commons 或 Guava 的替代品，也不追求堆叠大量低复杂度静态工具方法；项目更关注业务系统里反复出现、实现细节多、容易写散的工程能力，例如请求操作上下文、幂等与限流、分布式锁、缓存重建、OpenAPI 调用、安全分页排序、审计填充和导入任务模板。
 
-当前项目处于 GitHub 开源首发前的质量收口阶段，API 和模块边界仍可能在第一个稳定 Release 前调整。重要变更见 [CHANGELOG.md](CHANGELOG.md)，公开路线图见 [ROADMAP.md](ROADMAP.md)。
+当前稳定版本为 `1.0.0`，已发布到 Maven Central。重要变更见 [CHANGELOG.md](CHANGELOG.md)，公开路线图见 [ROADMAP.md](ROADMAP.md)。
 
 ## Project Scope
 
@@ -57,7 +57,7 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 
 ## Installation
 
-发布到 Maven 仓库前，可以先从源码安装到本地仓库：
+Under-Utils 已发布到 Maven Central。源码构建用于本地开发和验证：
 
 ```bash
 git clone https://github.com/yexianglun-d/java-tool-box.git
@@ -88,9 +88,9 @@ mvn clean install
 </dependencies>
 ```
 
-## Release Artifacts
+## Release Verification
 
-项目当前尚未发布到 Maven Central。发布前构件可以通过 `release` profile 本地验证，该 profile 会为参与构建的 jar 模块生成 sources 与 javadocs：
+发布构件可以通过 `release` profile 本地验证，该 profile 会为参与构建的 jar 模块生成 sources 与 javadocs：
 
 ```bash
 mvn -Prelease -DskipTests package
@@ -265,7 +265,7 @@ mvn -Pintegration-tests -pl under-utils-test -am test
 - 安全漏洞报告：[SECURITY.md](SECURITY.md)
 - 变更记录：[CHANGELOG.md](CHANGELOG.md)
 - 公开路线图：[ROADMAP.md](ROADMAP.md)
-- 发布前 API 审计：[docs/API_REVIEW.md](docs/API_REVIEW.md)
+- API 审计：[docs/API_REVIEW.md](docs/API_REVIEW.md)
 
 提交功能前建议先开 issue 说明场景、边界和复用价值。新增能力需要附带测试，并说明为什么不属于 Hutool、Apache Commons 或 Guava 已覆盖的低复杂度通用工具。
 

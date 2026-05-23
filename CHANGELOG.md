@@ -1,8 +1,15 @@
 # Changelog
 
-本文件记录 Under-Utils 的重要变更。项目当前处于 MVP 能力集与发布前质量收口阶段，尚未正式发布稳定版。
+本文件记录 Under-Utils 的重要变更。
 
 ## [Unreleased]
+
+### Changed
+
+- 发布后更新 README、Quick Start、Roadmap 和 API Review，改为面向 Maven Central 已发布版本的使用说明。
+- `main` 分支 Maven 版本进入 `1.0.1-SNAPSHOT` 开发周期，避免重复发布已存在的 `1.0.0` 构件。
+
+## [1.0.0] - 2026-05-23
 
 ### Added
 

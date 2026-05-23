@@ -340,7 +340,7 @@ future.thenAccept(response -> {
 
 ## 更新日志
 
-### v1.0.0 (2025-01-30)
+### v1.0.0 (2026-05-23)
 - ✅ 初始版本发布
 - ✅ 支持 GET、POST、PUT、DELETE、PATCH 等请求方法
 - ✅ 支持 JSON、表单、文件上传等请求格式

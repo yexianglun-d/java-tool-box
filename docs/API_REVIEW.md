@@ -1,6 +1,6 @@
 # API Review
 
-本文件记录 Under-Utils 发布前 public API 审计结论，目标是在首个稳定 Release 前收敛命名、配置 key、异常语义和模块边界。
+本文件记录 Under-Utils public API 审计结论，用于持续收敛命名、配置 key、异常语义和模块边界。
 
 ## 审计原则
 
@@ -81,6 +81,15 @@
 - Maven `groupId` 从 `com.undernineplaces` 收敛为 GitHub namespace `io.github.yexianglun-d`，避免依赖未持有域名的 DNS namespace 验证。
 - Java 包名仍保持 `com.undernine.utils`，本轮只调整 Maven 坐标，不引入包名级破坏性迁移。
 
+## 第七轮结论
+
+### 1.0.0 Release
+
+- `v1.0.0` 已发布到 Maven Central，发布源码 tag 固定在实际上传构件对应提交。
+- `main` 分支进入 `1.0.1-SNAPSHOT` 开发周期，避免重复发布 Maven Central 已存在的 `1.0.0` 坐标。
+- 发布后文档改为面向 Maven Central 使用，不再要求业务项目先本地 `mvn clean install`。
+
 ## 后续待审
 
-- 正式发布前仍需确认 Central Portal 中 `io.github.yexianglun-d` namespace 可发布，并配置 token、GPG 私钥和受保护的 GitHub Actions environment。
+- 补齐 starter 自动装配和 Redis cache 模板的 Testcontainers 集成测试。
+- 补充发布后版本兼容策略和弃用策略。

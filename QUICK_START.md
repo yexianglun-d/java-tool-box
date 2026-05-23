@@ -32,7 +32,7 @@ mvn test
 
 ## Add To Your Project
 
-发布到 Maven 仓库前，请先在本地执行 `mvn clean install`。业务项目推荐引入 BOM 后再引入 starter：
+Under-Utils 已发布到 Maven Central。业务项目推荐引入 BOM 后再引入 starter：
 
 ```xml
 <dependencyManagement>
@@ -71,7 +71,7 @@ mvn test
 
 ## Release Build Check
 
-项目尚未发布到 Maven Central。正式发布前可以先验证发布构件：
+维护者发布新版本前可以先验证发布构件：
 
 ```bash
 mvn -Prelease -DskipTests package
