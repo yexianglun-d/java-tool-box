@@ -16,6 +16,10 @@
     <name>Under-Utils Biz</name>
     <description>可复用业务组件模块 - 短信、上传、Excel 等</description>
 
+    <properties>
+        <japicmp.skip>false</japicmp.skip>
+    </properties>
+
     <dependencies>
         <!-- 核心模块 -->
         <dependency>

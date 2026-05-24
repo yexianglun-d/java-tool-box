@@ -126,6 +126,18 @@ starter 变更需要额外谨慎，因为它会影响应用启动行为。
 - README、模块文档、`CHANGELOG.md` 和 `docs/API_REVIEW.md` 是否已更新？
 - 旧路径和新路径是否都有兼容性测试？
 
+运行时模块还应执行 public API 兼容性检查：
+
+```bash
+mvn -Papi-compat \
+  -pl under-utils-core,under-utils-http,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz \
+  -am \
+  -DskipTests \
+  verify
+```
+
+该检查以 `1.0.1` 已发布构件为默认基线。starter 模块涉及自动装配和模块边界，仍需要结合自动装配测试、配置 key 文档和迁移说明人工确认。
+
 ## 发布说明
 
 Release Notes 应拆分说明：

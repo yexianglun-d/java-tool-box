@@ -17,11 +17,11 @@
 - 补充 Redis Testcontainers 测试，覆盖 cache-aside 和逻辑过期缓存行为。
 - 补充 public API 兼容性策略，明确变更、弃用、配置迁移和 Release Notes 要求。
 - 拆分 `under-utils-spring-starter` 与 `under-utils-redis-starter`，旧 `under-utils-starter` 保留为兼容聚合入口。
+- 增加 `api-compat` profile 并接入 CI，对稳定运行时模块执行 public API 兼容性检查。
 
 ## 近期计划
 
 - 持续维护 API Review，配置 key、异常语义和 starter 默认行为发生变化时同步记录。
-- 增加 API 兼容性检查，避免 patch/minor 版本误删 public API。
 - 继续收缩 `under-utils-core` 历史工具方法的扩张倾向。
 
 ## 后续方向

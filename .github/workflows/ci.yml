@@ -33,5 +33,13 @@ jobs:
       - name: Run default tests
         run: mvn -B -ntp test
 
+      - name: Check public API compatibility
+        run: >
+          mvn -B -ntp -Papi-compat
+          -pl under-utils-core,under-utils-http,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz
+          -am
+          -DskipTests
+          verify
+
       - name: Run integration tests
         run: mvn -B -ntp -Pintegration-tests -pl under-utils-test -am test

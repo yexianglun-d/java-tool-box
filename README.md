@@ -234,6 +234,18 @@ Testcontainers 集成测试：
 mvn -Pintegration-tests -pl under-utils-test -am test
 ```
 
+public API 兼容性检查：
+
+```bash
+mvn -Papi-compat \
+  -pl under-utils-core,under-utils-http,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz \
+  -am \
+  -DskipTests \
+  verify
+```
+
+`api-compat` profile 会把当前构件和 `1.0.1` 已发布构件做 public API 对比。默认覆盖稳定运行时模块；starter 拆分属于模块边界迁移，当前通过自动装配测试和文档记录维护兼容性。
+
 发布流程见 [docs/RELEASE.md](docs/RELEASE.md)。
 
 ## 贡献

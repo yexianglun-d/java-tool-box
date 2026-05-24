@@ -16,6 +16,10 @@
     <name>Under-Utils MyBatis</name>
     <description>MyBatis / MyBatis-Plus 增强模块 - 分页、元数据填充等</description>
 
+    <properties>
+        <japicmp.skip>false</japicmp.skip>
+    </properties>
+
     <dependencies>
         <!-- 核心模块 -->
         <dependency>

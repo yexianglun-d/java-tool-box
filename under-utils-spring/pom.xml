@@ -16,6 +16,10 @@
     <name>Under-Utils Spring</name>
     <description>Spring 通用组件模块 - 返回体、异常、工具等</description>
 
+    <properties>
+        <japicmp.skip>false</japicmp.skip>
+    </properties>
+
     <dependencies>
         <!-- 核心模块 -->
         <dependency>

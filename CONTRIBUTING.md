@@ -58,6 +58,16 @@ mvn test
 mvn -Prelease -DskipTests package
 ```
 
+public API 兼容性检查：
+
+```bash
+mvn -Papi-compat \
+  -pl under-utils-core,under-utils-http,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz \
+  -am \
+  -DskipTests \
+  verify
+```
+
 集成测试：
 
 ```bash
@@ -84,6 +94,7 @@ mvn -s docs/central-dry-run-settings.xml \
 - public API 行为不明显时，已补充文档。
 - public API 变更遵循 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)。
 - 避免在非 major 版本引入破坏性变更；如有安全或正确性例外，必须说明迁移路径。
+- 运行时模块的 public API 变更已通过 `api-compat` profile 检查，或已说明无法自动检查的原因。
 - deprecated API 有替代方案或迁移说明。
 - 行为变更包含测试。
 - 默认 `mvn test` 不依赖 Redis、MySQL、Docker 或私有基础设施。

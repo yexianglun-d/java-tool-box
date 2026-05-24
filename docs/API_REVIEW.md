@@ -150,6 +150,16 @@
 - `under-utils-starter` 保留为兼容聚合坐标，不删除旧 Maven artifact；旧用户可以继续使用，新用户按需选择轻量 starter。
 - `under.utils.*` 配置 key 保持不变，本轮只调整自动装配模块边界，不改变现有默认行为和失败语义。
 
+## 第十四轮结论
+
+### API 兼容性门禁
+
+- 新增 `api-compat` Maven profile，并接入 GitHub Actions CI，使用 japicmp 将当前构件和 `1.0.1` 已发布构件做 public API 对比。
+- 默认纳入检查的模块为 `under-utils-core`、`under-utils-http`、`under-utils-spring`、`under-utils-redis`、`under-utils-mybatis` 和 `under-utils-biz`。
+- 检查在 `verify` 阶段执行，并对二进制不兼容和源码不兼容修改失败退出。
+- `under-utils-starter`、`under-utils-spring-starter` 和 `under-utils-redis-starter` 暂不纳入单 jar 对比。starter 拆分会产生类移动误报，兼容性先由旧聚合坐标、自动装配测试和配置 key 文档共同保证。
+- 本地 Maven 如果配置了无法解析 japicmp 的镜像，可以使用 `docs/central-dry-run-settings.xml` 绕过全局镜像后再运行检查。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

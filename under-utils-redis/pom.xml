@@ -16,6 +16,10 @@
     <name>Under-Utils Redis</name>
     <description>Redis 操作封装模块 - 分布式锁、缓存工具等</description>
 
+    <properties>
+        <japicmp.skip>false</japicmp.skip>
+    </properties>
+
     <dependencies>
         <!-- 核心模块 -->
         <dependency>

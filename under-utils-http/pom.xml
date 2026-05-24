@@ -16,6 +16,10 @@
     <name>Under-Utils HTTP</name>
     <description>HTTP 请求封装模块 - HttpClient/OkHttp/RestTemplate</description>
 
+    <properties>
+        <japicmp.skip>false</japicmp.skip>
+    </properties>
+
     <dependencies>
         <!-- 核心模块 -->
         <dependency>

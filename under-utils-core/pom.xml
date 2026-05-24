@@ -16,6 +16,10 @@
     <name>Under-Utils Core</name>
     <description>Low-coupling core primitives and compatibility-maintained historical helpers for Under-Utils.</description>
 
+    <properties>
+        <japicmp.skip>false</japicmp.skip>
+    </properties>
+
     <dependencies>
         <!-- Jackson：JSON 处理 -->
         <dependency>

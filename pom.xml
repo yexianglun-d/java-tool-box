@@ -66,6 +66,7 @@
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
         <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
         <spring-boot-maven-plugin.version>3.1.11</spring-boot-maven-plugin.version>
+        <japicmp-maven-plugin.version>0.26.0</japicmp-maven-plugin.version>
 
         <!-- Maven Central Portal 发布配置：默认跳过上传，避免误发布。 -->
         <central.publishing.server.id>central</central.publishing.server.id>
@@ -73,6 +74,8 @@
         <central.autoPublish>false</central.autoPublish>
         <central.skipPublishing>true</central.skipPublishing>
         <central.waitUntil>validated</central.waitUntil>
+        <api.compat.baseline.version>1.0.1</api.compat.baseline.version>
+        <japicmp.skip>true</japicmp.skip>
     </properties>
 
     <modules>
@@ -280,6 +283,56 @@
                                 <excludeArtifact>under-utils-samples</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>api-compat</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.siom79.japicmp</groupId>
+                        <artifactId>japicmp-maven-plugin</artifactId>
+                        <version>${japicmp-maven-plugin.version}</version>
+                        <configuration>
+                            <skip>${japicmp.skip}</skip>
+                            <oldVersion>
+                                <dependency>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>${project.artifactId}</artifactId>
+                                    <version>${api.compat.baseline.version}</version>
+                                </dependency>
+                            </oldVersion>
+                            <newVersion>
+                                <file>
+                                    <path>${project.build.directory}/${project.build.finalName}.jar</path>
+                                </file>
+                            </newVersion>
+                            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+                            <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+                            <skipDiffReport>false</skipDiffReport>
+                            <skipHtmlReport>true</skipHtmlReport>
+                            <skipMarkdownReport>true</skipMarkdownReport>
+                            <skipXmlReport>true</skipXmlReport>
+                            <parameter>
+                                <accessModifier>public</accessModifier>
+                                <onlyModified>true</onlyModified>
+                                <ignoreMissingClasses>true</ignoreMissingClasses>
+                                <includeSynthetic>false</includeSynthetic>
+                                <skipPomModules>true</skipPomModules>
+                            </parameter>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>check-api-compatibility</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>cmp</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
