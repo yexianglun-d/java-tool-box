@@ -85,7 +85,7 @@
         <!-- 核心工具模块：字符串、日期、加密、ID 等基础工具 -->
         <module>under-utils-core</module>
         
-        <!-- HTTP 请求封装：OkHttp、HttpClient、RestTemplate -->
+        <!-- HTTP 请求封装：OkHttp、OpenAPI 客户端治理 -->
         <module>under-utils-http</module>
         
         <!-- Redis 操作封装：分布式锁、缓存工具等 -->

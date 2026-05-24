@@ -177,6 +177,14 @@
 - 移除 `under-utils-biz` POM 中未使用的 EasyExcel、POI 和 Jackson optional 依赖，不影响已发布 Java API。
 - 后续如果提供 Excel 流式导入，应进入独立扩展模块，避免基础 biz 模块重新带入 Excel 栈。
 
+## 第十七轮结论
+
+### HTTP 客户端边界
+
+- `under-utils-http` 当前 public API 基于 `HttpRequest`、`HttpResponse`、`HttpUtils`、`OkHttpRequestExecutor` 和 `OpenApiClient` 系列类型，不提供 HttpClient5 适配器。
+- 移除 POM 中未实现的 HttpClient5 optional 依赖，不影响已发布 Java API，也避免用户误以为模块内置 HttpClient5 执行器。
+- 后续如果需要多客户端实现，应新增明确的执行器抽象或独立适配模块，不能只通过 optional 依赖暗示能力。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

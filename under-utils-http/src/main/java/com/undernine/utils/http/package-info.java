@@ -1,7 +1,7 @@
 /**
  * Under-Utils HTTP 模块
  * <p>
- * 提供企业级 HTTP 客户端工具库，支持多种 HTTP 客户端实现（OkHttp、HttpClient5）。
+ * 提供基于 OkHttp 的 HTTP 请求封装和 OpenAPI 客户端治理能力。
  * </p>
  *
  * <h2>核心功能</h2>

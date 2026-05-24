@@ -11,6 +11,7 @@
 - `under-utils-core` 仍会带入 Jackson。`JsonUtils` 已经发布为 public API，`1.x` 内不应直接移除这组依赖。
 - `under-utils-redis` 的真正重量来自 Redisson/Netty；这是模块能力本身决定的，不适合在 patch 版本里伪装成轻量模块。
 - `under-utils-biz` 当前实现只使用无外部依赖的 CSV/导入模板，已移除未使用的 Excel/POI/Jackson optional 依赖。
+- `under-utils-http` 已移除未实现的 HttpClient5 optional 依赖，当前对外边界明确为 OkHttp 执行器和 OpenAPI 客户端治理。
 
 ## 模块快照
 
@@ -19,7 +20,7 @@
 | 模块 | 主 jar | runtime 树规模 | 主要默认依赖 | 判断 |
 |------|--------|----------------|--------------|------|
 | `under-utils-core` | 36K | 5 行 | Jackson databind/core/annotations/jsr310 | `1.x` 保留；`2.0.0` 再考虑 JSON 迁移。 |
-| `under-utils-http` | 64K | 19 行 | core、SLF4J、OkHttp/Okio/Kotlin、Jackson | 默认 OkHttp 会带 Kotlin runtime；HttpClient5 optional 目前没有实现支撑。 |
+| `under-utils-http` | 64K | 16 行 | core、SLF4J、OkHttp/Okio/Kotlin、Jackson | 默认 OkHttp 会带 Kotlin runtime；不再声明未实现的 HttpClient5 适配。 |
 | `under-utils-spring` | 72K | 20 行 | core、Spring context/web/webmvc、AspectJ、Validation、Jackson | Spring MVC/AOP 模块，重量和定位一致。 |
 | `under-utils-redis` | 40K | 45 行 | core、spring、Redisson/Netty、Jackson | Redisson 是主要重量；同时对 `under-utils-spring` 有接口耦合。 |
 | `under-utils-mybatis` | 24K | 9 行 | core、MyBatis-Plus、JSQLParser | 依赖和安全分页/审计能力匹配。 |
@@ -49,16 +50,16 @@
 
 ### HTTP
 
-`under-utils-http` 现在只有 OkHttp 执行器，POM 里存在 `httpclient5` optional 依赖，但主代码没有 HttpClient5 适配器。
+`under-utils-http` 现在只有 OkHttp 执行器和基于该执行器的 OpenAPI 客户端治理能力。
 
 风险：
 
 - OkHttp 默认带入 Kotlin runtime，这是 HTTP 模块的主要额外重量。
-- `httpclient5` optional 依赖会让用户误以为当前模块已经提供 HttpClient5 实现。
+- 如果后续新增 HttpClient5 实现，应作为明确适配器或独立模块提供，而不是只添加 optional 依赖。
 
 后续选择：
 
-- 短期：清理未使用的 `httpclient5` optional 依赖，或补一个真正的 HttpClient5 执行器。
+- 已移除未使用的 `httpclient5` optional 依赖。
 - 中期：评估拆成 `under-utils-http-core` + `under-utils-http-okhttp`，但这会影响 public API 路径，不适合在 patch 版本贸然做。
 
 ### Redis
@@ -91,9 +92,8 @@
 
 ## 建议执行顺序
 
-1. 清理或补齐 `under-utils-http` 的 HttpClient5 边界。
-2. 继续保持 `under-utils-core` 的 JSON 兼容策略，不在 `1.x` 里破坏老用户。
-3. 为 `2.0.0` 记录 Redis/Spring SPI 拆分方案。
+1. 继续保持 `under-utils-core` 的 JSON 兼容策略，不在 `1.x` 里破坏老用户。
+2. 为 `2.0.0` 记录 Redis/Spring SPI 拆分方案。
 
 ## 采集命令
 
