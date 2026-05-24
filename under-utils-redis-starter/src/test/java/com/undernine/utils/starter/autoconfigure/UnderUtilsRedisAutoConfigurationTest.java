@@ -42,14 +42,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * UnderUtilsAutoConfiguration 测试。
+ * UnderUtilsRedisAutoConfiguration 测试。
  *
  * @author Under-Utils Team
  */
-class UnderUtilsAutoConfigurationTest {
+class UnderUtilsRedisAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(UnderUtilsAutoConfiguration.class));
+            .withConfiguration(AutoConfigurations.of(
+                    UnderUtilsSpringAutoConfiguration.class,
+                    UnderUtilsRedisAutoConfiguration.class));
 
     @Test
     void shouldAutoConfigureDefaultLocalComponents() {

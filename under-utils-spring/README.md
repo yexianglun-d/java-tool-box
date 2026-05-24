@@ -2,7 +2,7 @@
 
 Spring Web 支持模块，提供请求上下文传播、限流、防重复提交、返回结果、异常处理和 JSON 字段脱敏。
 
-如果需要自动装配，优先使用 `under-utils-starter`。直接使用本模块时，建议只显式注册需要的 Bean。
+如果需要自动装配，优先使用 `under-utils-spring-starter`。直接使用本模块时，建议只显式注册需要的 Bean。
 
 ## 依赖
 
@@ -81,7 +81,7 @@ key 解析规则：
 - 多实例服务应使用 `under-utils-redis` 提供的 Redis store，或自行实现 store。
 - Redis 异常默认向外传播；如需降级，应由业务自定义 store。
 
-直接接入时需要注册 `RateLimitAspect`、`PreventRepeatAspect`、`OperationKeyResolver` 和对应 store。普通 Spring Boot 应用使用 starter 更简单。
+直接接入时需要注册 `RateLimitAspect`、`PreventRepeatAspect`、`OperationKeyResolver` 和对应 store。普通 Spring Boot 应用使用 `under-utils-spring-starter` 更简单。
 
 ## 返回结果和异常处理
 

@@ -2,7 +2,7 @@
  * Spring Web 横切能力模块。
  * <p>
  * 本模块提供操作上下文、限流防重、统一异常响应、请求日志拦截和敏感字段脱敏等 Web 基础设施。
- * 推荐通过 {@code under-utils-starter} 使用自动装配；直接依赖本模块时，应显式导入需要的 Bean，
+ * 推荐通过 {@code under-utils-spring-starter} 使用自动装配；直接依赖本模块时，应显式导入需要的 Bean，
  * 避免扫描整个 {@code com.undernine.utils.spring} 包。
  * </p>
  *

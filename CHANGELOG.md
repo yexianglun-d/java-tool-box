@@ -4,9 +4,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增 `under-utils-spring-starter`，只自动装配 Spring 本地横切能力，不再强制引入 Redis/Redisson。
+- 新增 `under-utils-redis-starter`，承载 Redis store、分布式锁、cache-aside 和逻辑过期缓存自动装配。
+
 ### Changed
 
 - `main` 分支 Maven 版本进入 `1.0.2-SNAPSHOT` 开发周期，`1.0.1` 保持为当前稳定版本。
+- `under-utils-starter` 调整为兼容聚合入口，继续保留旧坐标，但实际能力由 Spring/Redis 两个 starter 提供。
 
 ## [1.0.1] - 2026-05-23
 

@@ -43,7 +43,9 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 | `under-utils-http` | HTTP 便捷调用与 OpenAPI 客户端治理，包括 token 刷新、签名、trace/idempotency header、错误解码和重试。 |
 | `under-utils-mybatis` | MyBatis-Plus 安全分页、排序白名单、审计填充和分页结果封装。 |
 | `under-utils-biz` | 可复用业务流程模板，目前主要是 CSV 导入、异步导入进度查询和错误导出。 |
-| `under-utils-starter` | Spring Boot 自动装配入口。 |
+| `under-utils-spring-starter` | Spring Boot 自动装配入口，只包含 Spring 本地横切能力。 |
+| `under-utils-redis-starter` | Spring Boot Redis 自动装配入口，包含 Spring starter 并接入 Redis 分布式能力。 |
+| `under-utils-starter` | 兼容聚合 starter，继续覆盖 Spring 与 Redis 自动装配。 |
 | `under-utils-samples` | 可运行示例工程，不作为正式 Maven 库构件发布。 |
 | `under-utils-test` | Testcontainers 集成测试模块，仅通过 `integration-tests` profile 启用。 |
 
@@ -56,7 +58,7 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 
 ## 安装
 
-建议先引入 BOM，再按需引入 starter 或单模块：
+建议先引入 BOM，再按需引入 starter 或单模块。当前稳定版 `1.0.1` 使用兼容聚合 starter：
 
 ```xml
 <dependencyManagement>
@@ -78,6 +80,26 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
     </dependency>
 </dependencies>
 ```
+
+从 `1.0.2` 起，普通 Spring Boot 服务优先按需选择轻量 starter。只需要 Spring 本地横切能力时使用：
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-spring-starter</artifactId>
+</dependency>
+```
+
+如果需要 Redis 分布式锁、Redis 限流/防重或缓存模板，使用 Redis starter：
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-redis-starter</artifactId>
+</dependency>
+```
+
+旧入口 `under-utils-starter` 会保留为聚合 starter，适合暂时不调整依赖坐标的项目。
 
 本地开发：
 

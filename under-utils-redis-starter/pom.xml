@@ -11,10 +11,10 @@
         <version>1.0.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>under-utils-starter</artifactId>
+    <artifactId>under-utils-redis-starter</artifactId>
 
-    <name>Under-Utils Starter</name>
-    <description>兼容聚合 Starter，按需引入 Spring 与 Redis 自动配置模块</description>
+    <name>Under-Utils Redis Starter</name>
+    <description>Spring Boot 自动装配模块：Redis 分布式锁、限流/防重存储和缓存模板</description>
 
     <dependencies>
         <dependency>
@@ -25,8 +25,25 @@
 
         <dependency>
             <groupId>io.github.yexianglun-d</groupId>
-            <artifactId>under-utils-redis-starter</artifactId>
+            <artifactId>under-utils-redis</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

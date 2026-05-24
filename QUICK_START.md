@@ -26,7 +26,7 @@
 </dependencyManagement>
 ```
 
-Spring Boot 项目通常从 starter 开始：
+当前稳定版 `1.0.1` 的 Spring Boot 项目通常从兼容聚合 starter 开始：
 
 ```xml
 <dependency>
@@ -34,6 +34,26 @@ Spring Boot 项目通常从 starter 开始：
     <artifactId>under-utils-starter</artifactId>
 </dependency>
 ```
+
+从 `1.0.2` 起，可以按需选择轻量 starter。只需要 Spring 本地横切能力时使用：
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-spring-starter</artifactId>
+</dependency>
+```
+
+需要 Redis 分布式锁、Redis store 或缓存模板时，使用 Redis starter：
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-redis-starter</artifactId>
+</dependency>
+```
+
+`under-utils-starter` 继续作为兼容聚合入口保留，依赖它会同时带入 Spring 与 Redis 自动装配模块。
 
 也可以只引入单个模块：
 

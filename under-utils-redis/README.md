@@ -98,7 +98,7 @@ ProductView view = logicalExpireCacheTemplate.getOrLoad(
 
 `RedisRateLimitStore` 和 `RedisRepeatSubmitStore` 实现了 `under-utils-spring` 中的 store 接口。
 
-通常由 `under-utils-starter` 在以下配置下装配：
+通常由 `under-utils-redis-starter` 在以下配置下装配：
 
 ```yaml
 under:

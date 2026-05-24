@@ -141,6 +141,15 @@
 - `v1.0.1` 已发布到 Maven Central，发布源码 tag 固定在实际上传构件对应提交。
 - `main` 分支进入 `1.0.2-SNAPSHOT` 开发周期，避免重复发布 Maven Central 已存在的 `1.0.1` 坐标。
 
+## 第十三轮结论
+
+### Starter 轻量化
+
+- 新增 `under-utils-spring-starter`，只提供请求上下文、限流、防重复提交、本地 store 和基础 SPI 自动装配，避免只接入 Spring 横切能力的项目被动引入 Redis/Redisson。
+- 新增 `under-utils-redis-starter`，依赖 Spring starter 并承载 Redis store、分布式锁、缓存模板和缓存观测自动装配。
+- `under-utils-starter` 保留为兼容聚合坐标，不删除旧 Maven artifact；旧用户可以继续使用，新用户按需选择轻量 starter。
+- `under.utils.*` 配置 key 保持不变，本轮只调整自动装配模块边界，不改变现有默认行为和失败语义。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

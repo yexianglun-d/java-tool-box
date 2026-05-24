@@ -94,7 +94,13 @@
         <!-- Spring 通用组件：统一返回体、异常处理、工具等 -->
         <module>under-utils-spring</module>
         
-        <!-- Spring Boot Starter：自动配置模块 -->
+        <!-- Spring Boot Starter：Spring 本地横切能力自动装配 -->
+        <module>under-utils-spring-starter</module>
+
+        <!-- Spring Boot Starter：Redis 分布式能力自动装配 -->
+        <module>under-utils-redis-starter</module>
+
+        <!-- Spring Boot Starter：兼容聚合入口 -->
         <module>under-utils-starter</module>
         
         <!-- 业务组件模块：短信、上传、Excel 等可复用组件 -->

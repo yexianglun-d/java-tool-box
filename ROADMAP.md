@@ -16,12 +16,13 @@
 - 补充 starter 自动装配测试，覆盖 Redis store 切换和用户自定义 Bean 退让。
 - 补充 Redis Testcontainers 测试，覆盖 cache-aside 和逻辑过期缓存行为。
 - 补充 public API 兼容性策略，明确变更、弃用、配置迁移和 Release Notes 要求。
+- 拆分 `under-utils-spring-starter` 与 `under-utils-redis-starter`，旧 `under-utils-starter` 保留为兼容聚合入口。
 
 ## 近期计划
 
 - 持续维护 API Review，配置 key、异常语义和 starter 默认行为发生变化时同步记录。
-- 补充自定义 `RateLimitStore`、`RepeatSubmitStore`、`CacheValueCodec` 的示例。
-- 补充 patch/minor Release Notes 模板。
+- 增加 API 兼容性检查，避免 patch/minor 版本误删 public API。
+- 继续收缩 `under-utils-core` 历史工具方法的扩张倾向。
 
 ## 后续方向
 
@@ -29,7 +30,7 @@
 - 扩展 OpenAPI 示例：签名、幂等、token 刷新和业务错误解码。
 - 补充 MyBatis 审计填充和多数据库假设示例。
 - 扩展导入任务模板的异步执行、进度查询和错误导出能力。
-- 继续收缩 `under-utils-core` 历史工具方法的扩张倾向。
+- 评估将历史 JSON 工具迁移到独立模块，降低 `under-utils-core` 对 Jackson 的默认依赖。
 
 ## 非目标
 

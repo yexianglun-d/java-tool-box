@@ -116,6 +116,61 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- ==================== Under-Utils Modules ==================== -->
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-mybatis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-biz</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-spring-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-redis-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- ==================== MyBatis Plus ==================== -->
             <dependency>
                 <groupId>com.baomidou</groupId>

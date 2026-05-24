@@ -52,10 +52,10 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Starter 模块 -->
+        <!-- Redis Starter 模块 -->
         <dependency>
             <groupId>io.github.yexianglun-d</groupId>
-            <artifactId>under-utils-starter</artifactId>
+            <artifactId>under-utils-redis-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 

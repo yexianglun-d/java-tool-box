@@ -1,0 +1,142 @@
+package com.undernine.utils.starter.autoconfigure;
+
+import com.undernine.utils.spring.aspect.PreventRepeatAspect;
+import com.undernine.utils.spring.aspect.RateLimitAspect;
+import com.undernine.utils.spring.context.CurrentTenantProvider;
+import com.undernine.utils.spring.context.CurrentUserProvider;
+import com.undernine.utils.spring.context.DefaultCurrentTenantProvider;
+import com.undernine.utils.spring.context.DefaultCurrentUserProvider;
+import com.undernine.utils.spring.context.DefaultTraceIdProvider;
+import com.undernine.utils.spring.context.OperationContextCustomizer;
+import com.undernine.utils.spring.context.OperationContextFilter;
+import com.undernine.utils.spring.context.OperationContextTaskDecorator;
+import com.undernine.utils.spring.context.TraceIdProvider;
+import com.undernine.utils.spring.key.DefaultOperationKeyResolver;
+import com.undernine.utils.spring.key.OperationKeyResolver;
+import com.undernine.utils.spring.ratelimit.LocalRateLimitStore;
+import com.undernine.utils.spring.ratelimit.RateLimitStore;
+import com.undernine.utils.spring.repeat.LocalRepeatSubmitStore;
+import com.undernine.utils.spring.repeat.RepeatSubmitStore;
+import com.undernine.utils.starter.properties.UnderUtilsProperties;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskDecorator;
+
+import java.util.Collection;
+
+/**
+ * Under-Utils Spring 自动配置入口。
+ *
+ * @author Under-Utils Team
+ * @version 1.0.2
+ * @since 1.0.2
+ */
+@AutoConfiguration
+@EnableConfigurationProperties(UnderUtilsProperties.class)
+public class UnderUtilsSpringAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CurrentUserProvider currentUserProvider() {
+        return new DefaultCurrentUserProvider();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CurrentTenantProvider currentTenantProvider() {
+        return new DefaultCurrentTenantProvider();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public TraceIdProvider traceIdProvider() {
+        return new DefaultTraceIdProvider();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public OperationKeyResolver operationKeyResolver(CurrentUserProvider currentUserProvider,
+                                                     CurrentTenantProvider currentTenantProvider) {
+        return new DefaultOperationKeyResolver(currentUserProvider, currentTenantProvider);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(OperationContextFilter.class)
+    @ConditionalOnProperty(prefix = "under.utils.web.operation-context", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public OperationContextFilter operationContextFilter(Collection<OperationContextCustomizer> customizers) {
+        return new OperationContextFilter(customizers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "underUtilsOperationContextFilterRegistration")
+    @ConditionalOnClass(FilterRegistrationBean.class)
+    @ConditionalOnBean(OperationContextFilter.class)
+    @ConditionalOnProperty(prefix = "under.utils.web.operation-context", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<OperationContextFilter> underUtilsOperationContextFilterRegistration(
+            OperationContextFilter operationContextFilter,
+            UnderUtilsProperties properties) {
+        FilterRegistrationBean<OperationContextFilter> registration = new FilterRegistrationBean<>(operationContextFilter);
+        registration.setName("underUtilsOperationContextFilter");
+        registration.setOrder(properties.getWeb().getOperationContext().getOrder());
+        registration.addUrlPatterns("/*");
+        return registration;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(TaskDecorator.class)
+    @ConditionalOnProperty(prefix = "under.utils.web.operation-context",
+            name = {"enabled", "task-decorator-enabled"},
+            havingValue = "true",
+            matchIfMissing = true)
+    public OperationContextTaskDecorator operationContextTaskDecorator() {
+        return new OperationContextTaskDecorator();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "under.utils.web.rate-limit", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public RateLimitAspect rateLimitAspect(RateLimitStore rateLimitStore, OperationKeyResolver operationKeyResolver) {
+        RateLimitAspect aspect = new RateLimitAspect();
+        aspect.setRateLimitStore(rateLimitStore);
+        aspect.setOperationKeyResolver(operationKeyResolver);
+        return aspect;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "under.utils.web.repeat-submit", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public PreventRepeatAspect preventRepeatAspect(RepeatSubmitStore repeatSubmitStore,
+                                                   OperationKeyResolver operationKeyResolver) {
+        PreventRepeatAspect aspect = new PreventRepeatAspect();
+        aspect.setRepeatSubmitStore(repeatSubmitStore);
+        aspect.setOperationKeyResolver(operationKeyResolver);
+        return aspect;
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class LocalStateConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        @ConditionalOnProperty(prefix = "under.utils.web.rate-limit", name = "store", havingValue = "local", matchIfMissing = true)
+        public RateLimitStore localRateLimitStore() {
+            return new LocalRateLimitStore();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        @ConditionalOnProperty(prefix = "under.utils.web.repeat-submit", name = "store", havingValue = "local", matchIfMissing = true)
+        public RepeatSubmitStore localRepeatSubmitStore() {
+            return new LocalRepeatSubmitStore();
+        }
+    }
+
+}

@@ -8,7 +8,7 @@ import java.time.Duration;
  * Under-Utils 自动配置属性。
  *
  * @author Under-Utils Team
- * @version 1.0.0
+ * @version 1.0.2
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "under.utils")

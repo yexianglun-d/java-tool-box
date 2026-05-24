@@ -1,8 +1,14 @@
 # Under-Utils Starter
 
-Spring Boot 自动装配模块，用于接入 `under-utils-spring` 和 `under-utils-redis`。
+兼容聚合 starter，用于同时接入 `under-utils-spring-starter` 和 `under-utils-redis-starter`。
 
-starter 会在业务项目提供同类基础设施 Bean 时自动退让。对于 Spring Boot 服务，这是推荐入口；不需要手动扫描整个包。
+从 `1.0.2` 起，推荐按需选择轻量 starter：
+
+- 只需要 Spring 本地横切能力：使用 `under-utils-spring-starter`。
+- 需要 Redis 分布式能力：使用 `under-utils-redis-starter`。
+- 已经使用旧坐标且暂时不想改依赖：继续使用 `under-utils-starter`。
+
+starter 会在业务项目提供同类基础设施 Bean 时自动退让。
 
 ## 依赖
 
@@ -13,6 +19,13 @@ starter 会在业务项目提供同类基础设施 Bean 时自动退让。对于
     <version>1.0.1</version>
 </dependency>
 ```
+
+## 聚合内容
+
+`under-utils-starter` 本身只保留兼容入口，实际自动装配来自：
+
+- `under-utils-spring-starter`
+- `under-utils-redis-starter`
 
 ## 自动装配 Bean
 

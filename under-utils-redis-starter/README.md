@@ -1,0 +1,67 @@
+# Under-Utils Redis Starter
+
+Spring Boot 自动装配模块，用于接入 `under-utils-redis` 的分布式能力。它会引入 `under-utils-spring-starter`，因此同样包含请求上下文、限流和防重复提交的本地能力。
+
+本模块要求业务项目提供已经配置好的 `RedissonClient`，不会创建 Redis 连接。
+
+## 依赖
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-redis-starter</artifactId>
+    <version>1.0.2-SNAPSHOT</version>
+</dependency>
+```
+
+## 自动装配 Bean
+
+存在 `RedissonClient` 时，可按配置启用 Redis 相关 Bean：
+
+- `RedisRateLimitStore`
+- `RedisRepeatSubmitStore`
+- `DistributedLockTemplate`
+- `CacheValueCodec`
+- `CacheOptions`
+- `CacheAsideTemplate`
+- `LogicalExpireCacheOptions`
+- `LogicalExpireCacheTemplate`
+
+## 配置
+
+```yaml
+under:
+  utils:
+    web:
+      rate-limit:
+        store: redis
+      repeat-submit:
+        store: redis
+    redis:
+      lock-enabled: true
+      cache:
+        enabled: true
+        ttl: 5m
+        null-ttl: 30s
+        jitter: 10s
+        rebuild-lock-enabled: true
+      logical-cache:
+        enabled: true
+        logical-ttl: 5m
+        physical-ttl: 30m
+```
+
+## 退让规则
+
+starter 不会替换业务项目中同角色 Bean。常见退让点：
+
+- `RateLimitStore`
+- `RepeatSubmitStore`
+- `DistributedLockTemplate`
+- `CacheValueCodec`
+- `CacheOptions`
+- `CacheAsideTemplate`
+- `LogicalExpireCacheOptions`
+- `LogicalExpireCacheTemplate`
+
+Redis 或 Redisson 异常默认向外传播。如果业务需要 fail-open、降级或自定义序列化策略，请在业务项目内提供自定义 store、template 或 codec。

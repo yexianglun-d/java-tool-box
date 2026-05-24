@@ -23,7 +23,7 @@
     <dependencies>
         <dependency>
             <groupId>io.github.yexianglun-d</groupId>
-            <artifactId>under-utils-starter</artifactId>
+            <artifactId>under-utils-redis-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 
