@@ -19,10 +19,13 @@
 - 拆分 `under-utils-spring-starter` 与 `under-utils-redis-starter`，旧 `under-utils-starter` 保留为兼容聚合入口。
 - 增加 `api-compat` profile 并接入 CI，对稳定运行时模块执行 public API 兼容性检查。
 - HTTP、Spring、Redis 模块内部不再调用 `under-utils-core` 的历史 `JsonUtils`。
+- 完成第一轮依赖重量审计，明确 core JSON、HTTP 客户端、Redis/Spring 耦合和 biz optional 依赖的处理顺序。
 
 ## 近期计划
 
 - 持续维护 API Review，配置 key、异常语义和 starter 默认行为发生变化时同步记录。
+- 清理 `under-utils-biz` 未使用的 Excel/POI/Jackson optional 依赖。
+- 清理或补齐 `under-utils-http` 的 HttpClient5 边界。
 - 继续收缩 `under-utils-core` 历史工具方法的扩张倾向。
 
 ## 后续方向

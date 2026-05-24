@@ -32,6 +32,8 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 
 `under-utils-core` 中保留了一些历史静态工具类，用于兼容已有调用；它们不是后续新增能力的主线。
 
+模块依赖重量和拆分判断见 [docs/DEPENDENCY_REVIEW.md](docs/DEPENDENCY_REVIEW.md)。
+
 ## 模块
 
 | 模块 | 说明 |

@@ -9,6 +9,7 @@
 - 新增 `under-utils-spring-starter`，只自动装配 Spring 本地横切能力，不再强制引入 Redis/Redisson。
 - 新增 `under-utils-redis-starter`，承载 Redis store、分布式锁、cache-aside 和逻辑过期缓存自动装配。
 - 新增 `api-compat` Maven profile，并接入 CI，用于将稳定运行时模块的 public API 与 `1.0.1` 已发布构件做兼容性检查。
+- 新增依赖重量审计文档，记录各模块默认传递依赖、optional 边界和后续拆分判断。
 
 ### Changed
 
