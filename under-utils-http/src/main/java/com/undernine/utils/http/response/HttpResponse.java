@@ -1,7 +1,12 @@
 package com.undernine.utils.http.response;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.undernine.utils.core.json.JsonUtils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.undernine.utils.core.json.JsonException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +33,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HttpResponse {
+
+    private static final ObjectMapper JSON_MAPPER = createJsonMapper();
 
     /**
      * HTTP 状态码
@@ -94,7 +101,7 @@ public class HttpResponse {
         if (json == null || json.trim().isEmpty()) {
             return null;
         }
-        return JsonUtils.fromJson(json, clazz);
+        return fromJson(json, clazz);
     }
 
     /**
@@ -109,7 +116,32 @@ public class HttpResponse {
         if (json == null || json.trim().isEmpty()) {
             return null;
         }
-        return JsonUtils.fromJson(json, typeReference);
+        return fromJson(json, typeReference);
+    }
+
+    private static <T> T fromJson(String json, Class<T> clazz) {
+        try {
+            return JSON_MAPPER.readValue(json, clazz);
+        } catch (JsonProcessingException e) {
+            throw new JsonException("Failed to deserialize HTTP response body to " + clazz.getName(), e);
+        }
+    }
+
+    private static <T> T fromJson(String json, TypeReference<T> typeReference) {
+        try {
+            return JSON_MAPPER.readValue(json, typeReference);
+        } catch (JsonProcessingException e) {
+            throw new JsonException("Failed to deserialize HTTP response body to " + typeReference.getType(), e);
+        }
+    }
+
+    private static ObjectMapper createJsonMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        return mapper;
     }
 
     /**

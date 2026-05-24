@@ -75,6 +75,8 @@ Payload parsed = JsonUtils.fromJson(json, Payload.class);
 
 `JsonUtils.getObjectMapper()` 返回共享 mapper，调用方不应修改其配置。
 
+`JsonUtils` 在 `1.x` 内保留 Jackson 依赖，原因是它已经作为 public API 发布。后续如果迁移到独立 JSON 模块，会按 major 版本或明确迁移路径处理。
+
 ## 加密相关说明
 
 - `MD5Utils` 不适合密码存储、签名或安全校验。

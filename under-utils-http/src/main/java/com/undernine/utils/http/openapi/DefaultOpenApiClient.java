@@ -1,7 +1,12 @@
 package com.undernine.utils.http.openapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.undernine.utils.core.json.JsonUtils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.undernine.utils.core.json.JsonException;
 import com.undernine.utils.http.config.HttpConfig;
 import com.undernine.utils.http.enums.HttpMethod;
 import com.undernine.utils.http.exception.HttpNetworkException;
@@ -18,6 +23,8 @@ import java.util.Map;
  */
 @Slf4j
 public class DefaultOpenApiClient implements OpenApiClient {
+
+    private static final ObjectMapper JSON_MAPPER = createJsonMapper();
 
     private final OpenApiClientOptions options;
     private final AccessTokenProvider accessTokenProvider;
@@ -54,7 +61,7 @@ public class DefaultOpenApiClient implements OpenApiClient {
 
     @Override
     public <T> OpenApiResponse<T> execute(OpenApiRequest request, TypeReference<T> typeReference) {
-        return doExecute(request, rawBody -> JsonUtils.fromJson(rawBody, typeReference));
+        return doExecute(request, rawBody -> parseBody(rawBody, typeReference));
     }
 
     private <T> OpenApiResponse<T> doExecute(OpenApiRequest request, BodyParser<T> bodyParser) {
@@ -175,7 +182,39 @@ public class DefaultOpenApiClient implements OpenApiClient {
         if (isBlank(rawBody)) {
             return null;
         }
-        return JsonUtils.fromJson(rawBody, responseType);
+        return fromJson(rawBody, responseType);
+    }
+
+    private <T> T parseBody(String rawBody, TypeReference<T> typeReference) {
+        if (isBlank(rawBody)) {
+            return null;
+        }
+        return fromJson(rawBody, typeReference);
+    }
+
+    private <T> T fromJson(String rawBody, Class<T> responseType) {
+        try {
+            return JSON_MAPPER.readValue(rawBody, responseType);
+        } catch (JsonProcessingException e) {
+            throw new JsonException("Failed to deserialize OpenAPI response body to " + responseType.getName(), e);
+        }
+    }
+
+    private <T> T fromJson(String rawBody, TypeReference<T> typeReference) {
+        try {
+            return JSON_MAPPER.readValue(rawBody, typeReference);
+        } catch (JsonProcessingException e) {
+            throw new JsonException("Failed to deserialize OpenAPI response body to " + typeReference.getType(), e);
+        }
+    }
+
+    private static ObjectMapper createJsonMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        return mapper;
     }
 
     private void sleepBeforeRetry(int attempt, int maxRetries) {

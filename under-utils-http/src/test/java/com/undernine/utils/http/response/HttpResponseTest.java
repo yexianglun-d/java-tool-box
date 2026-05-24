@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +95,18 @@ class HttpResponseTest {
         assertThat(users).hasSize(2);
         assertThat(users.get(0).getName()).isEqualTo("John");
         assertThat(users.get(1).getName()).isEqualTo("Jane");
+    }
+
+    @Test
+    void asObjectSupportsJavaTimeValues() {
+        HttpResponse response = HttpResponse.builder()
+                .body("{\"name\":\"Job\",\"createdAt\":\"2026-05-24T15:30:00\"}")
+                .build();
+
+        TimedPayload payload = response.asObject(TimedPayload.class);
+
+        assertThat(payload.getName()).isEqualTo("Job");
+        assertThat(payload.getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 5, 24, 15, 30));
     }
 
     @Test
@@ -200,6 +213,27 @@ class HttpResponseTest {
 
         public void setAge(int age) {
             this.age = age;
+        }
+    }
+
+    public static class TimedPayload {
+        private String name;
+        private LocalDateTime createdAt;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public LocalDateTime getCreatedAt() {
+            return createdAt;
+        }
+
+        public void setCreatedAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
         }
     }
 }

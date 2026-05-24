@@ -18,6 +18,7 @@
 - 补充 public API 兼容性策略，明确变更、弃用、配置迁移和 Release Notes 要求。
 - 拆分 `under-utils-spring-starter` 与 `under-utils-redis-starter`，旧 `under-utils-starter` 保留为兼容聚合入口。
 - 增加 `api-compat` profile 并接入 CI，对稳定运行时模块执行 public API 兼容性检查。
+- HTTP、Spring、Redis 模块内部不再调用 `under-utils-core` 的历史 `JsonUtils`。
 
 ## 近期计划
 
@@ -30,7 +31,7 @@
 - 扩展 OpenAPI 示例：签名、幂等、token 刷新和业务错误解码。
 - 补充 MyBatis 审计填充和多数据库假设示例。
 - 扩展导入任务模板的异步执行、进度查询和错误导出能力。
-- 评估将历史 JSON 工具迁移到独立模块，降低 `under-utils-core` 对 Jackson 的默认依赖。
+- 评估 `2.0.0` 中将历史 JSON 工具迁移到独立模块，降低 `under-utils-core` 对 Jackson 的默认依赖。
 
 ## 非目标
 

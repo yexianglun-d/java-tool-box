@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -43,6 +44,19 @@ class DefaultOperationKeyResolverTest {
         }
 
         assertThat(key).startsWith("orders:tenant-context:user-context:/ctx/orders:submit:");
+    }
+
+    @Test
+    void defaultKeySerializesJavaTimeArguments() {
+        ProceedingJoinPoint point = mock(ProceedingJoinPoint.class);
+        Signature signature = mock(Signature.class);
+        when(point.getSignature()).thenReturn(signature);
+        when(signature.getName()).thenReturn("submit");
+        when(point.getArgs()).thenReturn(new Object[]{LocalDateTime.of(2026, 5, 24, 15, 30)});
+
+        String key = resolver.resolve(point, "orders", "");
+
+        assertThat(key).matches("orders:default:anonymous:no-request:submit:[0-9a-f]{24}");
     }
 
     @Test

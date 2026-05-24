@@ -14,6 +14,7 @@
 
 - `main` 分支 Maven 版本进入 `1.0.2-SNAPSHOT` 开发周期，`1.0.1` 保持为当前稳定版本。
 - `under-utils-starter` 调整为兼容聚合入口，继续保留旧坐标，但实际能力由 Spring/Redis 两个 starter 提供。
+- `under-utils-http`、`under-utils-spring` 和 `under-utils-redis` 内部不再调用 `under-utils-core` 的历史 `JsonUtils`，JSON 行为保持不变，为后续 core JSON 迁移降低耦合。
 
 ## [1.0.1] - 2026-05-23
 

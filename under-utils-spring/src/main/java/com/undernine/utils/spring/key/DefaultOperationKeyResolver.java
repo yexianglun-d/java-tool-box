@@ -1,6 +1,10 @@
 package com.undernine.utils.spring.key;
 
-import com.undernine.utils.core.json.JsonUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.undernine.utils.spring.context.CurrentTenantProvider;
 import com.undernine.utils.spring.context.CurrentUserProvider;
 import com.undernine.utils.spring.context.DefaultCurrentTenantProvider;
@@ -37,6 +41,7 @@ public class DefaultOperationKeyResolver implements OperationKeyResolver {
     private static final String DEFAULT_NAMESPACE = "under-utils";
     private static final ExpressionParser PARSER = new SpelExpressionParser();
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
+    private static final ObjectMapper JSON_MAPPER = createJsonMapper();
 
     private final CurrentUserProvider currentUserProvider;
     private final CurrentTenantProvider currentTenantProvider;
@@ -69,7 +74,7 @@ public class DefaultOperationKeyResolver implements OperationKeyResolver {
 
         String businessKey = isNotBlank(expression)
                 ? evaluateExpression(point, expression)
-                : digest(JsonUtils.tryToJson(point.getArgs()));
+                : digest(tryToJson(point.getArgs()));
 
         return String.join(":", actualNamespace, tenantId, userId, uri, methodName, businessKey);
     }
@@ -94,8 +99,25 @@ public class DefaultOperationKeyResolver implements OperationKeyResolver {
             Object value = PARSER.parseExpression(expression).getValue(context);
             return normalize(value == null ? null : String.valueOf(value), "empty");
         } catch (Exception e) {
-            return digest(expression + ":" + JsonUtils.tryToJson(point.getArgs()));
+            return digest(expression + ":" + tryToJson(point.getArgs()));
         }
+    }
+
+    private String tryToJson(Object value) {
+        try {
+            return JSON_MAPPER.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    private static ObjectMapper createJsonMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        return mapper;
     }
 
     private Method getMethod(ProceedingJoinPoint point) {

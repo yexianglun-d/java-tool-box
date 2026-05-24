@@ -160,6 +160,15 @@
 - `under-utils-starter`、`under-utils-spring-starter` 和 `under-utils-redis-starter` 暂不纳入单 jar 对比。starter 拆分会产生类移动误报，兼容性先由旧聚合坐标、自动装配测试和配置 key 文档共同保证。
 - 本地 Maven 如果配置了无法解析 japicmp 的镜像，可以使用 `docs/central-dry-run-settings.xml` 绕过全局镜像后再运行检查。
 
+## 第十五轮结论
+
+### Core JSON 解耦
+
+- `JsonUtils` 继续留在 `under-utils-core`，只作为 `1.x` 兼容维护 API，不在 patch 版本移出 Jackson 依赖，避免老用户升级后缺少 transitive dependency。
+- `under-utils-http`、`under-utils-spring` 和 `under-utils-redis` 内部不再调用 `JsonUtils`，改为模块内自有 Jackson mapper；异常仍沿用既有 unchecked 类型，避免改变用户可感知失败路径。
+- 受影响模块显式声明 `jackson-datatype-jsr310`，确保脱离 `JsonUtils` 后仍支持 Java Time 类型。
+- 本轮不是删除 core JSON，而是先降低运行时模块对历史工具入口的耦合。真正从 `under-utils-core` 移除 Jackson 需要等待 major 版本或提供明确迁移模块。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

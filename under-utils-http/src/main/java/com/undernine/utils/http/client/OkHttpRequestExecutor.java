@@ -1,6 +1,11 @@
 package com.undernine.utils.http.client;
 
-import com.undernine.utils.core.json.JsonUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.undernine.utils.core.json.JsonException;
 import com.undernine.utils.http.config.HttpConfig;
 import com.undernine.utils.http.enums.HttpMethod;
 import com.undernine.utils.http.exception.HttpException;
@@ -32,6 +37,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class OkHttpRequestExecutor {
+
+    private static final ObjectMapper JSON_MAPPER = createJsonMapper();
 
     /**
      * OkHttp 客户端实例
@@ -354,9 +361,26 @@ public class OkHttpRequestExecutor {
         if (body instanceof String) {
             json = (String) body;
         } else {
-            json = JsonUtils.toJson(body);
+            json = toJson(body);
         }
         return RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+    }
+
+    private static String toJson(Object body) {
+        try {
+            return JSON_MAPPER.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new JsonException("Failed to serialize HTTP request body to JSON: " + body.getClass().getName(), e);
+        }
+    }
+
+    private static ObjectMapper createJsonMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        return mapper;
     }
 
     /**
