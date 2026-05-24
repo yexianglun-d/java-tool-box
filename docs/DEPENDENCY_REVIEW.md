@@ -10,7 +10,7 @@
 - starter 拆分后，Spring-only 用户不再被 `under-utils-starter` 强制带入 Redis/Redisson。
 - `under-utils-core` 仍会带入 Jackson。`JsonUtils` 已经发布为 public API，`1.x` 内不应直接移除这组依赖。
 - `under-utils-redis` 的真正重量来自 Redisson/Netty；这是模块能力本身决定的，不适合在 patch 版本里伪装成轻量模块。
-- `under-utils-biz` 当前实现只使用无外部依赖的 CSV/导入模板，POM 里 Excel/POI/Jackson optional 依赖需要清理或移动到独立扩展模块。
+- `under-utils-biz` 当前实现只使用无外部依赖的 CSV/导入模板，已移除未使用的 Excel/POI/Jackson optional 依赖。
 
 ## 模块快照
 
@@ -23,7 +23,7 @@
 | `under-utils-spring` | 72K | 20 行 | core、Spring context/web/webmvc、AspectJ、Validation、Jackson | Spring MVC/AOP 模块，重量和定位一致。 |
 | `under-utils-redis` | 40K | 45 行 | core、spring、Redisson/Netty、Jackson | Redisson 是主要重量；同时对 `under-utils-spring` 有接口耦合。 |
 | `under-utils-mybatis` | 24K | 9 行 | core、MyBatis-Plus、JSQLParser | 依赖和安全分页/审计能力匹配。 |
-| `under-utils-biz` | 40K | 33 行 | core、SLF4J；Excel/POI/Jackson 为 optional | 当前代码未使用 Excel/POI/Jackson，应清理 POM 或拆扩展。 |
+| `under-utils-biz` | 40K | 4 行 | core、SLF4J | 当前代码未使用 Excel/POI/Jackson，基础 biz 模块保持无 Excel 栈。 |
 | `under-utils-spring-starter` | 16K | 10 行 | spring module、Boot autoconfigure、Servlet API | 符合 Spring-only starter 定位。 |
 | `under-utils-redis-starter` | 8K | 9 行 | spring starter、redis module、Boot autoconfigure | 符合 Redis starter 定位。 |
 | `under-utils-starter` | 4K | 3 行 | spring starter、redis starter | 兼容聚合入口，保持旧用户路径。 |
@@ -86,15 +86,14 @@
 
 后续选择：
 
-- 短期：移除 `under-utils-biz` POM 中未使用的 EasyExcel、POI、Jackson optional 依赖。
+- 已移除 `under-utils-biz` POM 中未使用的 EasyExcel、POI、Jackson optional 依赖。
 - 中期：如果要提供 Excel 流式导入，新增独立 `under-utils-excel` 或 `under-utils-biz-excel`，不要把 Excel 栈放回基础 biz 模块。
 
 ## 建议执行顺序
 
-1. 清理 `under-utils-biz` 未使用 optional 依赖。
-2. 清理或补齐 `under-utils-http` 的 HttpClient5 边界。
-3. 继续保持 `under-utils-core` 的 JSON 兼容策略，不在 `1.x` 里破坏老用户。
-4. 为 `2.0.0` 记录 Redis/Spring SPI 拆分方案。
+1. 清理或补齐 `under-utils-http` 的 HttpClient5 边界。
+2. 继续保持 `under-utils-core` 的 JSON 兼容策略，不在 `1.x` 里破坏老用户。
+3. 为 `2.0.0` 记录 Redis/Spring SPI 拆分方案。
 
 ## 采集命令
 

@@ -169,6 +169,14 @@
 - 受影响模块显式声明 `jackson-datatype-jsr310`，确保脱离 `JsonUtils` 后仍支持 Java Time 类型。
 - 本轮不是删除 core JSON，而是先降低运行时模块对历史工具入口的耦合。真正从 `under-utils-core` 移除 Jackson 需要等待 major 版本或提供明确迁移模块。
 
+## 第十六轮结论
+
+### Biz 依赖收敛
+
+- `under-utils-biz` 当前 public API 只覆盖导入任务、CSV reader、进度查询和错误导出，不提供 Excel/POI/Jackson 类型签名。
+- 移除 `under-utils-biz` POM 中未使用的 EasyExcel、POI 和 Jackson optional 依赖，不影响已发布 Java API。
+- 后续如果提供 Excel 流式导入，应进入独立扩展模块，避免基础 biz 模块重新带入 Excel 栈。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。
