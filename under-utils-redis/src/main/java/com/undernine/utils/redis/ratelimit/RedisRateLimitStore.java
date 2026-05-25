@@ -2,6 +2,7 @@ package com.undernine.utils.redis.ratelimit;
 
 import com.undernine.utils.spring.ratelimit.RateLimitStore;
 import org.redisson.api.RRateLimiter;
+import org.redisson.api.RateLimiterConfig;
 import org.redisson.api.RateIntervalUnit;
 import org.redisson.api.RateType;
 import org.redisson.api.RedissonClient;
@@ -41,10 +42,22 @@ public class RedisRateLimitStore implements RateLimitStore {
         if (limit <= 0) {
             return false;
         }
+        Objects.requireNonNull(window, "window must not be null");
         long windowMillis = Math.max(1L, window.toMillis());
         RRateLimiter limiter = redissonClient.getRateLimiter(keyPrefix + key);
-        limiter.trySetRate(RateType.OVERALL, limit, windowMillis, RateIntervalUnit.MILLISECONDS);
-        limiter.expire(window.plusSeconds(1));
+        if (!limiter.trySetRate(RateType.OVERALL, limit, windowMillis, RateIntervalUnit.MILLISECONDS)
+                && shouldUpdateRate(limiter, limit, windowMillis)) {
+            limiter.setRate(RateType.OVERALL, limit, windowMillis, RateIntervalUnit.MILLISECONDS);
+        }
+        limiter.expireIfNotSet(window.plusSeconds(1));
         return limiter.tryAcquire();
+    }
+
+    private boolean shouldUpdateRate(RRateLimiter limiter, int limit, long windowMillis) {
+        RateLimiterConfig config = limiter.getConfig();
+        return config == null
+                || config.getRateType() != RateType.OVERALL
+                || !Objects.equals(config.getRate(), (long) limit)
+                || !Objects.equals(config.getRateInterval(), windowMillis);
     }
 }

@@ -97,6 +97,7 @@ ProductView view = logicalExpireCacheTemplate.getOrLoad(
 ## 限流和防重复提交 store
 
 `RedisRateLimitStore` 和 `RedisRepeatSubmitStore` 实现了 `under-utils-spring` 中的 store 接口。
+`RedisRateLimitStore` 会在同一个 key 的限流参数变化时更新 Redisson limiter 配置，并只在 key 没有 TTL 时设置过期时间。
 
 通常由 `under-utils-redis-starter` 在以下配置下装配：
 

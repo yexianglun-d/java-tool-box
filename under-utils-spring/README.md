@@ -78,6 +78,7 @@ key 解析规则：
 存储选择：
 
 - `LocalRateLimitStore` 和 `LocalRepeatSubmitStore` 只保护当前 JVM。
+- 本地 store 会按窗口清理过期 key，并设置默认最大容量，避免不同用户或业务 key 无限制增长。
 - 多实例服务应使用 `under-utils-redis` 提供的 Redis store，或自行实现 store。
 - Redis 异常默认向外传播；如需降级，应由业务自定义 store。
 
@@ -141,5 +142,5 @@ public class LegacyAopConfiguration {
 注意：
 
 - `@OperationLog` 默认不记录请求参数，除非显式设置 `recordParams = true`。
-- `@Retry` 使用当前线程同步 sleep。
+- `@Retry` 是历史兼容同步重试，会使用当前线程 sleep；新代码不要把它作为 Web 请求线程上的客户端治理方案。
 - 生产级观测和重试治理建议使用应用侧 tracing、metrics、队列或客户端治理组件。

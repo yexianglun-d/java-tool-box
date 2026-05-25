@@ -41,6 +41,8 @@ long workerId = info.getWorkerId();
 注意：
 
 - `datacenterId` 和 `workerId` 取值范围为 `0..31`。
+- 默认构造器会优先读取系统属性 `under.utils.id.datacenter-id`、`under.utils.id.worker-id`，其次读取环境变量 `UNDER_UTILS_DATACENTER_ID`、`UNDER_UTILS_WORKER_ID`。
+- 未配置节点 ID 时，默认构造器会基于主机名和当前进程派生节点 ID；生产多节点部署仍建议显式传入稳定且全局唯一的节点编号。
 - 生成器依赖系统时钟单调前进，发生时钟回拨会拒绝生成 ID。
 - 多节点部署时，节点 ID 分配不由本模块负责。
 
@@ -82,6 +84,7 @@ Payload parsed = JsonUtils.fromJson(json, Payload.class);
 - `MD5Utils` 不适合密码存储、签名或安全校验。
 - `SHA256Utils` 是摘要工具，不是密码哈希方案。
 - `AESUtils` 不提供密钥轮换、KMS 集成、密文版本管理或认证加密策略。
+- `AESUtils.encrypt`、`AESUtils.decrypt` 和字节数组 CBC 方法仅保留历史兼容，新代码应使用认证加密或统一加密服务。
 - `AESUtils.encryptECB` 和 `AESUtils.decryptECB` 仅保留历史兼容，新代码不要使用 ECB 模式。
 
 ## 贡献规则

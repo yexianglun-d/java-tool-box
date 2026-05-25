@@ -6,6 +6,7 @@ import com.undernine.utils.mybatis.page.SortFieldMapping;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -113,5 +114,46 @@ class SafePageQueryTest {
 
         assertThat(page.getCurrent()).isEqualTo(1L);
         assertThat(page.getSize()).isEqualTo(1000L);
+    }
+
+    @Test
+    @DisplayName("测试排序字段数量上限")
+    void testRejectTooManySortOrders() {
+        SafePageQuery query = SafePageQuery.of()
+                .orderByAsc("id")
+                .orderByAsc("createdAt")
+                .orderByAsc("updatedAt")
+                .orderByAsc("username")
+                .orderByAsc("status");
+
+        assertThatThrownBy(() -> query.orderByAsc("tenantId"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("sort order count must not exceed");
+    }
+
+    @Test
+    @DisplayName("测试反序列化排序字段数量上限")
+    void testRejectTooManyDeserializedSortOrders() {
+        SortFieldMapping mapping = SortFieldMapping.of(Map.of(
+                "id", "id",
+                "createdAt", "create_time",
+                "updatedAt", "update_time",
+                "username", "user_name",
+                "status", "status",
+                "tenantId", "tenant_id"
+        ));
+        SafePageQuery query = SafePageQuery.of();
+        query.setOrders(List.of(
+                SafePageQuery.SortOrder.asc("id"),
+                SafePageQuery.SortOrder.asc("createdAt"),
+                SafePageQuery.SortOrder.asc("updatedAt"),
+                SafePageQuery.SortOrder.asc("username"),
+                SafePageQuery.SortOrder.asc("status"),
+                SafePageQuery.SortOrder.asc("tenantId")
+        ));
+
+        assertThatThrownBy(() -> query.buildPage(mapping))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("sort order count must not exceed");
     }
 }

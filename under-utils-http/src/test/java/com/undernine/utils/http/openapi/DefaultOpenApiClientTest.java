@@ -169,6 +169,34 @@ class DefaultOpenApiClientTest {
     }
 
     @Test
+    void shouldNotBlockCurrentThreadBeforeRetryByDefault() {
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"code\":\"BUSY\",\"message\":\"retry later\"}"));
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"code\":\"OK\",\"value\":\"done\"}"));
+        OpenApiClient client = new DefaultOpenApiClient(
+                OpenApiClientOptions.builder().maxRetries(1).retryInterval(3_000).build(),
+                AccessTokenProvider.noop(),
+                RequestSigner.noop(),
+                jsonCodeDecoder()
+        );
+
+        long startedAt = System.currentTimeMillis();
+        OpenApiResponse<Map<String, Object>> response = client.execute(
+                OpenApiRequest.builder()
+                        .url(server.url("/retry-without-sleep").toString())
+                        .build(),
+                new TypeReference<Map<String, Object>>() {
+                });
+
+        assertThat(response.isSuccess()).isTrue();
+        assertThat(System.currentTimeMillis() - startedAt).isLessThan(2_500L);
+        assertThat(server.getRequestCount()).isEqualTo(2);
+    }
+
+    @Test
     void shouldNotRetryNonRetryableBusinessError() {
         server.enqueue(new MockResponse()
                 .setResponseCode(200)

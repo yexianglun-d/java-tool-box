@@ -185,6 +185,19 @@
 - 移除 POM 中未实现的 HttpClient5 optional 依赖，不影响已发布 Java API，也避免用户误以为模块内置 HttpClient5 执行器。
 - 后续如果需要多客户端实现，应新增明确的执行器抽象或独立适配模块，不能只通过 optional 依赖暗示能力。
 
+## 第十八轮结论
+
+### Runtime Boundary Fixes
+
+- `RedisRateLimitStore` 不再忽略已存在 limiter 的配置漂移：`trySetRate` 失败后会读取当前配置，参数不一致时调用 `setRate` 更新，并改为只在 key 未设置 TTL 时补过期时间。
+- `IdGenerator` 默认构造器不再固定使用 `datacenterId=0, workerId=0`；默认值优先来自系统属性或环境变量，未配置时按主机和进程派生。生产多节点仍应显式分配稳定节点 ID。
+- `LocalRateLimitStore` 和 `LocalRepeatSubmitStore` 增加默认容量上限和节流过期清理，避免按用户、租户或业务 key 无限增长；`LocalRateLimitStore` 内部计数改为 `synchronized` 保护的普通 `int`。
+- `AsyncImportTaskTemplate` 增加完成/失败任务状态保留期，默认 24 小时，并支持构造器自定义，避免结果和错误明细永久驻留当前 JVM。
+- `SafePageQuery` 限制单次请求最多 5 个排序字段，排序白名单继续负责列名安全，数量上限负责防滥用。
+- `DefaultOpenApiClient` 保持同步 API，但默认不再在重试前 `Thread.sleep`；需要同步等待的兼容调用方必须显式开启 `blockingRetryDelayEnabled`。
+- Maven 坐标继续使用 `io.github.yexianglun-d`，Java 包名在 `1.x` 内保持 `com.undernine.utils`，避免包名级破坏性迁移；文档中明确这一兼容取舍。
+- `AESUtils` 类和 CBC/ECB 方法均表达为历史兼容 API，不再给 CBC 方法保留“推荐”信号。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。

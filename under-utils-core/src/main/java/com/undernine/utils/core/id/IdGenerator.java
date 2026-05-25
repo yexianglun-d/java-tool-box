@@ -1,5 +1,7 @@
 package com.undernine.utils.core.id;
 
+import java.net.InetAddress;
+
 /**
  * 分布式 ID 生成器（雪花算法 Snowflake）
  * <p>
@@ -23,6 +25,12 @@ package com.undernine.utils.core.id;
  *   <li>时间有序</li>
  *   <li>无需依赖数据库或第三方服务</li>
  * </ul>
+ * </p>
+ * <p>
+ * 默认构造器会优先读取系统属性 {@code under.utils.id.datacenter-id}、
+ * {@code under.utils.id.worker-id}，其次读取环境变量 {@code UNDER_UTILS_DATACENTER_ID}、
+ * {@code UNDER_UTILS_WORKER_ID}。未配置时会基于主机名和当前进程派生节点 ID。
+ * 生产多节点部署仍建议显式传入稳定且全局唯一的节点编号。
  * </p>
  *
  * @author Under-Utils Team
@@ -102,10 +110,17 @@ public class IdGenerator {
     private long lastTimestamp = -1L;
 
     /**
-     * 构造方法（数据中心 ID 和机器 ID 都为 0）。
+     * 构造方法。
+     * <p>
+     * 默认节点 ID 会从配置或当前运行环境派生，避免所有实例固定使用 0/0。
+     * </p>
      */
     public IdGenerator() {
-        this(0, 0);
+        this(resolveDefaultNodeIds());
+    }
+
+    private IdGenerator(NodeIds nodeIds) {
+        this(nodeIds.datacenterId(), nodeIds.workerId());
     }
 
     /**
@@ -227,6 +242,64 @@ public class IdGenerator {
         return timestamp;
     }
 
+    private static NodeIds resolveDefaultNodeIds() {
+        ResolvedNodeId datacenter = resolveConfiguredNodeId(
+                "under.utils.id.datacenter-id", "UNDER_UTILS_DATACENTER_ID");
+        ResolvedNodeId worker = resolveConfiguredNodeId(
+                "under.utils.id.worker-id", "UNDER_UTILS_WORKER_ID");
+
+        long datacenterId = datacenter.configured()
+                ? datacenter.value()
+                : nodeIdFrom(hostFingerprint());
+        long workerId = worker.configured()
+                ? worker.value()
+                : nodeIdFrom(processFingerprint());
+        if (!datacenter.configured() && !worker.configured() && datacenterId == 0L && workerId == 0L) {
+            workerId = 1L;
+        }
+        return new NodeIds(datacenterId, workerId);
+    }
+
+    private static ResolvedNodeId resolveConfiguredNodeId(String propertyName, String envName) {
+        String value = System.getProperty(propertyName);
+        if (isBlank(value)) {
+            value = System.getenv(envName);
+        }
+        if (isBlank(value)) {
+            return new ResolvedNodeId(0L, false);
+        }
+        try {
+            long nodeId = Long.parseLong(value.trim());
+            if (nodeId < 0 || nodeId > MAX_WORKER_ID) {
+                throw new IllegalArgumentException(
+                        String.format("%s/%s must be between 0 and %d", propertyName, envName, MAX_WORKER_ID));
+            }
+            return new ResolvedNodeId(nodeId, true);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(propertyName + "/" + envName + " must be a number", ex);
+        }
+    }
+
+    private static String hostFingerprint() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception ex) {
+            return "unknown-host";
+        }
+    }
+
+    private static String processFingerprint() {
+        return ProcessHandle.current().pid() + "@" + hostFingerprint();
+    }
+
+    private static long nodeIdFrom(String value) {
+        return Math.floorMod(value.hashCode(), (int) MAX_WORKER_ID + 1);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
     /**
      * ID 信息类
      */
@@ -294,5 +367,11 @@ public class IdGenerator {
                     ", sequence=" + sequence +
                     '}';
         }
+    }
+
+    private record NodeIds(long datacenterId, long workerId) {
+    }
+
+    private record ResolvedNodeId(long value, boolean configured) {
     }
 }

@@ -113,7 +113,8 @@ IPage<SysUser> page = userMapper.selectPage(
 PageResult<SysUser> result = PageResult.of(page);
 ```
 
-`SafePageQuery` 会忽略不在 `SortFieldMapping` 中的排序字段，避免请求原始值进入 `ORDER BY`。
+`SafePageQuery` 会拒绝不在 `SortFieldMapping` 中的排序字段，避免请求原始值进入 `ORDER BY`。
+单次请求最多允许 5 个排序字段，防止接口入参构造过宽的 `ORDER BY`。
 
 `PageQuery` 仍保留用于兼容，但不建议作为 Web 入参。
 

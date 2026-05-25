@@ -3,6 +3,7 @@ package com.undernine.utils.biz.importtask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -26,10 +28,14 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class AsyncImportTaskTemplate {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncImportTaskTemplate.class);
+    private static final Duration DEFAULT_TASK_RETENTION = Duration.ofHours(24);
+    private static final long CLEANUP_INTERVAL_MILLIS = Duration.ofMinutes(1).toMillis();
 
     private final ImportOptions options;
     private final Executor executor;
+    private final long taskRetentionMillis;
     private final Map<String, TaskState> tasks = new ConcurrentHashMap<>();
+    private final AtomicLong nextCleanupAt = new AtomicLong();
 
     /**
      * 使用默认导入选项创建异步模板。
@@ -47,8 +53,20 @@ public final class AsyncImportTaskTemplate {
      * @param executor 后台执行器
      */
     public AsyncImportTaskTemplate(ImportOptions options, Executor executor) {
+        this(options, executor, DEFAULT_TASK_RETENTION);
+    }
+
+    /**
+     * 使用指定导入选项、执行器和任务状态保留时间创建异步模板。
+     *
+     * @param options       导入选项
+     * @param executor      后台执行器
+     * @param taskRetention 完成或失败任务在当前 JVM 内的保留时间
+     */
+    public AsyncImportTaskTemplate(ImportOptions options, Executor executor, Duration taskRetention) {
         this.options = options == null ? ImportOptions.defaults() : options;
         this.executor = Objects.requireNonNull(executor, "executor must not be null");
+        this.taskRetentionMillis = normalizeTaskRetention(taskRetention).toMillis();
     }
 
     /**
@@ -118,7 +136,7 @@ public final class AsyncImportTaskTemplate {
      * @return 进度快照
      */
     public Optional<ImportProgress> findProgress(String taskId) {
-        TaskState state = tasks.get(taskId);
+        TaskState state = findTaskState(taskId);
         return state == null ? Optional.empty() : Optional.of(state.progress.get());
     }
 
@@ -129,7 +147,7 @@ public final class AsyncImportTaskTemplate {
      * @return 导入结果；任务未完成、失败或不存在时为空
      */
     public Optional<ImportResult> findResult(String taskId) {
-        TaskState state = tasks.get(taskId);
+        TaskState state = findTaskState(taskId);
         return state == null ? Optional.empty() : Optional.ofNullable(state.result);
     }
 
@@ -140,7 +158,7 @@ public final class AsyncImportTaskTemplate {
      * @return 失败异常；任务未失败或不存在时为空
      */
     public Optional<Throwable> findFailure(String taskId) {
-        TaskState state = tasks.get(taskId);
+        TaskState state = findTaskState(taskId);
         return state == null ? Optional.empty() : Optional.ofNullable(state.failure);
     }
 
@@ -156,6 +174,8 @@ public final class AsyncImportTaskTemplate {
     private String submitTask(String taskId, ImportExecution execution) {
         String normalizedTaskId = normalizeTaskId(taskId);
         Instant startedAt = Instant.now();
+        cleanupExpiredTask(normalizedTaskId, System.currentTimeMillis());
+        cleanupExpiredTasks(System.currentTimeMillis(), false);
         TaskState state = new TaskState(ImportProgress.pending(normalizedTaskId, startedAt));
         if (tasks.putIfAbsent(normalizedTaskId, state) != null) {
             throw new IllegalArgumentException("import task already exists: " + normalizedTaskId);
@@ -168,6 +188,7 @@ public final class AsyncImportTaskTemplate {
             state.failure = ex;
             state.progress.set(ImportProgress.failed(normalizedTaskId, startedAt, finishedAt,
                     state.progress.get(), failureMessage(ex)));
+            state.markFinished(finishedAt);
             throw ex;
         }
         return normalizedTaskId;
@@ -180,11 +201,13 @@ public final class AsyncImportTaskTemplate {
             Instant finishedAt = Instant.now();
             state.result = result;
             state.progress.set(ImportProgress.completed(taskId, startedAt, finishedAt, result));
+            state.markFinished(finishedAt);
         } catch (Throwable error) {
             Instant finishedAt = Instant.now();
             state.failure = error;
             state.progress.set(ImportProgress.failed(taskId, startedAt, finishedAt, state.progress.get(),
                     failureMessage(error)));
+            state.markFinished(finishedAt);
             log.warn("Async import task failed: {}", taskId, error);
         }
     }
@@ -222,14 +245,59 @@ public final class AsyncImportTaskTemplate {
         return error.getClass().getSimpleName();
     }
 
+    private Duration normalizeTaskRetention(Duration taskRetention) {
+        Duration retention = taskRetention == null ? DEFAULT_TASK_RETENTION : taskRetention;
+        if (retention.isZero() || retention.isNegative()) {
+            throw new IllegalArgumentException("taskRetention must be positive");
+        }
+        return retention;
+    }
+
+    private TaskState findTaskState(String taskId) {
+        TaskState state = tasks.get(taskId);
+        long now = System.currentTimeMillis();
+        if (state != null && state.isExpired(now, taskRetentionMillis)) {
+            tasks.remove(taskId, state);
+            return null;
+        }
+        cleanupExpiredTasks(now, false);
+        return state;
+    }
+
+    private void cleanupExpiredTask(String taskId, long now) {
+        TaskState state = tasks.get(taskId);
+        if (state != null && state.isExpired(now, taskRetentionMillis)) {
+            tasks.remove(taskId, state);
+        }
+    }
+
+    private void cleanupExpiredTasks(long now, boolean force) {
+        if (!force) {
+            long next = nextCleanupAt.get();
+            if (now < next || !nextCleanupAt.compareAndSet(next, now + CLEANUP_INTERVAL_MILLIS)) {
+                return;
+            }
+        }
+        tasks.entrySet().removeIf(entry -> entry.getValue().isExpired(now, taskRetentionMillis));
+    }
+
     private static final class TaskState {
 
         private final AtomicReference<ImportProgress> progress;
         private volatile ImportResult result;
         private volatile Throwable failure;
+        private volatile long finishedAtMillis = -1L;
 
         private TaskState(ImportProgress progress) {
             this.progress = new AtomicReference<>(progress);
+        }
+
+        private void markFinished(Instant finishedAt) {
+            this.finishedAtMillis = finishedAt.toEpochMilli();
+        }
+
+        private boolean isExpired(long now, long taskRetentionMillis) {
+            return finishedAtMillis >= 0L && now - finishedAtMillis >= taskRetentionMillis;
         }
     }
 

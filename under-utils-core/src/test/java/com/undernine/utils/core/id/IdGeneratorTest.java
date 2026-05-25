@@ -37,6 +37,39 @@ class IdGeneratorTest {
     }
 
     @Test
+    void testConstructor_defaultReadsSystemProperties() {
+        String oldDatacenter = System.getProperty("under.utils.id.datacenter-id");
+        String oldWorker = System.getProperty("under.utils.id.worker-id");
+        try {
+            System.setProperty("under.utils.id.datacenter-id", "2");
+            System.setProperty("under.utils.id.worker-id", "3");
+
+            IdGenerator generator = new IdGenerator();
+            IdGenerator.IdInfo info = generator.parseId(generator.nextId());
+
+            assertThat(info.getDatacenterId()).isEqualTo(2);
+            assertThat(info.getWorkerId()).isEqualTo(3);
+        } finally {
+            restoreProperty("under.utils.id.datacenter-id", oldDatacenter);
+            restoreProperty("under.utils.id.worker-id", oldWorker);
+        }
+    }
+
+    @Test
+    void testConstructor_defaultRejectsInvalidSystemProperties() {
+        String oldWorker = System.getProperty("under.utils.id.worker-id");
+        try {
+            System.setProperty("under.utils.id.worker-id", "32");
+
+            assertThatThrownBy(IdGenerator::new)
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("under.utils.id.worker-id");
+        } finally {
+            restoreProperty("under.utils.id.worker-id", oldWorker);
+        }
+    }
+
+    @Test
     void testConstructor_invalidDatacenterId() {
         assertThatThrownBy(() -> new IdGenerator(32, 1))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -272,5 +305,13 @@ class IdGeneratorTest {
         assertThat(str).contains("timestamp=");
         assertThat(str).contains("datacenterId=5");
         assertThat(str).contains("workerId=10");
+    }
+
+    private static void restoreProperty(String name, String oldValue) {
+        if (oldValue == null) {
+            System.clearProperty(name);
+        } else {
+            System.setProperty(name, oldValue);
+        }
     }
 }

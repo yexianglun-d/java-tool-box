@@ -13,6 +13,9 @@ Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包
 
 当前稳定版本：`1.0.1`。
 
+Maven 坐标使用 GitHub namespace `io.github.yexianglun-d`。Java 包名在 `1.x` 内继续保持
+`com.undernine.utils`，这是为了避免已发布 public API 发生包名级破坏性迁移。
+
 ## 项目边界
 
 适合进入本项目的能力，应有清晰复用边界，并能封装足够多的重复复杂度。

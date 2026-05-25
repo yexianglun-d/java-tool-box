@@ -151,6 +151,8 @@ ApiErrorDecoder decoder = (request, httpResponse) -> {
 ```
 
 只有解码结果标记为 `retryable`，并且还有重试预算时，客户端才会重试。
+同步客户端默认不会在重试前 sleep，即使设置了 `retryInterval` 也只会立即重试，避免占用 Web 请求线程。
+如确需当前线程等待，可显式设置 `blockingRetryDelayEnabled(true)`；生产级退避、熔断和异步调度建议放在应用侧客户端治理层。
 
 ## 异常
 

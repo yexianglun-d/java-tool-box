@@ -3,7 +3,7 @@ package com.undernine.utils.spring.ratelimit;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * JVM 本地限流存储。
@@ -17,7 +17,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class LocalRateLimitStore implements RateLimitStore {
 
+    private static final int DEFAULT_MAX_COUNTERS = 100_000;
+    private static final long CLEANUP_INTERVAL_MILLIS = 1_000L;
+
     private final Map<String, WindowCounter> counters = new ConcurrentHashMap<>();
+    private final int maxCounters;
+    private final AtomicLong nextCleanupAt = new AtomicLong();
+
+    public LocalRateLimitStore() {
+        this(DEFAULT_MAX_COUNTERS);
+    }
+
+    public LocalRateLimitStore(int maxCounters) {
+        if (maxCounters <= 0) {
+            throw new IllegalArgumentException("maxCounters must be greater than 0");
+        }
+        this.maxCounters = maxCounters;
+    }
 
     @Override
     public boolean tryAcquire(String key, int limit, Duration window) {
@@ -25,7 +41,20 @@ public class LocalRateLimitStore implements RateLimitStore {
             return false;
         }
         long windowMillis = Math.max(1L, window.toMillis());
-        WindowCounter counter = counters.computeIfAbsent(key, ignored -> new WindowCounter(limit, windowMillis));
+        long now = System.currentTimeMillis();
+        cleanupExpiredCounters(now, false);
+        if (!counters.containsKey(key) && counters.size() >= maxCounters) {
+            cleanupExpiredCounters(now, true);
+            if (!counters.containsKey(key) && counters.size() >= maxCounters) {
+                return false;
+            }
+        }
+        WindowCounter counter = counters.compute(key, (ignored, existing) -> {
+            if (existing == null || existing.isExpired(now)) {
+                return new WindowCounter(limit, now, windowMillis);
+            }
+            return existing;
+        });
         return counter.tryAcquire(limit, windowMillis);
     }
 
@@ -36,26 +65,47 @@ public class LocalRateLimitStore implements RateLimitStore {
         counters.clear();
     }
 
-    private static class WindowCounter {
-        private final AtomicInteger count;
-        private volatile long windowStart;
+    int size() {
+        return counters.size();
+    }
 
-        private WindowCounter(int limit, long windowMillis) {
-            this.count = new AtomicInteger(limit);
-            this.windowStart = System.currentTimeMillis();
+    private void cleanupExpiredCounters(long now, boolean force) {
+        if (!force) {
+            long next = nextCleanupAt.get();
+            if (now < next || !nextCleanupAt.compareAndSet(next, now + CLEANUP_INTERVAL_MILLIS)) {
+                return;
+            }
+        }
+        counters.entrySet().removeIf(entry -> entry.getValue().isExpired(now));
+    }
+
+    private static class WindowCounter {
+        private int count;
+        private long windowStart;
+        private long windowMillis;
+
+        private WindowCounter(int limit, long now, long windowMillis) {
+            this.count = limit;
+            this.windowStart = now;
+            this.windowMillis = windowMillis;
         }
 
         private synchronized boolean tryAcquire(int limit, long windowMillis) {
             long now = System.currentTimeMillis();
             if (now - windowStart >= windowMillis) {
-                count.set(limit);
+                count = limit;
                 windowStart = now;
+                this.windowMillis = windowMillis;
             }
-            if (count.get() <= 0) {
+            if (count <= 0) {
                 return false;
             }
-            count.decrementAndGet();
+            count--;
             return true;
+        }
+
+        private synchronized boolean isExpired(long now) {
+            return now - windowStart >= windowMillis;
         }
     }
 }

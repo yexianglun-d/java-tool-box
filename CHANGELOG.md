@@ -18,6 +18,12 @@
 - `under-utils-http`、`under-utils-spring` 和 `under-utils-redis` 内部不再调用 `under-utils-core` 的历史 `JsonUtils`，JSON 行为保持不变，为后续 core JSON 迁移降低耦合。
 - `under-utils-biz` 移除未使用的 EasyExcel、POI 和 Jackson optional 依赖，模块边界收敛为导入任务、进度查询和错误导出。
 - `under-utils-http` 移除未实现的 HttpClient5 optional 依赖，模块边界收敛为 OkHttp 执行器和 OpenAPI 客户端治理。
+- `RedisRateLimitStore` 在同 key 限流参数变化时会更新 Redisson limiter 配置，并避免每次请求无条件刷新 TTL。
+- `IdGenerator` 默认构造器不再固定使用 0/0 节点 ID，改为优先读取配置，缺省时按主机和进程派生节点 ID。
+- 本地限流、防重复提交和异步导入任务状态增加容量或保留期边界，避免内存状态无限增长。
+- `SafePageQuery` 限制单次请求最多 5 个排序字段，避免构造过宽 `ORDER BY`。
+- `DefaultOpenApiClient` 默认不再在重试前阻塞当前线程等待 `retryInterval`；需要同步等待时必须显式开启。
+- `AESUtils` 的 CBC 方法单独标记为 deprecated，并收敛文档中的推荐信号。
 
 ## [1.0.1] - 2026-05-23
 

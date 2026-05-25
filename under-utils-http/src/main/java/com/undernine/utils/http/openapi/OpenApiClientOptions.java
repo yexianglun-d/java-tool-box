@@ -46,6 +46,16 @@ public class OpenApiClientOptions {
     private long retryInterval = 1000;
 
     /**
+     * 是否允许同步客户端在重试前阻塞当前线程等待 {@link #retryInterval}。
+     * <p>
+     * 默认关闭，避免在 Web 请求线程中因为重试等待占用容器线程。需要退避、熔断或异步调度的场景，
+     * 建议在调用方的客户端治理层实现。
+     * </p>
+     */
+    @Builder.Default
+    private boolean blockingRetryDelayEnabled = false;
+
+    /**
      * 透传 traceId 时使用的请求头名称。
      */
     @Builder.Default

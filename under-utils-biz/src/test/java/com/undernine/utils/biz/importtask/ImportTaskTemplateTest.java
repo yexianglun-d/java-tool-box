@@ -2,6 +2,7 @@ package com.undernine.utils.biz.importtask;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -235,6 +236,21 @@ class ImportTaskTemplateTest {
         assertThat(template.findResult("failed-task")).isEmpty();
         assertThat(template.findFailure("failed-task")).hasValueSatisfying(error ->
                 assertThat(error).isInstanceOf(ImportTaskException.class));
+    }
+
+    @Test
+    void asyncTemplateExpiresCompletedTaskState() throws Exception {
+        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(
+                ImportOptions.defaults(), Runnable::run, Duration.ofMillis(5));
+
+        template.submit("expire-task", List.of("apple,10"), new CsvItemHandler(new ArrayList<>()));
+        assertThat(template.findProgress("expire-task")).isPresent();
+
+        Thread.sleep(20L);
+
+        assertThat(template.findProgress("expire-task")).isEmpty();
+        assertThat(template.findResult("expire-task")).isEmpty();
+        assertThat(template.findFailure("expire-task")).isEmpty();
     }
 
     @Test

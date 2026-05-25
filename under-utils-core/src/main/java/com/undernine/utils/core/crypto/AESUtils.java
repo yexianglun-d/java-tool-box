@@ -16,10 +16,10 @@ import java.util.Base64;
  * KMS 集成或密文版本治理；新代码应优先使用 AES/GCM、JDK JCA 或统一加密服务。
  * </p>
  * <p>
- * 特性：
+     * 历史兼容能力：
  * <ul>
  *   <li>支持 AES-128/192/256 位密钥</li>
- *   <li>默认使用 AES/CBC/PKCS5Padding 模式</li>
+     *   <li>历史默认使用 AES/CBC/PKCS5Padding 模式</li>
  *   <li>支持自定义密钥和 IV（初始化向量）</li>
  *   <li>提供 Base64 编码的加密结果</li>
  * </ul>
@@ -121,7 +121,7 @@ public final class AESUtils {
         return Base64.getEncoder().encodeToString(iv);
     }
 
-    // ==================== CBC 模式加密解密（推荐）====================
+    // ==================== CBC 模式加密解密（历史兼容）====================
 
     /**
      * AES 加密（CBC 模式，Base64 编码）。
@@ -140,7 +140,9 @@ public final class AESUtils {
      * @return Base64 编码的密文
      * @throws IllegalArgumentException 如果参数为 null
      * @throws RuntimeException        如果加密失败
+     * @deprecated CBC 模式仅保留历史兼容；新代码应使用认证加密或统一加密服务。
      */
+    @Deprecated(since = "1.0.0")
     public static String encrypt(String plainText, String key, String iv) {
         if (plainText == null || key == null || iv == null) {
             throw new IllegalArgumentException("Parameters cannot be null");
@@ -172,7 +174,9 @@ public final class AESUtils {
      * @return 明文
      * @throws IllegalArgumentException 如果参数为 null
      * @throws RuntimeException        如果解密失败
+     * @deprecated CBC 模式仅保留历史兼容；新代码应使用认证加密或统一加密服务。
      */
+    @Deprecated(since = "1.0.0")
     public static String decrypt(String cipherText, String key, String iv) {
         if (cipherText == null || key == null || iv == null) {
             throw new IllegalArgumentException("Parameters cannot be null");
@@ -267,7 +271,9 @@ public final class AESUtils {
      * @param key        Base64 编码的密钥
      * @param iv         Base64 编码的 IV
      * @return 密文字节数组
+     * @deprecated CBC 模式仅保留历史兼容；新代码应使用认证加密或统一加密服务。
      */
+    @Deprecated(since = "1.0.0")
     public static byte[] encryptBytes(byte[] plainBytes, String key, String iv) {
         if (plainBytes == null || key == null || iv == null) {
             throw new IllegalArgumentException("Parameters cannot be null");
@@ -295,7 +301,9 @@ public final class AESUtils {
      * @param key         Base64 编码的密钥
      * @param iv          Base64 编码的 IV
      * @return 明文字节数组
+     * @deprecated CBC 模式仅保留历史兼容；新代码应使用认证加密或统一加密服务。
      */
+    @Deprecated(since = "1.0.0")
     public static byte[] decryptBytes(byte[] cipherBytes, String key, String iv) {
         if (cipherBytes == null || key == null || iv == null) {
             throw new IllegalArgumentException("Parameters cannot be null");

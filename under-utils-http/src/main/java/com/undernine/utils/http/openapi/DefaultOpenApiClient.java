@@ -224,6 +224,9 @@ public class DefaultOpenApiClient implements OpenApiClient {
         if (options.isLoggingEnabled()) {
             log.warn("OpenAPI request retrying... ({}/{})", attempt + 1, maxRetries);
         }
+        if (!options.isBlockingRetryDelayEnabled()) {
+            return;
+        }
         try {
             Thread.sleep(options.getRetryInterval());
         } catch (InterruptedException e) {

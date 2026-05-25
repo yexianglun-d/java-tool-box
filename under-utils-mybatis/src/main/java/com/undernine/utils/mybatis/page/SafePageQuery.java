@@ -30,6 +30,7 @@ public class SafePageQuery implements Serializable {
     private static final long DEFAULT_CURRENT = 1L;
     private static final long DEFAULT_SIZE = 10L;
     private static final long MAX_SIZE = 1000L;
+    private static final int MAX_ORDER_COUNT = 5;
 
     /**
      * 当前页码（从 1 开始）。
@@ -77,6 +78,7 @@ public class SafePageQuery implements Serializable {
         Page<T> page = new Page<>(validCurrent, validSize);
         List<SortOrder> effectiveOrders = hasOrders(this.orders) ? this.orders : defaultOrders;
         if (hasOrders(effectiveOrders)) {
+            validateOrderCount(effectiveOrders);
             page.setOrders(toOrderItems(mapping, effectiveOrders));
         }
         return page;
@@ -146,11 +148,20 @@ public class SafePageQuery implements Serializable {
         if (this.orders == null) {
             this.orders = new ArrayList<>();
         }
+        if (this.orders.size() >= MAX_ORDER_COUNT) {
+            throw new IllegalArgumentException("sort order count must not exceed " + MAX_ORDER_COUNT);
+        }
         this.orders.add(order);
     }
 
     private static boolean hasOrders(List<SortOrder> orders) {
         return orders != null && !orders.isEmpty();
+    }
+
+    private static void validateOrderCount(List<SortOrder> orders) {
+        if (orders.size() > MAX_ORDER_COUNT) {
+            throw new IllegalArgumentException("sort order count must not exceed " + MAX_ORDER_COUNT);
+        }
     }
 
     private static List<OrderItem> toOrderItems(SortFieldMapping mapping, List<SortOrder> orders) {
