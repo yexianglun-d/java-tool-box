@@ -15,6 +15,7 @@
 - 贡献指南、PR 模板、Bug 模板和 release notes 模板增加回归测试命名、修复来源和 CHANGELOG 可追溯性要求。
 - `HttpRequest` 增加方法级快捷 builder、builder 直接执行和 `toBuilder()` 复制修改；`HttpConfig`、`OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式配置方法。
 - 新增 `under-utils-ai` 和 `under-utils-ai-starter`，提供 OpenAI-compatible 同步文本对话客户端、Spring Boot 自动装配、基础错误分类、token 用量响应模型和敏感信息脱敏边界。
+- `under-utils-samples` 新增 AI profile 示例，演示通过环境变量配置 `under-utils-ai-starter` 并调用文本对话接口。
 
 ### Changed
 

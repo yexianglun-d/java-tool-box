@@ -122,6 +122,7 @@ under:
 - 复用 `under-utils-http` 的 `HttpRequest`、`HttpConfig` 和 `HttpResponse`，但 AI 模块对外不暴露 HTTP 内部请求/响应模型。
 - 已用 `MockWebServer` 覆盖成功响应、认证失败、限流、服务端错误、超时、响应解析失败和敏感信息不进入 `toString()`。
 - 已新增独立 `under-utils-ai-starter`，在 `under.utils.ai.enabled=true` 时按配置创建默认 `AiClient`；它不加入 `under-utils-starter` 聚合入口，避免普通 Spring/Redis 用户被动引入 AI 依赖。
+- 已在 `under-utils-samples` 增加 `ai` profile 和 `/samples/ai/*` 示例接口，默认 profile 只暴露状态，不会在未配置模型服务时访问外部网络。
 
 ### 待确认问题
 

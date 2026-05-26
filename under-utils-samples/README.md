@@ -3,6 +3,7 @@
 Under-Utils 的 Spring Boot 可运行示例工程。
 
 默认 profile 不需要 Redis 或数据库，覆盖请求上下文传播、本地限流/防重提交、OpenAPI 客户端用法、安全分页参数构建和 CSV 导入流程。
+AI 示例默认不启用，避免未配置模型服务时启动应用就访问外部网络。
 
 ## 启动
 
@@ -58,6 +59,27 @@ curl -X POST http://localhost:18080/samples/openapi/orders/envelope \
   -H 'Content-Type: application/json' \
   -H 'X-Trace-Id: trace-openapi' \
   -d '{"requestNo":"req-openapi-2","skuId":"sku-1","quantity":0}'
+
+curl http://localhost:18080/samples/ai/status
+```
+
+## AI Profile
+
+`ai` profile 展示如何通过 `under-utils-ai-starter` 按配置创建默认 `AiClient`。默认配置指向本地占位地址，不会自动访问公网；真实调用前需要设置模型服务地址和模型名。
+
+```bash
+AI_BASE_URL=https://api.example.com/v1 \
+AI_API_KEY=your-api-key \
+AI_MODEL=your-model-name \
+mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=ai
+```
+
+调用：
+
+```bash
+curl -X POST http://localhost:18080/samples/ai/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"请用一句话介绍 Under-Utils","systemPrompt":"你是一个简洁的助手"}'
 ```
 
 ## Redis Profile
