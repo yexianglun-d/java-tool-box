@@ -235,6 +235,20 @@
 - `HttpConfig` 和 `OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式方法。为保持 Lombok builder 原有 `int/long` setter 兼容，新增方法使用 `connectTimeoutDuration`、`retryIntervalDuration` 等不冲突命名。
 - `CacheOptions`、`LogicalExpireCacheOptions` 和 `ImportOptions` 已具备 builder/toBuilder，本轮不为增加 `return this` 数量继续扩 API。
 
+## 第二十三轮结论
+
+### AI Basic Client
+
+- 新增 `under-utils-ai` 模块，第一阶段只提供 OpenAI-compatible 同步文本对话客户端，不进入 Agent、RAG、流式响应、工具调用或厂商私有完整参数封装。
+- 对外入口为 `AiClient.builder()` 和 `AiClientOptions`。调用方配置 `baseUrl`、`apiKey`、`model`、`timeout` 等基础参数后，可通过 `chat(ChatRequest)` 或 `chat(String)` 调用模型。
+- 请求/响应模型使用 `ChatRequest`、`ChatMessage`、`ChatResponse` 和 `TokenUsage`，不直接暴露 `under-utils-http` 的 `HttpRequest` / `HttpResponse`，降低后续替换底层执行器的 API 风险。
+- 错误统一映射为 `AiException`，通过 `AiErrorType` 区分鉴权失败、限流、超时、客户端错误、服务端错误、网络错误和响应解析失败，并暴露 `statusCode`、`errorCode` 与 `retryable`。
+- 安全边界明确：异常信息和 `toString()` 不输出 API key、Authorization header 或完整 prompt/模型回复。
+- 新增独立 `under-utils-ai-starter`，配置前缀为 `under.utils.ai`，默认 `enabled=false`，避免应用只引入 starter 坐标后就自动访问外部模型服务。
+- `under-utils-ai-starter` 在存在用户自定义 `AiClient` Bean 时退让；当前 `provider` 只支持 `openai-compatible`，不通过配置暗示未实现的厂商原生协议。
+- AI 模块复用 `under-utils-http` 的 HTTP 执行能力，因此会带入 OkHttp/Jackson；AI starter 没有放入 `under-utils-starter` 聚合入口，避免普通 Spring/Redis 用户被动引入 AI 依赖。
+- 新模块没有 `1.0.1` 基线构件，当前 `japicmp` 暂跳过；正式发布后再纳入 public API 兼容检查。
+
 ## 后续待审
 
 - Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI 和模板内置指标，避免强绑定监控栈。

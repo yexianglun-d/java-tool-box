@@ -9,7 +9,7 @@
 
 Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包，用来沉淀业务系统里反复出现、实现细节多、容易写散的基础设施代码。
 
-这个项目不定位为 Hutool、Apache Commons 或 Guava 的替代品。新增能力应解决可复用的工程问题，并且有明确行为可以测试，例如请求上下文传播、限流、防重复提交、Redis 分布式锁、缓存重建、OpenAPI 客户端治理、安全分页、审计填充和导入任务流程。
+这个项目不定位为 Hutool、Apache Commons 或 Guava 的替代品。新增能力应解决可复用的工程问题，并且有明确行为可以测试，例如请求上下文传播、限流、防重复提交、Redis 分布式锁、缓存重建、OpenAPI 客户端治理、AI 模型基础调用、安全分页、审计填充和导入任务流程。
 
 当前稳定版本：`1.0.1`。
 
@@ -47,8 +47,10 @@ Maven 坐标使用 GitHub namespace `io.github.yexianglun-d`。Java 包名在 `1
 | `under-utils-spring` | Spring Web 上下文传播、限流/防重抽象、返回结果、异常处理和 JSON 脱敏。 |
 | `under-utils-redis` | 基于 Redisson 的分布式锁、限流/防重存储、cache-aside、逻辑过期缓存模板和缓存观测 SPI。 |
 | `under-utils-http` | HTTP 便捷调用与 OpenAPI 客户端治理，包括 token 刷新、签名、trace/idempotency header、错误解码和重试。 |
+| `under-utils-ai` | OpenAI-compatible AI 大模型基础调用封装，覆盖同步文本对话、基础错误分类和敏感信息脱敏。 |
 | `under-utils-mybatis` | MyBatis-Plus 安全分页、排序白名单、审计填充和分页结果封装。 |
 | `under-utils-biz` | 可复用业务流程模板，目前主要是 CSV 导入、异步导入进度查询和错误导出。 |
+| `under-utils-ai-starter` | Spring Boot AI 自动装配入口，按配置创建默认 `AiClient`。 |
 | `under-utils-spring-starter` | Spring Boot 自动装配入口，只包含 Spring 本地横切能力。 |
 | `under-utils-redis-starter` | Spring Boot Redis 自动装配入口，包含 Spring starter 并接入 Redis 分布式能力。 |
 | `under-utils-starter` | 兼容聚合 starter，继续覆盖 Spring 与 Redis 自动装配。 |
@@ -106,6 +108,24 @@ Maven 坐标使用 GitHub namespace `io.github.yexianglun-d`。Java 包名在 `1
 ```
 
 旧入口 `under-utils-starter` 会保留为聚合 starter，适合暂时不调整依赖坐标的项目。
+
+如果只需要 AI 大模型基础调用封装，单独引入：
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-ai</artifactId>
+</dependency>
+```
+
+Spring Boot 项目需要按配置创建默认 `AiClient` 时，引入独立 AI starter：
+
+```xml
+<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>under-utils-ai-starter</artifactId>
+</dependency>
+```
 
 本地开发：
 

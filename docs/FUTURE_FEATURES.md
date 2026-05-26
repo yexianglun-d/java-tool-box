@@ -32,7 +32,7 @@
 
 ## F-001 AI 大模型基础调用封装
 
-状态：`想法`
+状态：`实现中`
 
 ### 背景
 
@@ -114,6 +114,14 @@ under:
 - 文档提供 Java builder 和 Spring Boot YAML 两种用法。
 - 依赖边界经过评估，不能让现有轻量模块被动引入 AI 或 HTTP 大依赖。
 - 与 `under-utils-http` 的复用关系明确：可以复用执行器能力，但不能让 AI API 被 HTTP 内部模型绑死。
+
+### 第一阶段实现记录
+
+- 已新增 `under-utils-ai` 核心模块，提供 `AiClient`、`AiClientOptions`、`ChatRequest`、`ChatMessage`、`ChatResponse`、`TokenUsage`、`AiException` 和 `OpenAiCompatibleAiClient`。
+- 第一阶段只实现同步文本对话，协议目标为 OpenAI-compatible Chat Completions。
+- 复用 `under-utils-http` 的 `HttpRequest`、`HttpConfig` 和 `HttpResponse`，但 AI 模块对外不暴露 HTTP 内部请求/响应模型。
+- 已用 `MockWebServer` 覆盖成功响应、认证失败、限流、服务端错误、超时、响应解析失败和敏感信息不进入 `toString()`。
+- 已新增独立 `under-utils-ai-starter`，在 `under.utils.ai.enabled=true` 时按配置创建默认 `AiClient`；它不加入 `under-utils-starter` 聚合入口，避免普通 Spring/Redis 用户被动引入 AI 依赖。
 
 ### 待确认问题
 

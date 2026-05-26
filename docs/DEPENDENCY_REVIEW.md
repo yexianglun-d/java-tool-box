@@ -12,6 +12,7 @@
 - `under-utils-redis` 的真正重量来自 Redisson/Netty；这是模块能力本身决定的，不适合在 patch 版本里伪装成轻量模块。
 - `under-utils-biz` 当前实现只使用无外部依赖的 CSV/导入模板，已移除未使用的 Excel/POI/Jackson optional 依赖。
 - `under-utils-http` 已移除未实现的 HttpClient5 optional 依赖，当前对外边界明确为 OkHttp 执行器和 OpenAPI 客户端治理。
+- `under-utils-ai` 作为独立模块复用 `under-utils-http`；`under-utils-ai-starter` 也保持独立，不会通过聚合 starter 让普通 Spring/Redis 用户被动引入 AI 依赖。
 
 ## 模块快照
 
@@ -21,6 +22,8 @@
 |------|--------|----------------|--------------|------|
 | `under-utils-core` | 36K | 5 行 | Jackson databind/core/annotations/jsr310 | `1.x` 保留；`2.0.0` 再考虑 JSON 迁移。 |
 | `under-utils-http` | 64K | 16 行 | core、SLF4J、OkHttp/Okio/Kotlin、Jackson | 默认 OkHttp 会带 Kotlin runtime；不再声明未实现的 HttpClient5 适配。 |
+| `under-utils-ai` | 28K | 11 行 | http、core、OkHttp/Okio、Jackson、SLF4J | 独立 AI 能力模块，不放入 starter 聚合入口，避免扩大默认依赖面。 |
+| `under-utils-ai-starter` | 7.5K | 16 行 | ai module、Boot autoconfigure、Spring context | 独立 AI starter，不被兼容聚合 starter 引入。 |
 | `under-utils-spring` | 72K | 20 行 | core、Spring context/web/webmvc、AspectJ、Validation、Jackson | Spring MVC/AOP 模块，重量和定位一致。 |
 | `under-utils-redis` | 40K | 45 行 | core、spring、Redisson/Netty、Jackson | Redisson 是主要重量；同时对 `under-utils-spring` 有接口耦合。 |
 | `under-utils-mybatis` | 24K | 9 行 | core、MyBatis-Plus、JSQLParser | 依赖和安全分页/审计能力匹配。 |
@@ -62,6 +65,16 @@
 - 已移除未使用的 `httpclient5` optional 依赖。
 - 中期：评估拆成 `under-utils-http-core` + `under-utils-http-okhttp`，但这会影响 public API 路径，不适合在 patch 版本贸然做。
 
+### AI
+
+`under-utils-ai` 当前复用 `under-utils-http` 的请求执行能力，主要传递依赖来自 HTTP 模块的 OkHttp、Okio、Kotlin runtime 和 Jackson。
+
+当前策略：
+
+- AI 能力只放在独立 `under-utils-ai` 坐标中，不加入 `under-utils-starter`。
+- 第一阶段不引入厂商 SDK，避免为一个 OpenAI-compatible 基础调用带入额外重量。
+- Spring Boot 自动装配已进入独立 `under-utils-ai-starter`，不并入 Spring/Redis starter，也不并入兼容聚合 starter。
+
 ### Redis
 
 `under-utils-redis` 的主要重量来自 Redisson：
@@ -102,6 +115,8 @@ mvn -Prelease -DskipTests package
 
 mvn -pl under-utils-core dependency:tree -Dscope=runtime
 mvn -pl under-utils-http dependency:tree -Dscope=runtime
+mvn -pl under-utils-ai dependency:tree -Dscope=runtime
+mvn -pl under-utils-ai-starter dependency:tree -Dscope=runtime
 mvn -pl under-utils-spring dependency:tree -Dscope=runtime
 mvn -pl under-utils-redis dependency:tree -Dscope=runtime
 mvn -pl under-utils-mybatis dependency:tree -Dscope=runtime

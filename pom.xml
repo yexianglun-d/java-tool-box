@@ -87,6 +87,12 @@
         
         <!-- HTTP 请求封装：OkHttp、OpenAPI 客户端治理 -->
         <module>under-utils-http</module>
+
+        <!-- AI 大模型基础调用封装：OpenAI-compatible 文本对话客户端 -->
+        <module>under-utils-ai</module>
+
+        <!-- Spring Boot Starter：AI 大模型基础调用客户端自动装配 -->
+        <module>under-utils-ai-starter</module>
         
         <!-- Redis 操作封装：分布式锁、缓存工具等 -->
         <module>under-utils-redis</module>

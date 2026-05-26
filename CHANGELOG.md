@@ -14,6 +14,7 @@
 - 新增工程成熟度推进文档和后续功能孵化文档，并在 README 提供入口。
 - 贡献指南、PR 模板、Bug 模板和 release notes 模板增加回归测试命名、修复来源和 CHANGELOG 可追溯性要求。
 - `HttpRequest` 增加方法级快捷 builder、builder 直接执行和 `toBuilder()` 复制修改；`HttpConfig`、`OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式配置方法。
+- 新增 `under-utils-ai` 和 `under-utils-ai-starter`，提供 OpenAI-compatible 同步文本对话客户端、Spring Boot 自动装配、基础错误分类、token 用量响应模型和敏感信息脱敏边界。
 
 ### Changed
 

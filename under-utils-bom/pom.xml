@@ -131,6 +131,18 @@
 
             <dependency>
                 <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-ai</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
+                <artifactId>under-utils-ai-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yexianglun-d</groupId>
                 <artifactId>under-utils-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>
