@@ -42,6 +42,16 @@
 
 小型修复、测试和文档改进可以直接提交 PR。
 
+## Bug 修复与回归测试
+
+Bug 修复应留下可追溯防线，避免同类问题在后续重构中悄悄回归。
+
+- 重要 Bug 修复必须补独立回归测试；测试应能在修复前失败、修复后通过。
+- 有 issue 编号时，优先把编号写进测试类名或测试方法名，例如 `Issue1234Test`、`IssueGH1234Test` 或 `issue1234_shouldRejectUnsafeSort`。
+- 没有外部 issue 时，使用 `Regression...Test` 或 `regression_...` 命名，并在 PR、`CHANGELOG.md` 或 `docs/API_REVIEW.md` 中说明来源，例如 `review-doc`、`internal-review` 或 `user-report`。
+- 回归测试应覆盖触发条件、失败语义和边界值；不要只验证修复后的 happy path。
+- 如果无法直接写自动化测试，PR 必须说明原因，并给出可复现的手动验证步骤。
+
 ## 本地环境
 
 要求：
@@ -91,6 +101,7 @@ mvn -s docs/central-dry-run-settings.xml \
 提交 review 前请确认：
 
 - 变更有清晰模块归属。
+- Bug 修复已补独立回归测试，并能追溯到 issue、review-doc、internal-review 或 user-report。
 - public API 行为不明显时，已补充文档。
 - public API 变更遵循 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)。
 - 避免在非 major 版本引入破坏性变更；如有安全或正确性例外，必须说明迁移路径。
@@ -99,7 +110,7 @@ mvn -s docs/central-dry-run-settings.xml \
 - 行为变更包含测试。
 - 默认 `mvn test` 不依赖 Redis、MySQL、Docker 或私有基础设施。
 - `mvn -Prelease -DskipTests package` 仍能生成 sources 和 javadocs。
-- 面向用户的变更已更新 README、模块文档或 `CHANGELOG.md`。
+- 面向用户的变更已更新 README、模块文档或 `CHANGELOG.md`；`CHANGELOG.md` 应说明原因、影响范围、兼容性分类和来源编号或来源类型。
 - 没有提交构建产物、本地路径、token、私钥、内部报告或生产日志。
 
 ## 提交信息

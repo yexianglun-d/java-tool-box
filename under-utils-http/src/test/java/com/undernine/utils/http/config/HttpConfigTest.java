@@ -2,6 +2,7 @@ package com.undernine.utils.http.config;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,5 +106,48 @@ class HttpConfigTest {
 
         assertThat(updatedConfig).isSameAs(config);
         assertThat(config.getDefaultHeaders()).containsEntry("User-Agent", "MyApp/1.0");
+    }
+
+    @Test
+    void shouldSupportDurationBuilderAndDefaultHeaderChaining() {
+        HttpConfig config = HttpConfig.builder()
+                .connectTimeoutDuration(Duration.ofSeconds(3))
+                .readTimeoutDuration(Duration.ofSeconds(8))
+                .writeTimeoutDuration(Duration.ofSeconds(9))
+                .retryIntervalDuration(Duration.ofMillis(250))
+                .keepAliveTimeDuration(Duration.ofSeconds(30))
+                .addDefaultHeader("User-Agent", "MyApp/1.0")
+                .defaultHeader("Accept", "application/json")
+                .build();
+
+        assertThat(config.getConnectTimeout()).isEqualTo(3000);
+        assertThat(config.getReadTimeout()).isEqualTo(8000);
+        assertThat(config.getWriteTimeout()).isEqualTo(9000);
+        assertThat(config.getRetryInterval()).isEqualTo(250L);
+        assertThat(config.getKeepAliveTime()).isEqualTo(30000L);
+        assertThat(config.getConnectTimeoutDuration()).isEqualTo(Duration.ofSeconds(3));
+        assertThat(config.getDefaultHeaders())
+                .containsEntry("User-Agent", "MyApp/1.0")
+                .containsEntry("Accept", "application/json");
+    }
+
+    @Test
+    void shouldCopyConfigWithToBuilder() {
+        HttpConfig original = HttpConfig.builder()
+                .connectTimeout(1000)
+                .addDefaultHeader("User-Agent", "MyApp/1.0")
+                .build();
+
+        HttpConfig copied = original.toBuilder()
+                .readTimeoutDuration(Duration.ofSeconds(2))
+                .addDefaultHeader("Accept", "application/json")
+                .build();
+
+        assertThat(copied.getConnectTimeout()).isEqualTo(1000);
+        assertThat(copied.getReadTimeout()).isEqualTo(2000);
+        assertThat(copied.getDefaultHeaders())
+                .containsEntry("User-Agent", "MyApp/1.0")
+                .containsEntry("Accept", "application/json");
+        assertThat(original.getDefaultHeaders()).doesNotContainKey("Accept");
     }
 }

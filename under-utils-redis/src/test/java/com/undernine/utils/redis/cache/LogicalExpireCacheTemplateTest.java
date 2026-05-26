@@ -221,6 +221,34 @@ class LogicalExpireCacheTemplateTest {
         assertThat(refreshExecutor.executeCount()).hasValue(1);
     }
 
+    @Test
+    void getMetricsTracksLogicalCacheEventsWithoutCustomObserver() throws Exception {
+        CacheHarness harness = CacheHarness.create();
+        TrackingExecutor refreshExecutor = new TrackingExecutor();
+        LogicalExpireCacheTemplate template = new LogicalExpireCacheTemplate(harness.redissonClient());
+        LogicalExpireCacheOptions options = options(refreshExecutor)
+                .logicalTtl(Duration.ofMillis(10))
+                .physicalTtl(Duration.ofSeconds(30))
+                .build();
+
+        String oldValue = template.getOrLoad("hot:metrics", String.class, options, key -> "old");
+        waitUntilLogicallyExpired();
+        String returned = template.getOrLoad("hot:metrics", String.class, options, key -> "fresh");
+
+        CacheMetrics metrics = template.getMetrics();
+        assertThat(oldValue).isEqualTo("old");
+        assertThat(returned).isEqualTo("old");
+        assertThat(metrics.getHitCount()).isEqualTo(1L);
+        assertThat(metrics.getMissCount()).isEqualTo(1L);
+        assertThat(metrics.getLoadSuccessCount()).isEqualTo(2L);
+        assertThat(metrics.getWriteCount()).isEqualTo(2L);
+        assertThat(metrics.getRefreshSubmittedCount()).isEqualTo(1L);
+        assertThat(metrics.getRefreshSuccessCount()).isEqualTo(1L);
+
+        template.resetMetrics();
+        assertThat(template.getMetrics().getLookupCount()).isZero();
+    }
+
     private static LogicalExpireCacheOptions.Builder options(Executor refreshExecutor) {
         return LogicalExpireCacheOptions.builder()
             .keyPrefix("logical-cache:")

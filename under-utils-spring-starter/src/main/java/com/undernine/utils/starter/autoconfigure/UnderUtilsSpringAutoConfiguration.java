@@ -127,15 +127,18 @@ public class UnderUtilsSpringAutoConfiguration {
         @Bean
         @ConditionalOnMissingBean
         @ConditionalOnProperty(prefix = "under.utils.web.rate-limit", name = "store", havingValue = "local", matchIfMissing = true)
-        public RateLimitStore localRateLimitStore() {
-            return new LocalRateLimitStore();
+        public RateLimitStore localRateLimitStore(UnderUtilsProperties properties) {
+            UnderUtilsProperties.StoreCapability rateLimit = properties.getWeb().getRateLimit();
+            return new LocalRateLimitStore(rateLimit.getLocalMaxEntries(), rateLimit.getLocalCleanupInterval());
         }
 
         @Bean
         @ConditionalOnMissingBean
         @ConditionalOnProperty(prefix = "under.utils.web.repeat-submit", name = "store", havingValue = "local", matchIfMissing = true)
-        public RepeatSubmitStore localRepeatSubmitStore() {
-            return new LocalRepeatSubmitStore();
+        public RepeatSubmitStore localRepeatSubmitStore(UnderUtilsProperties properties) {
+            UnderUtilsProperties.StoreCapability repeatSubmit = properties.getWeb().getRepeatSubmit();
+            return new LocalRepeatSubmitStore(repeatSubmit.getLocalMaxEntries(),
+                    repeatSubmit.getLocalCleanupInterval());
         }
     }
 

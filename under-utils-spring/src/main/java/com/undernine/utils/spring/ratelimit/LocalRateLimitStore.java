@@ -1,8 +1,17 @@
 package com.undernine.utils.spring.ratelimit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -15,24 +24,45 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class LocalRateLimitStore implements RateLimitStore {
+public class LocalRateLimitStore implements RateLimitStore, AutoCloseable {
+
+    private static final Logger log = LoggerFactory.getLogger(LocalRateLimitStore.class);
 
     private static final int DEFAULT_MAX_COUNTERS = 100_000;
-    private static final long CLEANUP_INTERVAL_MILLIS = 1_000L;
+    private static final Duration DEFAULT_CLEANUP_INTERVAL = Duration.ofSeconds(1);
+    private static final AtomicLong THREAD_SEQUENCE = new AtomicLong();
 
     private final Map<String, WindowCounter> counters = new ConcurrentHashMap<>();
     private final int maxCounters;
+    private final long cleanupIntervalMillis;
+    private final ScheduledExecutorService cleanupExecutor;
+    private final ScheduledFuture<?> cleanupFuture;
     private final AtomicLong nextCleanupAt = new AtomicLong();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     public LocalRateLimitStore() {
-        this(DEFAULT_MAX_COUNTERS);
+        this(DEFAULT_MAX_COUNTERS, DEFAULT_CLEANUP_INTERVAL);
     }
 
     public LocalRateLimitStore(int maxCounters) {
+        this(maxCounters, DEFAULT_CLEANUP_INTERVAL);
+    }
+
+    public LocalRateLimitStore(int maxCounters, Duration cleanupInterval) {
         if (maxCounters <= 0) {
             throw new IllegalArgumentException("maxCounters must be greater than 0");
         }
+        Duration interval = normalizeCleanupInterval(cleanupInterval);
         this.maxCounters = maxCounters;
+        this.cleanupIntervalMillis = Math.max(1L, interval.toMillis());
+        this.cleanupExecutor = Executors.newSingleThreadScheduledExecutor(
+                daemonThreadFactory("under-local-rate-limit-cleanup-"));
+        this.cleanupFuture = cleanupExecutor.scheduleWithFixedDelay(
+                this::cleanupExpiredCountersSafely,
+                cleanupIntervalMillis,
+                cleanupIntervalMillis,
+                TimeUnit.MILLISECONDS
+        );
     }
 
     @Override
@@ -65,18 +95,51 @@ public class LocalRateLimitStore implements RateLimitStore {
         counters.clear();
     }
 
+    @Override
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            cleanupFuture.cancel(false);
+            cleanupExecutor.shutdownNow();
+        }
+    }
+
     int size() {
         return counters.size();
+    }
+
+    private void cleanupExpiredCountersSafely() {
+        try {
+            cleanupExpiredCounters(System.currentTimeMillis(), true);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to cleanup local rate limit counters", ex);
+        }
     }
 
     private void cleanupExpiredCounters(long now, boolean force) {
         if (!force) {
             long next = nextCleanupAt.get();
-            if (now < next || !nextCleanupAt.compareAndSet(next, now + CLEANUP_INTERVAL_MILLIS)) {
+            if (now < next || !nextCleanupAt.compareAndSet(next,
+                    now + cleanupIntervalMillis)) {
                 return;
             }
         }
         counters.entrySet().removeIf(entry -> entry.getValue().isExpired(now));
+    }
+
+    private Duration normalizeCleanupInterval(Duration cleanupInterval) {
+        Duration interval = cleanupInterval == null ? DEFAULT_CLEANUP_INTERVAL : cleanupInterval;
+        if (interval.isZero() || interval.isNegative()) {
+            throw new IllegalArgumentException("cleanupInterval must be positive");
+        }
+        return interval;
+    }
+
+    private static ThreadFactory daemonThreadFactory(String namePrefix) {
+        return runnable -> {
+            Thread thread = new Thread(runnable, namePrefix + THREAD_SEQUENCE.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
     }
 
     private static class WindowCounter {

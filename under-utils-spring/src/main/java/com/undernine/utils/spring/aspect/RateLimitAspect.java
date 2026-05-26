@@ -19,7 +19,7 @@ import java.time.Duration;
  * 接口限流切面。
  * <p>
  * 解析操作 key 后向 {@link RateLimitStore} 请求访问额度；获取失败时抛出
- * {@link BizException}。默认构造时使用 {@link LocalRateLimitStore}，starter 会按配置替换为
+ * {@link BizException}。未注入存储时会懒加载 {@link LocalRateLimitStore}，starter 会按配置替换为
  * 本地或 Redis 存储。
  * </p>
  *
@@ -30,9 +30,10 @@ import java.time.Duration;
 @Slf4j
 @Aspect
 @Component
-public class RateLimitAspect {
+public class RateLimitAspect implements AutoCloseable {
 
-    private RateLimitStore rateLimitStore = new LocalRateLimitStore();
+    private volatile RateLimitStore rateLimitStore;
+    private volatile boolean defaultStoreOwned;
     private OperationKeyResolver operationKeyResolver = new DefaultOperationKeyResolver();
 
     @Around("@annotation(rateLimit)")
@@ -41,7 +42,7 @@ public class RateLimitAspect {
         Duration window = Duration.ofSeconds(Math.max(1, rateLimit.period()));
         String message = rateLimit.message();
 
-        if (!rateLimitStore.tryAcquire(key, rateLimit.limit(), window)) {
+        if (!getRateLimitStore().tryAcquire(key, rateLimit.limit(), window)) {
             log.warn("【接口限流】请求被限流: {}", key);
             throw new BizException(message);
         }
@@ -50,9 +51,11 @@ public class RateLimitAspect {
     }
 
     @Autowired(required = false)
-    public void setRateLimitStore(RateLimitStore rateLimitStore) {
+    public synchronized void setRateLimitStore(RateLimitStore rateLimitStore) {
         if (rateLimitStore != null) {
+            closeDefaultStore();
             this.rateLimitStore = rateLimitStore;
+            this.defaultStoreOwned = false;
         }
     }
 
@@ -61,5 +64,35 @@ public class RateLimitAspect {
         if (operationKeyResolver != null) {
             this.operationKeyResolver = operationKeyResolver;
         }
+    }
+
+    @Override
+    public synchronized void close() {
+        closeDefaultStore();
+    }
+
+    private RateLimitStore getRateLimitStore() {
+        RateLimitStore store = rateLimitStore;
+        if (store != null) {
+            return store;
+        }
+        synchronized (this) {
+            if (rateLimitStore == null) {
+                rateLimitStore = new LocalRateLimitStore();
+                defaultStoreOwned = true;
+            }
+            return rateLimitStore;
+        }
+    }
+
+    private void closeDefaultStore() {
+        if (defaultStoreOwned && rateLimitStore instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception ex) {
+                log.warn("Failed to close default rate limit store", ex);
+            }
+        }
+        defaultStoreOwned = false;
     }
 }

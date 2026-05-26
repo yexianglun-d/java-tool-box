@@ -29,6 +29,7 @@ public class LogicalExpireCacheTemplate {
     private final RedissonClient redissonClient;
     private final CacheValueCodec valueCodec;
     private final LogicalExpireCacheOptions defaultOptions;
+    private final CountingCacheOperationObserver metricsObserver;
     private final CacheOperationObserver operationObserver;
 
     public LogicalExpireCacheTemplate(RedissonClient redissonClient) {
@@ -56,7 +57,24 @@ public class LogicalExpireCacheTemplate {
         this.redissonClient = Objects.requireNonNull(redissonClient, "redissonClient must not be null");
         this.valueCodec = Objects.requireNonNull(valueCodec, "valueCodec must not be null");
         this.defaultOptions = Objects.requireNonNull(defaultOptions, "defaultOptions must not be null");
+        this.metricsObserver = new CountingCacheOperationObserver();
         this.operationObserver = operationObserver == null ? CacheOperationObserver.noop() : operationObserver;
+    }
+
+    /**
+     * 返回当前缓存指标快照。
+     *
+     * @return 缓存指标快照
+     */
+    public CacheMetrics getMetrics() {
+        return metricsObserver.snapshot();
+    }
+
+    /**
+     * 重置内置指标计数。
+     */
+    public void resetMetrics() {
+        metricsObserver.reset();
     }
 
     public <T, E extends Throwable> T getOrLoad(
@@ -339,6 +357,11 @@ public class LogicalExpireCacheTemplate {
     }
 
     private void observe(Consumer<CacheOperationObserver> consumer) {
+        try {
+            consumer.accept(metricsObserver);
+        } catch (RuntimeException ex) {
+            log.warn("Cache metrics observer failed", ex);
+        }
         try {
             consumer.accept(operationObserver);
         } catch (RuntimeException ex) {

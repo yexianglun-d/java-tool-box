@@ -51,6 +51,26 @@ class UnderUtilsSpringAutoConfigurationTest {
     }
 
     @Test
+    void shouldBindLocalStoreLimitsAndCleanupInterval() {
+        contextRunner
+                .withPropertyValues(
+                        "under.utils.web.rate-limit.local-max-entries=1",
+                        "under.utils.web.rate-limit.local-cleanup-interval=10ms",
+                        "under.utils.web.repeat-submit.local-max-entries=1",
+                        "under.utils.web.repeat-submit.local-cleanup-interval=10ms"
+                )
+                .run(context -> {
+                    RateLimitStore rateLimitStore = context.getBean(RateLimitStore.class);
+                    RepeatSubmitStore repeatSubmitStore = context.getBean(RepeatSubmitStore.class);
+
+                    assertThat(rateLimitStore.tryAcquire("rate:1", 1, Duration.ofSeconds(1))).isTrue();
+                    assertThat(rateLimitStore.tryAcquire("rate:2", 1, Duration.ofSeconds(1))).isFalse();
+                    assertThat(repeatSubmitStore.acquire("repeat:1", Duration.ofSeconds(1))).isTrue();
+                    assertThat(repeatSubmitStore.acquire("repeat:2", Duration.ofSeconds(1))).isFalse();
+                });
+    }
+
+    @Test
     void shouldBackOffWhenUserProviderExists() {
         CurrentUserProvider customProvider = () -> "custom-user";
 

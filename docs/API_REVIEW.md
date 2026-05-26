@@ -198,6 +198,43 @@
 - Maven 坐标继续使用 `io.github.yexianglun-d`，Java 包名在 `1.x` 内保持 `com.undernine.utils`，避免包名级破坏性迁移；文档中明确这一兼容取舍。
 - `AESUtils` 类和 CBC/ECB 方法均表达为历史兼容 API，不再给 CBC 方法保留“推荐”信号。
 
+## 第十九轮结论
+
+### Redis Cache Metrics
+
+- `CacheAsideTemplate` 和 `LogicalExpireCacheTemplate` 内置 `CountingCacheOperationObserver`，调用方可以通过 `getMetrics()` 零配置读取缓存命中、未命中、加载、写入、重建锁和后台刷新计数。
+- 新增 `CacheMetrics` 作为只读快照对象，派生 `lookupCount`、`hitRate`、`missRate`、`loadCount` 和 `errorCount`，避免业务侧重复聚合最常见的缓存指标。
+- 保留 `CacheOperationObserver` SPI。外部 observer 继续接收所有事件，模板内置指标与外部 observer 相互独立；observer 抛出的运行时异常仍不会影响缓存主流程。
+- starter 不新增默认 `CacheOperationObserver` Bean，避免污染应用上下文。Spring 应用可以直接从已装配的缓存模板 Bean 读取指标。
+
+## 第二十轮结论
+
+### Local State Active Cleanup
+
+- `LocalRateLimitStore`、`LocalRepeatSubmitStore` 和 `AsyncImportTaskTemplate` 增加每实例后台清理线程，过期本地状态不再只依赖下一次访问或容量触发时被动清理。
+- 三个类型均实现 `AutoCloseable`。后台清理线程为 daemon 线程，Spring 管理的 Bean 会在上下文销毁时关闭；手动创建的实例应在不再使用时调用 `close()`。
+- 本轮不引入全局静态清理线程池，避免多个应用上下文、测试上下文或手动实例共享不可控生命周期。
+- `under-utils-spring-starter` 为本地限流和本地防重复提交增加 `local-max-entries` 与 `local-cleanup-interval` 配置，继续保持 Redis store 配置语义不变。
+- `RateLimitAspect` 和 `PreventRepeatAspect` 的默认本地 store 改为懒加载，避免 starter 注入外部 store 前先创建一个无用的后台清理线程。
+
+## 第二十一轮结论
+
+### Regression And Changelog Traceability
+
+- 贡献指南明确 Bug 修复必须补独立回归测试。有外部 issue 时，测试类或方法应能追溯到 issue 编号；没有 issue 时，使用 `Regression...Test` 或 `regression_...` 命名，并标明来源类型。
+- PR 模板增加追溯来源字段，区分 issue、PR、review-doc、internal-review、user-report 或 none，避免 `CHANGELOG.md` 只留下功能描述而缺少原因。
+- Bug issue 模板增加建议回归测试段落，release notes 模板增加可追溯性段落，后续 patch/minor 发布需要同步说明 Issue/PR、Review 来源和回归测试。
+
+## 第二十二轮结论
+
+### Fluent API Experience
+
+- `HttpRequest` 增加 `get/post/put/delete/patch/head/options` 方法级快捷 builder，直接 HTTP 调用可以从请求方法开始链式声明，不再必须先写 `builder().url(...).method(...)`。
+- `HttpRequest.Builder` 增加 `execute()` 和 `executeAsync()`，常见一次性请求可以由 builder 直接构建并执行；原有 `build().execute()` 路径继续可用。
+- `HttpRequest` 增加 `toBuilder()`，复制修改请求时会拷贝 headers、params、files 和 formParams，避免修改派生请求时污染原请求。
+- `HttpConfig` 和 `OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式方法。为保持 Lombok builder 原有 `int/long` setter 兼容，新增方法使用 `connectTimeoutDuration`、`retryIntervalDuration` 等不冲突命名。
+- `CacheOptions`、`LogicalExpireCacheOptions` 和 `ImportOptions` 已具备 builder/toBuilder，本轮不为增加 `return this` 数量继续扩 API。
+
 ## 后续待审
 
-- Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI，避免强绑定监控栈。
+- Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI 和模板内置指标，避免强绑定监控栈。

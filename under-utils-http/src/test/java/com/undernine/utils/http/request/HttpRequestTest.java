@@ -5,6 +5,7 @@ import com.undernine.utils.http.enums.HttpMethod;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -221,6 +222,48 @@ class HttpRequestTest {
                 .build();
 
         assertThat(request.getFormParams()).isEmpty();
+    }
+
+    @Test
+    void shouldCreateRequestsWithMethodShortcutBuilders() {
+        HttpRequest request = HttpRequest.post("https://api.example.com/users")
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(2))
+                .retry(1)
+                .body(new TestUser("John", 25))
+                .build();
+
+        assertThat(request.getUrl()).isEqualTo("https://api.example.com/users");
+        assertThat(request.getMethod()).isEqualTo(HttpMethod.POST);
+        assertThat(request.getTimeout()).isEqualTo(2000);
+        assertThat(request.getMaxRetries()).isEqualTo(1);
+        assertThat(request.getHeaders()).containsEntry("Content-Type", "application/json");
+    }
+
+    @Test
+    void shouldCopyRequestWithToBuilderWithoutSharingMutableMaps() {
+        HttpRequest original = HttpRequest.get("https://api.example.com/users")
+                .header("Authorization", "Bearer token")
+                .param("page", "1")
+                .build();
+
+        HttpRequest copied = original.toBuilder()
+                .url("https://api.example.com/admin/users")
+                .header("X-Request-Id", "req-001")
+                .param("size", "20")
+                .build();
+
+        assertThat(copied.getMethod()).isEqualTo(HttpMethod.GET);
+        assertThat(copied.getUrl()).isEqualTo("https://api.example.com/admin/users");
+        assertThat(copied.getHeaders())
+                .containsEntry("Authorization", "Bearer token")
+                .containsEntry("X-Request-Id", "req-001");
+        assertThat(copied.getParams())
+                .containsEntry("page", "1")
+                .containsEntry("size", "20");
+        assertThat(original.getUrl()).isEqualTo("https://api.example.com/users");
+        assertThat(original.getHeaders()).doesNotContainKey("X-Request-Id");
+        assertThat(original.getParams()).doesNotContainKey("size");
     }
 
     // 测试用的内部类

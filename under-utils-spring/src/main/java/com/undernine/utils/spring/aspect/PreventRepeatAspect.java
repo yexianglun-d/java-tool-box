@@ -30,9 +30,10 @@ import java.time.Duration;
 @Slf4j
 @Aspect
 @Component
-public class PreventRepeatAspect {
+public class PreventRepeatAspect implements AutoCloseable {
 
-    private RepeatSubmitStore repeatSubmitStore = new LocalRepeatSubmitStore();
+    private volatile RepeatSubmitStore repeatSubmitStore;
+    private volatile boolean defaultStoreOwned;
     private OperationKeyResolver operationKeyResolver = new DefaultOperationKeyResolver();
 
     @Around("@annotation(preventRepeat)")
@@ -40,8 +41,9 @@ public class PreventRepeatAspect {
         String key = operationKeyResolver.resolve(point, preventRepeat.namespace(), preventRepeat.key());
         Duration ttl = Duration.ofMillis(Math.max(1L, preventRepeat.timeUnit().toMillis(preventRepeat.timeout())));
         String message = preventRepeat.message();
+        RepeatSubmitStore store = getRepeatSubmitStore();
 
-        if (!repeatSubmitStore.acquire(key, ttl)) {
+        if (!store.acquire(key, ttl)) {
             log.warn("【防重复提交】请求被拒绝: {}", key);
             throw new BizException(message);
         }
@@ -50,16 +52,18 @@ public class PreventRepeatAspect {
             return point.proceed();
         } catch (Throwable e) {
             if (preventRepeat.releaseOnFailure()) {
-                repeatSubmitStore.release(key);
+                store.release(key);
             }
             throw e;
         }
     }
 
     @Autowired(required = false)
-    public void setRepeatSubmitStore(RepeatSubmitStore repeatSubmitStore) {
+    public synchronized void setRepeatSubmitStore(RepeatSubmitStore repeatSubmitStore) {
         if (repeatSubmitStore != null) {
+            closeDefaultStore();
             this.repeatSubmitStore = repeatSubmitStore;
+            this.defaultStoreOwned = false;
         }
     }
 
@@ -68,5 +72,35 @@ public class PreventRepeatAspect {
         if (operationKeyResolver != null) {
             this.operationKeyResolver = operationKeyResolver;
         }
+    }
+
+    @Override
+    public synchronized void close() {
+        closeDefaultStore();
+    }
+
+    private RepeatSubmitStore getRepeatSubmitStore() {
+        RepeatSubmitStore store = repeatSubmitStore;
+        if (store != null) {
+            return store;
+        }
+        synchronized (this) {
+            if (repeatSubmitStore == null) {
+                repeatSubmitStore = new LocalRepeatSubmitStore();
+                defaultStoreOwned = true;
+            }
+            return repeatSubmitStore;
+        }
+    }
+
+    private void closeDefaultStore() {
+        if (defaultStoreOwned && repeatSubmitStore instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception ex) {
+                log.warn("Failed to close default repeat submit store", ex);
+            }
+        }
+        defaultStoreOwned = false;
     }
 }

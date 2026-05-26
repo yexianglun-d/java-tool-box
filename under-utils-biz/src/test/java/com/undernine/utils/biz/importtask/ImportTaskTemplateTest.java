@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -195,79 +196,98 @@ class ImportTaskTemplateTest {
     @Test
     void asyncTemplateStoresResultAndProgress() {
         Executor directExecutor = Runnable::run;
-        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(directExecutor);
+        try (AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(directExecutor)) {
 
-        String taskId = template.submit("task-1", List.of("apple,10", ",0"), new CsvItemHandler(new ArrayList<>()));
+            String taskId = template.submit("task-1", List.of("apple,10", ",0"), new CsvItemHandler(new ArrayList<>()));
 
-        assertThat(taskId).isEqualTo("task-1");
-        assertThat(template.findProgress("task-1")).hasValueSatisfying(progress -> {
-            assertThat(progress.getTaskId()).isEqualTo("task-1");
-            assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.COMPLETED);
-            assertThat(progress.getTotalCount()).isEqualTo(2);
-            assertThat(progress.getErrorCount()).isEqualTo(2);
-        });
-        assertThat(template.findResult("task-1")).hasValueSatisfying(result -> {
-            assertThat(result.getSuccessCount()).isEqualTo(1);
-            assertThat(result.getFailureCount()).isEqualTo(1);
-        });
-        assertThat(template.findFailure("task-1")).isEmpty();
+            assertThat(taskId).isEqualTo("task-1");
+            assertThat(template.findProgress("task-1")).hasValueSatisfying(progress -> {
+                assertThat(progress.getTaskId()).isEqualTo("task-1");
+                assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.COMPLETED);
+                assertThat(progress.getTotalCount()).isEqualTo(2);
+                assertThat(progress.getErrorCount()).isEqualTo(2);
+            });
+            assertThat(template.findResult("task-1")).hasValueSatisfying(result -> {
+                assertThat(result.getSuccessCount()).isEqualTo(1);
+                assertThat(result.getFailureCount()).isEqualTo(1);
+            });
+            assertThat(template.findFailure("task-1")).isEmpty();
+        }
     }
 
     @Test
     void asyncTemplateStoresTaskFailure() {
-        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(Runnable::run);
-        ImportRowHandler<String, String> handler = new ImportRowHandler<>() {
-            @Override
-            public String parse(String rawRow, ImportRowContext context) {
-                throw new ImportTaskException("reader configuration missing");
-            }
+        try (AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(Runnable::run)) {
+            ImportRowHandler<String, String> handler = new ImportRowHandler<>() {
+                @Override
+                public String parse(String rawRow, ImportRowContext context) {
+                    throw new ImportTaskException("reader configuration missing");
+                }
 
-            @Override
-            public void process(String row, ImportRowContext context) {
-            }
-        };
+                @Override
+                public void process(String row, ImportRowContext context) {
+                }
+            };
 
-        template.submit("failed-task", List.of("row"), handler);
+            template.submit("failed-task", List.of("row"), handler);
 
-        assertThat(template.findProgress("failed-task")).hasValueSatisfying(progress -> {
-            assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.FAILED);
-            assertThat(progress.getFailureMessage()).isEqualTo("reader configuration missing");
-        });
-        assertThat(template.findResult("failed-task")).isEmpty();
-        assertThat(template.findFailure("failed-task")).hasValueSatisfying(error ->
-                assertThat(error).isInstanceOf(ImportTaskException.class));
+            assertThat(template.findProgress("failed-task")).hasValueSatisfying(progress -> {
+                assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.FAILED);
+                assertThat(progress.getFailureMessage()).isEqualTo("reader configuration missing");
+            });
+            assertThat(template.findResult("failed-task")).isEmpty();
+            assertThat(template.findFailure("failed-task")).hasValueSatisfying(error ->
+                    assertThat(error).isInstanceOf(ImportTaskException.class));
+        }
     }
 
     @Test
     void asyncTemplateExpiresCompletedTaskState() throws Exception {
-        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(
-                ImportOptions.defaults(), Runnable::run, Duration.ofMillis(5));
+        try (AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(
+                ImportOptions.defaults(), Runnable::run, Duration.ofMillis(5))) {
 
-        template.submit("expire-task", List.of("apple,10"), new CsvItemHandler(new ArrayList<>()));
-        assertThat(template.findProgress("expire-task")).isPresent();
+            template.submit("expire-task", List.of("apple,10"), new CsvItemHandler(new ArrayList<>()));
+            assertThat(template.findProgress("expire-task")).isPresent();
 
-        Thread.sleep(20L);
+            Thread.sleep(20L);
 
-        assertThat(template.findProgress("expire-task")).isEmpty();
-        assertThat(template.findResult("expire-task")).isEmpty();
-        assertThat(template.findFailure("expire-task")).isEmpty();
+            assertThat(template.findProgress("expire-task")).isEmpty();
+            assertThat(template.findResult("expire-task")).isEmpty();
+            assertThat(template.findFailure("expire-task")).isEmpty();
+        }
+    }
+
+    @Test
+    void asyncTemplateActivelyRemovesExpiredTaskState() throws Exception {
+        try (AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(
+                ImportOptions.defaults(), Runnable::run, Duration.ofMillis(5), Duration.ofMillis(10))) {
+
+            template.submit("active-expire-task", List.of("apple,10"), new CsvItemHandler(new ArrayList<>()));
+            assertThat(template.size()).isEqualTo(1);
+
+            waitUntil(() -> template.size() == 0);
+
+            assertThat(template.findProgress("active-expire-task")).isEmpty();
+            assertThat(template.size()).isZero();
+        }
     }
 
     @Test
     void asyncTemplateMarksTaskFailedWhenExecutorRejects() {
-        AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(command -> {
+        try (AsyncImportTaskTemplate template = new AsyncImportTaskTemplate(command -> {
             throw new RejectedExecutionException("queue full");
-        });
+        })) {
 
-        assertThatThrownBy(() -> template.submit("rejected-task", List.of("apple,10"),
-                new CsvItemHandler(new ArrayList<>())))
-                .isInstanceOf(RejectedExecutionException.class)
-                .hasMessage("queue full");
+            assertThatThrownBy(() -> template.submit("rejected-task", List.of("apple,10"),
+                    new CsvItemHandler(new ArrayList<>())))
+                    .isInstanceOf(RejectedExecutionException.class)
+                    .hasMessage("queue full");
 
-        assertThat(template.findProgress("rejected-task")).hasValueSatisfying(progress -> {
-            assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.FAILED);
-            assertThat(progress.getFailureMessage()).isEqualTo("queue full");
-        });
+            assertThat(template.findProgress("rejected-task")).hasValueSatisfying(progress -> {
+                assertThat(progress.getStatus()).isEqualTo(ImportTaskStatus.FAILED);
+                assertThat(progress.getFailureMessage()).isEqualTo("queue full");
+            });
+        }
     }
 
     @Test
@@ -294,6 +314,13 @@ class ImportTaskTemplateTest {
 
         assertThat(result.isAllSuccess()).isTrue();
         assertThat(callbackCount).hasPositiveValue();
+    }
+
+    private static void waitUntil(BooleanSupplier condition) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 1_000L;
+        while (!condition.getAsBoolean() && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10L);
+        }
     }
 
     private record Item(String name, int quantity) {

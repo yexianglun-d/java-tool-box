@@ -375,11 +375,14 @@ public class UnderUtilsProperties {
      * 用于 {@code under.utils.web.rate-limit} 和 {@code under.utils.web.repeat-submit}。
      * {@code enabled=false} 会关闭对应切面；{@code store=local} 使用 JVM 本地状态，只适合单实例或测试环境；
      * {@code store=redis} 使用 Redis 共享状态，要求应用上下文中存在 {@code RedissonClient}。
+     * {@code local-max-entries} 和 {@code local-cleanup-interval} 只影响 local store。
      * </p>
      */
     public static class StoreCapability {
         private boolean enabled = true;
         private StoreType store = StoreType.LOCAL;
+        private int localMaxEntries = 100_000;
+        private Duration localCleanupInterval = Duration.ofSeconds(1);
 
         public boolean isEnabled() {
             return enabled;
@@ -395,6 +398,22 @@ public class UnderUtilsProperties {
 
         public void setStore(StoreType store) {
             this.store = store;
+        }
+
+        public int getLocalMaxEntries() {
+            return localMaxEntries;
+        }
+
+        public void setLocalMaxEntries(int localMaxEntries) {
+            this.localMaxEntries = localMaxEntries;
+        }
+
+        public Duration getLocalCleanupInterval() {
+            return localCleanupInterval;
+        }
+
+        public void setLocalCleanupInterval(Duration localCleanupInterval) {
+            this.localCleanupInterval = localCleanupInterval;
         }
     }
 

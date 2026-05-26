@@ -10,6 +10,10 @@
 - 新增 `under-utils-redis-starter`，承载 Redis store、分布式锁、cache-aside 和逻辑过期缓存自动装配。
 - 新增 `api-compat` Maven profile，并接入 CI，用于将稳定运行时模块的 public API 与 `1.0.1` 已发布构件做兼容性检查。
 - 新增依赖重量审计文档，记录各模块默认传递依赖、optional 边界和后续拆分判断。
+- 新增 `CacheMetrics` 和 `CountingCacheOperationObserver`，cache-aside 与逻辑过期缓存模板可零配置读取命中、未命中、加载、写入、锁和刷新计数。
+- 新增工程成熟度推进文档和后续功能孵化文档，并在 README 提供入口。
+- 贡献指南、PR 模板、Bug 模板和 release notes 模板增加回归测试命名、修复来源和 CHANGELOG 可追溯性要求。
+- `HttpRequest` 增加方法级快捷 builder、builder 直接执行和 `toBuilder()` 复制修改；`HttpConfig`、`OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式配置方法。
 
 ### Changed
 
@@ -21,6 +25,7 @@
 - `RedisRateLimitStore` 在同 key 限流参数变化时会更新 Redisson limiter 配置，并避免每次请求无条件刷新 TTL。
 - `IdGenerator` 默认构造器不再固定使用 0/0 节点 ID，改为优先读取配置，缺省时按主机和进程派生节点 ID。
 - 本地限流、防重复提交和异步导入任务状态增加容量或保留期边界，避免内存状态无限增长。
+- 本地限流、防重复提交和异步导入任务状态增加可关闭、可配置的主动清理线程；starter 本地 store 支持配置本地容量和清理间隔。
 - `SafePageQuery` 限制单次请求最多 5 个排序字段，避免构造过宽 `ORDER BY`。
 - `DefaultOpenApiClient` 默认不再在重试前阻塞当前线程等待 `retryInterval`；需要同步等待时必须显式开启。
 - `AESUtils` 的 CBC 方法单独标记为 deprecated，并收敛文档中的推荐信号。

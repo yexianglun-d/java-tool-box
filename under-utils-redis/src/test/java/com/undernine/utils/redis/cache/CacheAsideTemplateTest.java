@@ -180,6 +180,29 @@ class CacheAsideTemplateTest {
                 "hit:user:observer:false");
     }
 
+    @Test
+    void getMetricsTracksCacheAsideEventsWithoutCustomObserver() {
+        CacheHarness harness = CacheHarness.create();
+        CacheAsideTemplate template = new CacheAsideTemplate(harness.redissonClient());
+        CacheOptions options = optionsWithoutLock().build();
+
+        String first = template.getOrLoad("user:metrics", String.class, options, key -> "fresh");
+        String second = template.getOrLoad("user:metrics", String.class, options, key -> "should-not-load");
+
+        CacheMetrics metrics = template.getMetrics();
+        assertThat(first).isEqualTo("fresh");
+        assertThat(second).isEqualTo("fresh");
+        assertThat(metrics.getHitCount()).isEqualTo(1L);
+        assertThat(metrics.getMissCount()).isEqualTo(1L);
+        assertThat(metrics.getHitRate()).isEqualTo(0.5D);
+        assertThat(metrics.getLoadSuccessCount()).isEqualTo(1L);
+        assertThat(metrics.getLoadFailureCount()).isZero();
+        assertThat(metrics.getWriteCount()).isEqualTo(1L);
+
+        template.resetMetrics();
+        assertThat(template.getMetrics().getLookupCount()).isZero();
+    }
+
     private static CacheOptions.Builder optionsWithoutLock() {
         return CacheOptions.builder()
             .keyPrefix("cache:")

@@ -36,6 +36,7 @@ Maven 坐标使用 GitHub namespace `io.github.yexianglun-d`。Java 包名在 `1
 `under-utils-core` 中保留了一些历史静态工具类，用于兼容已有调用；它们不是后续新增能力的主线。
 
 模块依赖重量和拆分判断见 [docs/DEPENDENCY_REVIEW.md](docs/DEPENDENCY_REVIEW.md)。
+工程成熟度推进见 [docs/ENGINEERING_MATURITY.md](docs/ENGINEERING_MATURITY.md)，后续功能孵化见 [docs/FUTURE_FEATURES.md](docs/FUTURE_FEATURES.md)。
 
 ## 模块
 

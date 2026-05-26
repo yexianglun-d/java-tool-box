@@ -79,8 +79,25 @@ key 解析规则：
 
 - `LocalRateLimitStore` 和 `LocalRepeatSubmitStore` 只保护当前 JVM。
 - 本地 store 会按窗口清理过期 key，并设置默认最大容量，避免不同用户或业务 key 无限制增长。
+- 本地 store 默认启用每实例后台清理线程，支持 `close()` 释放资源；作为 Spring Bean 使用时会随应用上下文关闭。
 - 多实例服务应使用 `under-utils-redis` 提供的 Redis store，或自行实现 store。
 - Redis 异常默认向外传播；如需降级，应由业务自定义 store。
+
+starter 本地 store 可配置容量和清理间隔：
+
+```yaml
+under:
+  utils:
+    web:
+      rate-limit:
+        store: local
+        local-max-entries: 100000
+        local-cleanup-interval: 1s
+      repeat-submit:
+        store: local
+        local-max-entries: 100000
+        local-cleanup-interval: 1s
+```
 
 直接接入时需要注册 `RateLimitAspect`、`PreventRepeatAspect`、`OperationKeyResolver` 和对应 store。普通 Spring Boot 应用使用 `under-utils-spring-starter` 更简单。
 

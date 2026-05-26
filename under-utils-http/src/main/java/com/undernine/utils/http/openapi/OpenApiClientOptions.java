@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.Duration;
+import java.util.Objects;
 
 /**
  * 开放平台客户端配置。
@@ -12,7 +13,7 @@ import java.time.Duration;
  * </p>
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class OpenApiClientOptions {
 
     /**
@@ -116,5 +117,64 @@ public class OpenApiClientOptions {
      */
     public Duration getRetryIntervalDuration() {
         return Duration.ofMillis(retryInterval);
+    }
+
+    private static int toIntMillis(Duration duration, String fieldName) {
+        long millis = toMillis(duration, fieldName);
+        return Math.toIntExact(millis);
+    }
+
+    private static long toMillis(Duration duration, String fieldName) {
+        long millis = Objects.requireNonNull(duration, fieldName + " must not be null").toMillis();
+        if (millis < 0L) {
+            throw new IllegalArgumentException(fieldName + " must not be negative");
+        }
+        return millis;
+    }
+
+    /**
+     * OpenAPI 客户端配置构建器扩展。
+     */
+    public static class OpenApiClientOptionsBuilder {
+
+        /**
+         * 设置连接超时时间。
+         *
+         * @param timeout 连接超时时间
+         * @return 当前构建器
+         */
+        public OpenApiClientOptionsBuilder connectTimeoutDuration(Duration timeout) {
+            return connectTimeout(toIntMillis(timeout, "connectTimeout"));
+        }
+
+        /**
+         * 设置读取超时时间。
+         *
+         * @param timeout 读取超时时间
+         * @return 当前构建器
+         */
+        public OpenApiClientOptionsBuilder readTimeoutDuration(Duration timeout) {
+            return readTimeout(toIntMillis(timeout, "readTimeout"));
+        }
+
+        /**
+         * 设置写入超时时间。
+         *
+         * @param timeout 写入超时时间
+         * @return 当前构建器
+         */
+        public OpenApiClientOptionsBuilder writeTimeoutDuration(Duration timeout) {
+            return writeTimeout(toIntMillis(timeout, "writeTimeout"));
+        }
+
+        /**
+         * 设置重试等待间隔。
+         *
+         * @param interval 重试等待间隔
+         * @return 当前构建器
+         */
+        public OpenApiClientOptionsBuilder retryIntervalDuration(Duration interval) {
+            return retryInterval(toMillis(interval, "retryInterval"));
+        }
     }
 }

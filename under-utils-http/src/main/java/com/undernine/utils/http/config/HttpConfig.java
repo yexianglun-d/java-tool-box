@@ -3,8 +3,10 @@ package com.undernine.utils.http.config;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * HTTP 配置类
@@ -17,7 +19,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class HttpConfig {
 
     /**
@@ -102,6 +104,8 @@ public class HttpConfig {
     public HttpConfig addDefaultHeader(String name, String value) {
         if (defaultHeaders == null) {
             defaultHeaders = new HashMap<>();
+        } else if (!(defaultHeaders instanceof HashMap)) {
+            defaultHeaders = new HashMap<>(defaultHeaders);
         }
         defaultHeaders.put(name, value);
         return this;
@@ -114,5 +118,148 @@ public class HttpConfig {
      */
     public static HttpConfig defaultConfig() {
         return HttpConfig.builder().build();
+    }
+
+    /**
+     * 连接超时时间。
+     *
+     * @return 连接超时时间
+     */
+    public Duration getConnectTimeoutDuration() {
+        return Duration.ofMillis(connectTimeout);
+    }
+
+    /**
+     * 读取超时时间。
+     *
+     * @return 读取超时时间
+     */
+    public Duration getReadTimeoutDuration() {
+        return Duration.ofMillis(readTimeout);
+    }
+
+    /**
+     * 写入超时时间。
+     *
+     * @return 写入超时时间
+     */
+    public Duration getWriteTimeoutDuration() {
+        return Duration.ofMillis(writeTimeout);
+    }
+
+    /**
+     * 重试间隔。
+     *
+     * @return 重试间隔
+     */
+    public Duration getRetryIntervalDuration() {
+        return Duration.ofMillis(retryInterval);
+    }
+
+    /**
+     * 连接保活时间。
+     *
+     * @return 连接保活时间
+     */
+    public Duration getKeepAliveTimeDuration() {
+        return Duration.ofMillis(keepAliveTime);
+    }
+
+    private static int toIntMillis(Duration duration, String fieldName) {
+        long millis = toMillis(duration, fieldName);
+        return Math.toIntExact(millis);
+    }
+
+    private static long toMillis(Duration duration, String fieldName) {
+        long millis = Objects.requireNonNull(duration, fieldName + " must not be null").toMillis();
+        if (millis < 0L) {
+            throw new IllegalArgumentException(fieldName + " must not be negative");
+        }
+        return millis;
+    }
+
+    /**
+     * HTTP 配置构建器扩展。
+     */
+    public static class HttpConfigBuilder {
+
+        /**
+         * 设置连接超时时间。
+         *
+         * @param timeout 连接超时时间
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder connectTimeoutDuration(Duration timeout) {
+            return connectTimeout(toIntMillis(timeout, "connectTimeout"));
+        }
+
+        /**
+         * 设置读取超时时间。
+         *
+         * @param timeout 读取超时时间
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder readTimeoutDuration(Duration timeout) {
+            return readTimeout(toIntMillis(timeout, "readTimeout"));
+        }
+
+        /**
+         * 设置写入超时时间。
+         *
+         * @param timeout 写入超时时间
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder writeTimeoutDuration(Duration timeout) {
+            return writeTimeout(toIntMillis(timeout, "writeTimeout"));
+        }
+
+        /**
+         * 设置重试间隔。
+         *
+         * @param interval 重试间隔
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder retryIntervalDuration(Duration interval) {
+            return retryInterval(toMillis(interval, "retryInterval"));
+        }
+
+        /**
+         * 设置连接保活时间。
+         *
+         * @param keepAliveTime 连接保活时间
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder keepAliveTimeDuration(Duration keepAliveTime) {
+            return keepAliveTime(toMillis(keepAliveTime, "keepAliveTime"));
+        }
+
+        /**
+         * 添加默认请求头。
+         *
+         * @param name  请求头名称
+         * @param value 请求头值
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder addDefaultHeader(String name, String value) {
+            if (defaultHeaders$value == null) {
+                defaultHeaders$value = new HashMap<>();
+            } else {
+                defaultHeaders$value = new HashMap<>(defaultHeaders$value);
+            }
+            defaultHeaders$value.put(name, value);
+            defaultHeaders$set = true;
+            return this;
+        }
+
+        /**
+         * 添加默认请求头。
+         *
+         * @param name  请求头名称
+         * @param value 请求头值
+         * @return 当前构建器
+         */
+        public HttpConfigBuilder defaultHeader(String name, String value) {
+            return addDefaultHeader(name, value);
+        }
     }
 }

@@ -96,8 +96,10 @@ ImportResult result = asyncTemplate.findResult(taskId)
         .orElse(null);
 ```
 
-默认状态存储是内存 Map，适合单实例后台任务或示例工程。完成或失败的任务默认在当前 JVM 内保留 24 小时；
-如需调整，可使用带 `Duration taskRetention` 的构造器。生产环境如果需要跨实例查询、重启恢复或任务审计，应通过
+默认状态存储是内存 Map，适合单实例后台任务或示例工程。完成或失败的任务默认在当前 JVM 内保留 24 小时，
+并由每实例后台清理线程主动移除；如需调整，可使用带 `Duration taskRetention` 和 `Duration cleanupInterval`
+的构造器。`AsyncImportTaskTemplate` 实现了 `AutoCloseable`，手动创建时可在不再使用后调用 `close()`；
+作为 Spring Bean 使用时会随应用上下文关闭。生产环境如果需要跨实例查询、重启恢复或任务审计，应通过
 `ImportProgressListener` 将进度写入数据库、Redis 或消息系统。
 
 ## 错误导出

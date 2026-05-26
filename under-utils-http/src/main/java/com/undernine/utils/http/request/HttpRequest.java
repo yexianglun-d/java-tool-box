@@ -7,8 +7,10 @@ import com.undernine.utils.http.response.HttpResponse;
 import lombok.Data;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -97,6 +99,96 @@ public class HttpRequest {
     }
 
     /**
+     * 创建指定方法和 URL 的请求构建器。
+     *
+     * @param url    请求 URL
+     * @param method 请求方法
+     * @return 构建器实例
+     */
+    public static Builder request(String url, HttpMethod method) {
+        return builder().url(url).method(method);
+    }
+
+    /**
+     * 创建 GET 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder get(String url) {
+        return request(url, HttpMethod.GET);
+    }
+
+    /**
+     * 创建 POST 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder post(String url) {
+        return request(url, HttpMethod.POST);
+    }
+
+    /**
+     * 创建 PUT 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder put(String url) {
+        return request(url, HttpMethod.PUT);
+    }
+
+    /**
+     * 创建 DELETE 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder delete(String url) {
+        return request(url, HttpMethod.DELETE);
+    }
+
+    /**
+     * 创建 PATCH 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder patch(String url) {
+        return request(url, HttpMethod.PATCH);
+    }
+
+    /**
+     * 创建 HEAD 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder head(String url) {
+        return request(url, HttpMethod.HEAD);
+    }
+
+    /**
+     * 创建 OPTIONS 请求构建器。
+     *
+     * @param url 请求 URL
+     * @return 构建器实例
+     */
+    public static Builder options(String url) {
+        return request(url, HttpMethod.OPTIONS);
+    }
+
+    /**
+     * 基于当前请求创建构建器。
+     *
+     * @return 构建器实例
+     */
+    public Builder toBuilder() {
+        return new Builder(this);
+    }
+
+    /**
      * 执行请求（同步）
      *
      * @return HTTP 响应
@@ -115,6 +207,14 @@ public class HttpRequest {
         return CompletableFuture.supplyAsync(this::execute);
     }
 
+    private static int toIntMillis(Duration duration, String fieldName) {
+        long millis = Objects.requireNonNull(duration, fieldName + " must not be null").toMillis();
+        if (millis < 0L) {
+            throw new IllegalArgumentException(fieldName + " must not be negative");
+        }
+        return Math.toIntExact(millis);
+    }
+
     /**
      * HTTP 请求构建器
      */
@@ -127,6 +227,29 @@ public class HttpRequest {
             this.request.params = new HashMap<>();
             this.request.files = new HashMap<>();
             this.request.formParams = new HashMap<>();
+        }
+
+        private Builder(HttpRequest source) {
+            this();
+            HttpRequest copySource = Objects.requireNonNull(source, "source must not be null");
+            this.request.url = copySource.url;
+            this.request.method = copySource.method;
+            if (copySource.headers != null) {
+                this.request.headers.putAll(copySource.headers);
+            }
+            if (copySource.params != null) {
+                this.request.params.putAll(copySource.params);
+            }
+            this.request.body = copySource.body;
+            if (copySource.files != null) {
+                this.request.files.putAll(copySource.files);
+            }
+            if (copySource.formParams != null) {
+                this.request.formParams.putAll(copySource.formParams);
+            }
+            this.request.timeout = copySource.timeout;
+            this.request.maxRetries = copySource.maxRetries;
+            this.request.config = copySource.config;
         }
 
         /**
@@ -261,6 +384,17 @@ public class HttpRequest {
         }
 
         /**
+         * 设置超时时间。
+         *
+         * @param timeout 超时时间
+         * @return 构建器实例
+         */
+        public Builder timeout(Duration timeout) {
+            request.timeout = toIntMillis(timeout, "timeout");
+            return this;
+        }
+
+        /**
          * 设置最大重试次数
          *
          * @param maxRetries 最大重试次数
@@ -295,6 +429,24 @@ public class HttpRequest {
                 request.method = HttpMethod.GET;
             }
             return request;
+        }
+
+        /**
+         * 构建并同步执行请求。
+         *
+         * @return HTTP 响应
+         */
+        public HttpResponse execute() {
+            return build().execute();
+        }
+
+        /**
+         * 构建并异步执行请求。
+         *
+         * @return CompletableFuture 包装的 HTTP 响应
+         */
+        public CompletableFuture<HttpResponse> executeAsync() {
+            return build().executeAsync();
         }
     }
 }

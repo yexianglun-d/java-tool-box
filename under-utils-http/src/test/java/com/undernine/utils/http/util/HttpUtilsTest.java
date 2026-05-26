@@ -1,6 +1,7 @@
 package com.undernine.utils.http.util;
 
 import com.undernine.utils.http.config.HttpConfig;
+import com.undernine.utils.http.request.HttpRequest;
 import com.undernine.utils.http.response.HttpResponse;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -107,6 +108,22 @@ class HttpUtilsTest {
         assertThat(response.getStatusCode()).isEqualTo(200);
         assertThat(response.asString()).isEqualTo("Hello World");
         assertThat(response.getHeader("Content-Type")).isEqualTo("text/plain");
+    }
+
+    @Test
+    void shouldExecuteFluentRequestBuilderDirectly() throws InterruptedException {
+        mockWebServer.enqueue(new MockResponse()
+                .setBody("OK")
+                .setResponseCode(200));
+
+        HttpResponse response = HttpRequest.get(baseUrl + "fluent")
+                .header("X-Request-Id", "req-001")
+                .execute();
+
+        RecordedRequest request = mockWebServer.takeRequest();
+        assertThat(response.asString()).isEqualTo("OK");
+        assertThat(request.getMethod()).isEqualTo("GET");
+        assertThat(request.getHeader("X-Request-Id")).isEqualTo("req-001");
     }
 
     @Test

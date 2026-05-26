@@ -1,8 +1,17 @@
 package com.undernine.utils.spring.repeat;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -15,24 +24,45 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class LocalRepeatSubmitStore implements RepeatSubmitStore {
+public class LocalRepeatSubmitStore implements RepeatSubmitStore, AutoCloseable {
+
+    private static final Logger log = LoggerFactory.getLogger(LocalRepeatSubmitStore.class);
 
     private static final int DEFAULT_MAX_ENTRIES = 100_000;
-    private static final long CLEANUP_INTERVAL_MILLIS = 1_000L;
+    private static final Duration DEFAULT_CLEANUP_INTERVAL = Duration.ofSeconds(1);
+    private static final AtomicLong THREAD_SEQUENCE = new AtomicLong();
 
     private final Map<String, Long> cache = new ConcurrentHashMap<>();
     private final int maxEntries;
+    private final long cleanupIntervalMillis;
+    private final ScheduledExecutorService cleanupExecutor;
+    private final ScheduledFuture<?> cleanupFuture;
     private final AtomicLong nextCleanupAt = new AtomicLong();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     public LocalRepeatSubmitStore() {
-        this(DEFAULT_MAX_ENTRIES);
+        this(DEFAULT_MAX_ENTRIES, DEFAULT_CLEANUP_INTERVAL);
     }
 
     public LocalRepeatSubmitStore(int maxEntries) {
+        this(maxEntries, DEFAULT_CLEANUP_INTERVAL);
+    }
+
+    public LocalRepeatSubmitStore(int maxEntries, Duration cleanupInterval) {
         if (maxEntries <= 0) {
             throw new IllegalArgumentException("maxEntries must be greater than 0");
         }
+        Duration interval = normalizeCleanupInterval(cleanupInterval);
         this.maxEntries = maxEntries;
+        this.cleanupIntervalMillis = Math.max(1L, interval.toMillis());
+        this.cleanupExecutor = Executors.newSingleThreadScheduledExecutor(
+                daemonThreadFactory("under-local-repeat-submit-cleanup-"));
+        this.cleanupFuture = cleanupExecutor.scheduleWithFixedDelay(
+                this::cleanupExpiredSafely,
+                cleanupIntervalMillis,
+                cleanupIntervalMillis,
+                TimeUnit.MILLISECONDS
+        );
     }
 
     @Override
@@ -73,17 +103,50 @@ public class LocalRepeatSubmitStore implements RepeatSubmitStore {
         cache.clear();
     }
 
+    @Override
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            cleanupFuture.cancel(false);
+            cleanupExecutor.shutdownNow();
+        }
+    }
+
     int size() {
         return cache.size();
+    }
+
+    private void cleanupExpiredSafely() {
+        try {
+            cleanupExpired(System.currentTimeMillis(), true);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to cleanup local repeat submit entries", ex);
+        }
     }
 
     private void cleanupExpired(long now, boolean force) {
         if (!force) {
             long next = nextCleanupAt.get();
-            if (now < next || !nextCleanupAt.compareAndSet(next, now + CLEANUP_INTERVAL_MILLIS)) {
+            if (now < next || !nextCleanupAt.compareAndSet(next,
+                    now + cleanupIntervalMillis)) {
                 return;
             }
         }
         cache.entrySet().removeIf(entry -> entry.getValue() <= now);
+    }
+
+    private Duration normalizeCleanupInterval(Duration cleanupInterval) {
+        Duration interval = cleanupInterval == null ? DEFAULT_CLEANUP_INTERVAL : cleanupInterval;
+        if (interval.isZero() || interval.isNegative()) {
+            throw new IllegalArgumentException("cleanupInterval must be positive");
+        }
+        return interval;
+    }
+
+    private static ThreadFactory daemonThreadFactory(String namePrefix) {
+        return runnable -> {
+            Thread thread = new Thread(runnable, namePrefix + THREAD_SEQUENCE.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
     }
 }

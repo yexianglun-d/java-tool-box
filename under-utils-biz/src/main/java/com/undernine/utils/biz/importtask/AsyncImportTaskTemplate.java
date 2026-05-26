@@ -11,6 +11,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -25,17 +31,22 @@ import java.util.concurrent.atomic.AtomicReference;
  * @version 1.0.1
  * @since 1.0.1
  */
-public final class AsyncImportTaskTemplate {
+public final class AsyncImportTaskTemplate implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncImportTaskTemplate.class);
     private static final Duration DEFAULT_TASK_RETENTION = Duration.ofHours(24);
-    private static final long CLEANUP_INTERVAL_MILLIS = Duration.ofMinutes(1).toMillis();
+    private static final Duration DEFAULT_CLEANUP_INTERVAL = Duration.ofMinutes(1);
+    private static final AtomicLong THREAD_SEQUENCE = new AtomicLong();
 
     private final ImportOptions options;
     private final Executor executor;
     private final long taskRetentionMillis;
+    private final long cleanupIntervalMillis;
+    private final ScheduledExecutorService cleanupExecutor;
+    private final ScheduledFuture<?> cleanupFuture;
     private final Map<String, TaskState> tasks = new ConcurrentHashMap<>();
     private final AtomicLong nextCleanupAt = new AtomicLong();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     /**
      * 使用默认导入选项创建异步模板。
@@ -64,9 +75,35 @@ public final class AsyncImportTaskTemplate {
      * @param taskRetention 完成或失败任务在当前 JVM 内的保留时间
      */
     public AsyncImportTaskTemplate(ImportOptions options, Executor executor, Duration taskRetention) {
+        this(options, executor, taskRetention, DEFAULT_CLEANUP_INTERVAL);
+    }
+
+    /**
+     * 使用指定导入选项、执行器、任务状态保留时间和清理间隔创建异步模板。
+     *
+     * @param options         导入选项
+     * @param executor        后台执行器
+     * @param taskRetention   完成或失败任务在当前 JVM 内的保留时间
+     * @param cleanupInterval 完成或失败任务的后台清理间隔
+     */
+    public AsyncImportTaskTemplate(
+        ImportOptions options,
+        Executor executor,
+        Duration taskRetention,
+        Duration cleanupInterval
+    ) {
         this.options = options == null ? ImportOptions.defaults() : options;
         this.executor = Objects.requireNonNull(executor, "executor must not be null");
         this.taskRetentionMillis = normalizeTaskRetention(taskRetention).toMillis();
+        this.cleanupIntervalMillis = Math.max(1L, normalizeCleanupInterval(cleanupInterval).toMillis());
+        this.cleanupExecutor = Executors.newSingleThreadScheduledExecutor(
+                daemonThreadFactory("under-async-import-cleanup-"));
+        this.cleanupFuture = cleanupExecutor.scheduleWithFixedDelay(
+                this::cleanupExpiredTasksSafely,
+                cleanupIntervalMillis,
+                cleanupIntervalMillis,
+                TimeUnit.MILLISECONDS
+        );
     }
 
     /**
@@ -171,6 +208,20 @@ public final class AsyncImportTaskTemplate {
         tasks.remove(taskId);
     }
 
+    /**
+     * 关闭任务状态后台清理线程。
+     * <p>
+     * 该方法不会关闭业务传入的导入执行器。
+     * </p>
+     */
+    @Override
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            cleanupFuture.cancel(false);
+            cleanupExecutor.shutdownNow();
+        }
+    }
+
     private String submitTask(String taskId, ImportExecution execution) {
         String normalizedTaskId = normalizeTaskId(taskId);
         Instant startedAt = Instant.now();
@@ -253,6 +304,14 @@ public final class AsyncImportTaskTemplate {
         return retention;
     }
 
+    private Duration normalizeCleanupInterval(Duration cleanupInterval) {
+        Duration interval = cleanupInterval == null ? DEFAULT_CLEANUP_INTERVAL : cleanupInterval;
+        if (interval.isZero() || interval.isNegative()) {
+            throw new IllegalArgumentException("cleanupInterval must be positive");
+        }
+        return interval;
+    }
+
     private TaskState findTaskState(String taskId) {
         TaskState state = tasks.get(taskId);
         long now = System.currentTimeMillis();
@@ -262,6 +321,10 @@ public final class AsyncImportTaskTemplate {
         }
         cleanupExpiredTasks(now, false);
         return state;
+    }
+
+    int size() {
+        return tasks.size();
     }
 
     private void cleanupExpiredTask(String taskId, long now) {
@@ -274,11 +337,27 @@ public final class AsyncImportTaskTemplate {
     private void cleanupExpiredTasks(long now, boolean force) {
         if (!force) {
             long next = nextCleanupAt.get();
-            if (now < next || !nextCleanupAt.compareAndSet(next, now + CLEANUP_INTERVAL_MILLIS)) {
+            if (now < next || !nextCleanupAt.compareAndSet(next, now + cleanupIntervalMillis)) {
                 return;
             }
         }
         tasks.entrySet().removeIf(entry -> entry.getValue().isExpired(now, taskRetentionMillis));
+    }
+
+    private void cleanupExpiredTasksSafely() {
+        try {
+            cleanupExpiredTasks(System.currentTimeMillis(), true);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to cleanup async import tasks", ex);
+        }
+    }
+
+    private static ThreadFactory daemonThreadFactory(String namePrefix) {
+        return runnable -> {
+            Thread thread = new Thread(runnable, namePrefix + THREAD_SEQUENCE.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
     }
 
     private static final class TaskState {

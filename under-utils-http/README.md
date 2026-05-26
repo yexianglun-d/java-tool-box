@@ -34,15 +34,22 @@ if (response.isSuccess()) {
 }
 ```
 
+常用方法可以直接从方法级快捷 builder 开始，并由 builder 直接执行：
+
+```java
+HttpResponse response = HttpRequest.get("https://api.example.com/users")
+        .header("Authorization", "Bearer " + token)
+        .param("page", "1")
+        .timeout(Duration.ofSeconds(5))
+        .execute();
+```
+
 POST JSON：
 
 ```java
-HttpResponse response = HttpRequest.builder()
-        .url("https://api.example.com/orders")
-        .method(HttpMethod.POST)
+HttpResponse response = HttpRequest.post("https://api.example.com/orders")
         .header("Content-Type", "application/json")
         .body(command)
-        .build()
         .execute();
 ```
 
@@ -57,15 +64,17 @@ String created = HttpUtils.postJson("https://api.example.com/orders", command);
 
 ```java
 HttpConfig config = HttpConfig.builder()
-        .connectTimeout(5000)
-        .readTimeout(10000)
+        .connectTimeoutDuration(Duration.ofSeconds(5))
+        .readTimeoutDuration(Duration.ofSeconds(10))
         .maxRetries(1)
-        .retryInterval(500)
+        .retryIntervalDuration(Duration.ofMillis(500))
         .addDefaultHeader("User-Agent", "my-service/1.0")
         .build();
 
 HttpUtils.setDefaultConfig(config);
 ```
+
+已有配置可以通过 `toBuilder()` 复制后调整，避免重复声明所有字段。
 
 ## OpenAPI 客户端
 
@@ -74,10 +83,10 @@ HttpUtils.setDefaultConfig(config);
 ```java
 OpenApiClient client = new DefaultOpenApiClient(
         OpenApiClientOptions.builder()
-                .connectTimeout(3000)
-                .readTimeout(8000)
+                .connectTimeoutDuration(Duration.ofSeconds(3))
+                .readTimeoutDuration(Duration.ofSeconds(8))
                 .maxRetries(1)
-                .retryInterval(300)
+                .retryIntervalDuration(Duration.ofMillis(300))
                 .build(),
         request -> tokenService.getAccessToken(),
         request -> {
