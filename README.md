@@ -7,6 +7,8 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.yexianglun-d/under-utils-starter.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.yexianglun-d/under-utils-starter)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+中文 | [English](README_EN.md)
+
 Under-Utils 是一组面向 Java 21 / Spring Boot 项目的工程模式工具包，用来沉淀业务系统里反复出现、实现细节多、容易写散的基础设施代码。
 
 这个项目不定位为 Hutool、Apache Commons 或 Guava 的替代品。新增能力应解决可复用的工程问题，并且有明确行为可以测试，例如请求上下文传播、限流、防重复提交、Redis 分布式锁、缓存重建、OpenAPI 客户端治理、AI 模型基础调用、安全分页、审计填充和导入任务流程。
