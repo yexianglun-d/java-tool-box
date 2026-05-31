@@ -13,7 +13,7 @@ Under-Utils is an engineering-pattern utility toolkit for Java 21 and Spring Boo
 
 This project is not a replacement for Hutool, Apache Commons, or Guava. New features should solve reusable engineering problems with testable behavior, such as request-context propagation, rate limiting, repeat-submit protection, Redis distributed locks, cache rebuild patterns, OpenAPI client governance, basic AI model calls, safe pagination, audit filling, and import task workflows.
 
-Current stable version: `1.0.1`. The `main` branch is currently in the `1.0.2-SNAPSHOT` development cycle.
+Current stable version: `1.0.2`.
 
 Maven coordinates use the GitHub namespace `io.github.yexianglun-d`. Java packages remain under `com.undernine.utils` throughout `1.x` to avoid a package-level breaking change for published public APIs.
 
@@ -66,7 +66,7 @@ Dependency weight and module-splitting decisions are documented in [docs/DEPENDE
 
 ## Installation
 
-Import the BOM first, then add the starter or module you need. The current stable version `1.0.1` uses the compatibility aggregate starter:
+Import the BOM first, then add the starter or module you need. Starting from `1.0.2`, Spring Boot services should prefer lighter starters by need:
 
 ```xml
 <dependencyManagement>
@@ -74,7 +74,7 @@ Import the BOM first, then add the starter or module you need. The current stabl
         <dependency>
             <groupId>io.github.yexianglun-d</groupId>
             <artifactId>under-utils-bom</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -84,12 +84,12 @@ Import the BOM first, then add the starter or module you need. The current stabl
 <dependencies>
     <dependency>
         <groupId>io.github.yexianglun-d</groupId>
-        <artifactId>under-utils-starter</artifactId>
+        <artifactId>under-utils-spring-starter</artifactId>
     </dependency>
 </dependencies>
 ```
 
-Starting from `1.0.2`, Spring Boot services should prefer lighter starters by need. Use the Spring starter when you only need local Spring cross-cutting features:
+Use the Spring starter when you only need local Spring cross-cutting features:
 
 ```xml
 <dependency>

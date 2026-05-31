@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无。
+
+## [1.0.2] - 2026-05-31
+
 ### Added
 
 - 新增 `under-utils-spring-starter`，只自动装配 Spring 本地横切能力，不再强制引入 Redis/Redisson。
@@ -22,7 +26,7 @@
 
 ### Changed
 
-- `main` 分支 Maven 版本进入 `1.0.2-SNAPSHOT` 开发周期，`1.0.1` 保持为当前稳定版本。
+- 本轮 `1.0.2-SNAPSHOT` 开发内容收敛为 `1.0.2` 正式发布版本，`1.0.1` 继续作为 API 兼容性基线。
 - `under-utils-starter` 调整为兼容聚合入口，继续保留旧坐标，但实际能力由 Spring/Redis 两个 starter 提供。
 - `under-utils-http`、`under-utils-spring` 和 `under-utils-redis` 内部不再调用 `under-utils-core` 的历史 `JsonUtils`，JSON 行为保持不变，为后续 core JSON 迁移降低耦合。
 - `under-utils-biz` 移除未使用的 EasyExcel、POI 和 Jackson optional 依赖，模块边界收敛为导入任务、进度查询和错误导出。
