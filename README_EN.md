@@ -13,7 +13,7 @@ Under-Utils is an engineering-pattern utility toolkit for Java 21 and Spring Boo
 
 This project is not a replacement for Hutool, Apache Commons, or Guava. New features should solve reusable engineering problems with testable behavior, such as request-context propagation, rate limiting, repeat-submit protection, Redis distributed locks, cache rebuild patterns, OpenAPI client governance, basic AI model calls, safe pagination, audit filling, and import task workflows.
 
-Current stable version: `1.0.2`.
+Current stable version: `1.0.2`. The `main` branch is currently in the `1.0.3-SNAPSHOT` development cycle.
 
 Maven coordinates use the GitHub namespace `io.github.yexianglun-d`. Java packages remain under `com.undernine.utils` throughout `1.x` to avoid a package-level breaking change for published public APIs.
 
