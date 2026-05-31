@@ -26,6 +26,7 @@
 | `CacheMetrics` | 缓存模板内置指标快照，包含命中、未命中、加载、写入、锁和刷新计数。 |
 | `CacheValueCodec` | cache 模板共享的序列化边界。 |
 | `CacheOperationObserver` | 缓存命中、未命中、加载、写入、锁和刷新事件观测 SPI。 |
+| `MicrometerCacheOperationObserver` | 可选 Micrometer 适配器，记录缓存事件 counter、duration timer 和 observation。 |
 
 ## 分布式锁
 
@@ -143,7 +144,22 @@ CacheOperationObserver observer = new CacheOperationObserver() {
 CacheAsideTemplate template = new CacheAsideTemplate(redissonClient, codec, options, observer);
 ```
 
-在 starter 中，只要应用声明一个 `CacheOperationObserver` Bean，cache-aside 和 logical-cache 模板都会自动接入。observer 抛出的运行时异常会被模板记录并忽略，不影响缓存主流程。
+如果项目已经引入 Micrometer，也可以直接使用内置适配器：
+
+```java
+CacheOperationObserver observer = new MicrometerCacheOperationObserver(meterRegistry, observationRegistry);
+CacheAsideTemplate template = new CacheAsideTemplate(redissonClient, codec, options, observer);
+```
+
+内置适配器记录：
+
+- counter：`under.utils.redis.cache.operations`
+- timer：`under.utils.redis.cache.duration`
+- observation name：`under.utils.redis.cache`
+
+指标 tag 只包含 `cache.type`、`cache.operation`、`cache.outcome`、`cache.null` 和 `exception`，不会把业务 key 或实际 cache key 写入 tag。
+
+在 starter 中，如果应用声明了 `CacheOperationObserver` Bean，cache-aside 和 logical-cache 模板都会自动接入；如果没有自定义 observer 但上下文中存在 `MeterRegistry`，starter 会自动创建 `MicrometerCacheOperationObserver`。observer 抛出的运行时异常会被模板记录并忽略，不影响缓存主流程。
 
 ## 集成测试
 

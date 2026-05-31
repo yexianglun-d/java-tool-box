@@ -48,6 +48,19 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- Micrometer 观测适配（可选） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-observation</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Redisson -->
         <dependency>
             <groupId>org.redisson</groupId>

@@ -16,6 +16,7 @@
 | `候选` | 已确认与项目边界基本匹配，等待设计。 |
 | `设计中` | 正在明确 API、依赖、配置、失败语义和验收标准。 |
 | `实现中` | 已开始代码实现。 |
+| `已实现` | 已进入 `main`，完成代码、测试和文档，等待正式版本发布。 |
 | `已发布` | 已进入正式版本并完成文档、测试和变更记录。 |
 | `拒绝` | 不符合项目边界，或已有成熟库更适合承载。 |
 
@@ -32,7 +33,7 @@
 
 ## F-001 AI 大模型基础调用封装
 
-状态：`实现中`
+状态：`已实现`
 
 ### 背景
 
@@ -124,13 +125,54 @@ under:
 - 已新增独立 `under-utils-ai-starter`，在 `under.utils.ai.enabled=true` 时按配置创建默认 `AiClient`；它不加入 `under-utils-starter` 聚合入口，避免普通 Spring/Redis 用户被动引入 AI 依赖。
 - 已在 `under-utils-samples` 增加 `ai` profile 和 `/samples/ai/*` 示例接口，默认 profile 只暴露状态，不会在未配置模型服务时访问外部网络。
 
+### 第一阶段结论
+
+- 第一阶段只支持 OpenAI-compatible 协议，先不封装国内厂商原生私有 API。
+- 第一阶段只提供同步文本对话，不引入流式响应、工具调用、RAG 或 Agent 编排。
+- 第一阶段继续复用 `under-utils-http` 执行能力，AI 模块不把 HTTP 内部请求/响应模型暴露为 public API。
+- 已暴露 token 用量、模型名和 finish reason；模型指纹等元数据暂不进入第一阶段 public API。
+- starter 默认不创建 `AiClient`，必须显式设置 `under.utils.ai.enabled=true`。
+
+## F-002 AI 流式响应与厂商扩展
+
+状态：`候选`
+
+### 背景
+
+F-001 已覆盖最小可用的同步文本对话。后续如果真实项目需要更低首 token 延迟、SSE 输出或国内模型厂商原生协议，可以进入第二阶段。
+
+### 目标
+
+- 评估流式响应 API 形态，例如 callback、iterator、`Flow.Publisher` 或独立响应事件模型。
+- 评估厂商扩展边界：优先通过 OpenAI-compatible 参数透传解决，只有协议差异无法兼容时才新增 provider。
+- 保持同步 `AiClient` API 稳定，不把第二阶段能力强行塞进第一阶段入口。
+- 明确取消、超时、连接中断和半截响应的失败语义。
+
+### 非目标
+
+- 不做完整 Agent 编排、工具调用市场、RAG 知识库或模型路由平台。
+- 不引入具体厂商 SDK 作为默认依赖。
+- 不让 `under-utils-ai-starter` 进入 `under-utils-starter` 聚合入口。
+
+### 候选模块
+
+| 模块 | 说明 |
+|------|------|
+| `under-utils-ai` | 增加流式响应抽象和 provider 扩展点。 |
+| `under-utils-ai-starter` | 只在配置明确启用时装配第二阶段能力。 |
+
+### 第二阶段验收标准
+
+- 默认测试仍不访问外网。
+- 流式 API 能通过 MockWebServer 覆盖正常分片、服务端错误、连接中断和取消。
+- provider 扩展不能要求普通用户引入额外厂商 SDK。
+- 新增配置 key 和 public API 必须记录在 `CHANGELOG.md`、`docs/API_REVIEW.md` 和模块 README。
+
 ### 待确认问题
 
-- 第一阶段是否只支持 OpenAI-compatible 协议，还是同时支持国内模型厂商的原生 API。
-- 是否需要流式响应；如果需要，应作为第二阶段能力，避免第一版 API 过重。
-- 是否基于现有 `under-utils-http` 执行器实现，还是单独维护更贴合 AI 协议的 executor。
-- 是否需要暴露 token 用量、模型指纹、请求 ID 等元数据。
-- starter 默认是否创建 `AiClient` Bean，还是要求用户显式开启。
+- 是否先做 SSE 流式响应，还是先做 provider 扩展。
+- 是否需要单独的 `StreamingAiClient`，避免把同步调用入口复杂化。
+- 是否需要为 token 用量增量、模型指纹和 request id 提供标准元数据模型。
 
 ## 新功能记录模板
 

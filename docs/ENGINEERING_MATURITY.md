@@ -28,11 +28,11 @@
 | M-003 | Bug 回归测试追踪规范 | 已完成 | `tests`、`CONTRIBUTING.md` | 重要 Bug 修复必须新增独立回归测试；有 issue 编号时使用 issue 命名，无 issue 时使用 `Regression...Test` 或等价可追溯命名。 |
 | M-004 | CHANGELOG 可追溯性 | 已完成 | `CHANGELOG.md`、`docs/releases` | 面向用户的变更记录说明原因、影响范围、兼容性分类和对应 issue/PR；无外部 issue 时说明来源，例如 review-doc 或 internal-review。 |
 | M-005 | 高频 API 链式体验梳理 | 已完成 | `under-utils-http`、`under-utils-redis`、`under-utils-biz` | 高频构建路径支持自然链式调用或 builder；避免为了统计 `return this` 数量而制造无意义 API。 |
-| M-006 | Crypto 方向重新建模 | 暂缓 | `under-utils-core`、候选 `under-utils-crypto` | `AESUtils` 仅做历史兼容维护；如重新进入加密能力，应以独立模块、算法/模式/填充组合模型和清晰安全边界重新设计。 |
+| M-006 | Crypto 方向重新建模 | 暂缓 | `under-utils-core`、候选 `under-utils-crypto` | `AESUtils` 仅做历史兼容维护；重新进入条件和候选模型见 [CRYPTO_REDESIGN.md](CRYPTO_REDESIGN.md)。 |
 
 ## 实施顺序建议
 
-1. M-006：除非有明确业务需求，否则不在 `1.x` 内展开。
+1. M-006：已明确暂缓原因、重新进入条件和候选模块边界；除非有明确业务需求，否则不在 `1.x` 内展开。
 
 ## 单项完成标准
 
@@ -50,8 +50,9 @@
 ```bash
 /usr/local/apache-maven-3.9.9/bin/mvn -q test
 /usr/local/apache-maven-3.9.9/bin/mvn -Prelease -DskipTests package
-/usr/local/apache-maven-3.9.9/bin/mvn -Papi-compat \
-  -pl under-utils-core,under-utils-http,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz \
+/usr/local/apache-maven-3.9.9/bin/mvn -gs docs/central-dry-run-settings.xml -s docs/central-dry-run-settings.xml \
+  -Papi-compat \
+  -pl under-utils-core,under-utils-http,under-utils-ai,under-utils-ai-starter,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz \
   -am \
   -DskipTests \
   verify

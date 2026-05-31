@@ -22,20 +22,23 @@
 - 完成第一轮依赖重量审计，明确 core JSON、HTTP 客户端、Redis/Spring 耦合和 biz optional 依赖的处理顺序。
 - 清理 `under-utils-biz` 未使用的 EasyExcel、POI 和 Jackson optional 依赖。
 - 清理 `under-utils-http` 未实现的 HttpClient5 optional 依赖。
+- 新增 `under-utils-ai` 与 `under-utils-ai-starter`，完成 OpenAI-compatible 同步文本对话第一阶段封装。
+- `under-utils-samples` 覆盖 AI profile、OpenAPI 签名/幂等/token 刷新/业务错误解码、异步导入进度查询和错误导出示例。
+- Redis 缓存观测补齐内置计数指标和可选 Micrometer observer，starter 可在存在 `MeterRegistry` 时自动接入。
+- Crypto 重新建模和 core JSON 迁移均已形成独立设计备忘，避免长期停留在一句占位说明。
 
 ## 近期计划
 
 - 持续维护 API Review，配置 key、异常语义和 starter 默认行为发生变化时同步记录。
 - 继续收缩 `under-utils-core` 历史工具方法的扩张倾向。
-- 为 `2.0.0` 记录 Redis/Spring SPI 拆分方案。
+- 为 `1.0.2` 准备发布验证、GitHub Release Notes 和 Central Portal 提交。
+- 为 `2.0.0` 记录 Redis/Spring SPI 拆分方案，并按 [JSON_MODULE_MIGRATION.md](docs/JSON_MODULE_MIGRATION.md) 评估 core JSON 迁移。
 
 ## 后续方向
 
-- 改进 Redis 缓存模板可观测性，包括刷新失败、锁等待、空值缓存和逻辑过期状态。
-- 扩展 OpenAPI 示例：签名、幂等、token 刷新和业务错误解码。
-- 补充 MyBatis 审计填充和多数据库假设示例。
-- 扩展导入任务模板的异步执行、进度查询和错误导出能力。
-- 评估 `2.0.0` 中将历史 JSON 工具迁移到独立模块，降低 `under-utils-core` 对 Jackson 的默认依赖。
+- 评估 AI 第二阶段能力：流式响应、provider 扩展和更完整的元数据模型。
+- 评估 `under-utils-crypto` 是否有真实业务需求；没有明确需求时继续保持暂缓。
+- 评估 Redis/Spring SPI 拆分，降低 cache/lock 用户对 Spring 横切接口的被动依赖。
 
 ## 非目标
 

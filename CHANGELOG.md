@@ -16,6 +16,8 @@
 - `HttpRequest` 增加方法级快捷 builder、builder 直接执行和 `toBuilder()` 复制修改；`HttpConfig`、`OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式配置方法。
 - 新增 `under-utils-ai` 和 `under-utils-ai-starter`，提供 OpenAI-compatible 同步文本对话客户端、Spring Boot 自动装配、基础错误分类、token 用量响应模型和敏感信息脱敏边界。
 - `under-utils-samples` 新增 AI profile 示例，演示通过环境变量配置 `under-utils-ai-starter` 并调用文本对话接口。
+- `under-utils-redis` 新增 `MicrometerCacheOperationObserver`，Redis starter 可在存在 `MeterRegistry` 时自动接入缓存事件 counter、duration timer 和 observation。
+- 新增 `docs/CRYPTO_REDESIGN.md`、`docs/JSON_MODULE_MIGRATION.md` 和 `docs/releases/v1.0.2.md`，收口 crypto、core JSON 迁移和 `1.0.2` 发布准备边界。
 
 ### Changed
 

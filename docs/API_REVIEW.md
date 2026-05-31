@@ -249,6 +249,12 @@
 - AI 模块复用 `under-utils-http` 的 HTTP 执行能力，因此会带入 OkHttp/Jackson；AI starter 没有放入 `under-utils-starter` 聚合入口，避免普通 Spring/Redis 用户被动引入 AI 依赖。
 - 新模块没有 `1.0.1` 基线构件，当前 `japicmp` 暂跳过；正式发布后再纳入 public API 兼容检查。
 
-## 后续待审
+## 第二十四轮结论
 
-- Redis 缓存观测事件是否需要进一步接入 Micrometer Observation 语义。当前只提供无依赖 SPI 和模板内置指标，避免强绑定监控栈。
+### Redis Micrometer Observation
+
+- 新增 `MicrometerCacheOperationObserver`，将 `CacheOperationObserver` 事件桥接为 Micrometer counter、duration timer 和 observation。
+- 新 observer 只使用低基数 tag：`cache.type`、`cache.operation`、`cache.outcome`、`cache.null` 和 `exception`；不会把业务 key 或实际 cache key 写入 tag。
+- `under-utils-redis` 和 `under-utils-redis-starter` 仅以 optional dependency 引入 Micrometer，不改变普通 Redis 用户的默认依赖面。
+- `under-utils-redis-starter` 在存在 `MeterRegistry`、没有用户自定义 `CacheOperationObserver` 且缓存能力启用时，自动创建 `MicrometerCacheOperationObserver`；配置 `under.utils.redis.observation.enabled=false` 可关闭。
+- 如果用户已经声明自己的 `CacheOperationObserver`，starter 继续退让，不会叠加第二个 observer。

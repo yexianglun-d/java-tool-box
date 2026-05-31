@@ -94,4 +94,5 @@ ChatRequest request = ChatRequest.builder()
 - 只支持同步文本对话调用。
 - 不支持流式响应。
 - 不封装工具调用、函数调用、Agent 工作流和多步骤推理。
-- 不提供 Spring Boot starter；如需自动装配，应在核心 API 稳定后进入独立 `under-utils-ai-starter`。
+- Spring Boot 自动装配已放入独立 `under-utils-ai-starter`，不会被 `under-utils-starter` 聚合引入。
+- 第二阶段能力，例如流式响应和厂商原生 provider，先记录在 `docs/FUTURE_FEATURES.md`，不进入第一阶段 API。

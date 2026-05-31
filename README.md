@@ -37,6 +37,7 @@ Maven 坐标使用 GitHub namespace `io.github.yexianglun-d`。Java 包名在 `1
 
 模块依赖重量和拆分判断见 [docs/DEPENDENCY_REVIEW.md](docs/DEPENDENCY_REVIEW.md)。
 工程成熟度推进见 [docs/ENGINEERING_MATURITY.md](docs/ENGINEERING_MATURITY.md)，后续功能孵化见 [docs/FUTURE_FEATURES.md](docs/FUTURE_FEATURES.md)。
+Crypto 重新建模和 core JSON 迁移分别见 [docs/CRYPTO_REDESIGN.md](docs/CRYPTO_REDESIGN.md) 与 [docs/JSON_MODULE_MIGRATION.md](docs/JSON_MODULE_MIGRATION.md)。
 
 ## 模块
 
@@ -45,7 +46,7 @@ Maven 坐标使用 GitHub namespace `io.github.yexianglun-d`。Java 包名在 `1
 | `under-utils-bom` | 统一管理 Under-Utils 模块和相关依赖版本。 |
 | `under-utils-core` | 低耦合基础能力，例如雪花 ID、金额工具；历史静态工具仅做兼容维护。 |
 | `under-utils-spring` | Spring Web 上下文传播、限流/防重抽象、返回结果、异常处理和 JSON 脱敏。 |
-| `under-utils-redis` | 基于 Redisson 的分布式锁、限流/防重存储、cache-aside、逻辑过期缓存模板和缓存观测 SPI。 |
+| `under-utils-redis` | 基于 Redisson 的分布式锁、限流/防重存储、cache-aside、逻辑过期缓存模板、内置指标和可选 Micrometer 观测适配。 |
 | `under-utils-http` | HTTP 便捷调用与 OpenAPI 客户端治理，包括 token 刷新、签名、trace/idempotency header、错误解码和重试。 |
 | `under-utils-ai` | OpenAI-compatible AI 大模型基础调用封装，覆盖同步文本对话、基础错误分类和敏感信息脱敏。 |
 | `under-utils-mybatis` | MyBatis-Plus 安全分页、排序白名单、审计填充和分页结果封装。 |
@@ -168,9 +169,12 @@ under:
         physical-ttl: 30m
         cache-null: true
         key-prefix: "app:logical-cache:"
+      observation:
+        enabled: true
 ```
 
 限流和防重复提交默认失败语义是拒绝请求并抛出 `BizException`，异常消息来自注解配置。本地 store 只在当前 JVM 内生效，多实例部署应使用 Redis 或自定义 `RateLimitStore` / `RepeatSubmitStore`。
+存在 `MeterRegistry` 且没有自定义 `CacheOperationObserver` 时，Redis starter 会自动接入 Micrometer 缓存观测；需要关闭时设置 `under.utils.redis.observation.enabled=false`。
 
 ## 使用示例
 

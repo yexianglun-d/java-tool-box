@@ -7,6 +7,7 @@ import com.undernine.utils.redis.cache.CacheOptions;
 import com.undernine.utils.redis.cache.CacheValueCodec;
 import com.undernine.utils.redis.cache.LogicalExpireCacheOptions;
 import com.undernine.utils.redis.cache.LogicalExpireCacheTemplate;
+import com.undernine.utils.redis.cache.MicrometerCacheOperationObserver;
 import com.undernine.utils.redis.lock.DistributedLockTemplate;
 import com.undernine.utils.redis.ratelimit.RedisRateLimitStore;
 import com.undernine.utils.redis.repeat.RedisRepeatSubmitStore;
@@ -22,6 +23,8 @@ import com.undernine.utils.spring.ratelimit.LocalRateLimitStore;
 import com.undernine.utils.spring.ratelimit.RateLimitStore;
 import com.undernine.utils.spring.repeat.LocalRepeatSubmitStore;
 import com.undernine.utils.spring.repeat.RepeatSubmitStore;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.RBucket;
 import org.junit.jupiter.api.Test;
@@ -302,6 +305,53 @@ class UnderUtilsRedisAutoConfigurationTest {
                     assertThat(value).isEqualTo("fresh");
                     assertThat(writeEvents).hasValue(1);
                 });
+    }
+
+    @Test
+    void shouldAutoConfigureMicrometerCacheObserverWhenMeterRegistryExists() {
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(CacheOperationObserver.class);
+                    assertThat(context.getBean(CacheOperationObserver.class))
+                            .isInstanceOf(MicrometerCacheOperationObserver.class);
+                });
+    }
+
+    @Test
+    void shouldBackOffMicrometerCacheObserverWhenUserObserverExists() {
+        CacheOperationObserver customObserver = CacheOperationObserver.noop();
+
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withBean(CacheOperationObserver.class, () -> customObserver)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(CacheOperationObserver.class);
+                    assertThat(context.getBean(CacheOperationObserver.class)).isSameAs(customObserver);
+                });
+    }
+
+    @Test
+    void shouldAllowMicrometerCacheObserverToBeDisabled() {
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withPropertyValues("under.utils.redis.observation.enabled=false")
+                .run(context -> assertThat(context).doesNotHaveBean(CacheOperationObserver.class));
+    }
+
+    @Test
+    void shouldNotCreateMicrometerCacheObserverWhenCacheFeaturesDisabled() {
+        contextRunner
+                .withBean(RedissonClient.class, () -> mock(RedissonClient.class))
+                .withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withPropertyValues(
+                        "under.utils.redis.cache.enabled=false",
+                        "under.utils.redis.logical-cache.enabled=false"
+                )
+                .run(context -> assertThat(context).doesNotHaveBean(CacheOperationObserver.class));
     }
 
     @Test

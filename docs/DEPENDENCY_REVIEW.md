@@ -10,6 +10,7 @@
 - starter 拆分后，Spring-only 用户不再被 `under-utils-starter` 强制带入 Redis/Redisson。
 - `under-utils-core` 仍会带入 Jackson。`JsonUtils` 已经发布为 public API，`1.x` 内不应直接移除这组依赖。
 - `under-utils-redis` 的真正重量来自 Redisson/Netty；这是模块能力本身决定的，不适合在 patch 版本里伪装成轻量模块。
+- `under-utils-redis` 和 `under-utils-redis-starter` 新增 Micrometer 可选依赖，只用于 `MicrometerCacheOperationObserver`，不会通过普通依赖路径强制引入到用户应用。
 - `under-utils-biz` 当前实现只使用无外部依赖的 CSV/导入模板，已移除未使用的 Excel/POI/Jackson optional 依赖。
 - `under-utils-http` 已移除未实现的 HttpClient5 optional 依赖，当前对外边界明确为 OkHttp 执行器和 OpenAPI 客户端治理。
 - `under-utils-ai` 作为独立模块复用 `under-utils-http`；`under-utils-ai-starter` 也保持独立，不会通过聚合 starter 让普通 Spring/Redis 用户被动引入 AI 依赖。
@@ -25,7 +26,7 @@
 | `under-utils-ai` | 28K | 11 行 | http、core、OkHttp/Okio、Jackson、SLF4J | 独立 AI 能力模块，不放入 starter 聚合入口，避免扩大默认依赖面。 |
 | `under-utils-ai-starter` | 7.5K | 16 行 | ai module、Boot autoconfigure、Spring context | 独立 AI starter，不被兼容聚合 starter 引入。 |
 | `under-utils-spring` | 72K | 20 行 | core、Spring context/web/webmvc、AspectJ、Validation、Jackson | Spring MVC/AOP 模块，重量和定位一致。 |
-| `under-utils-redis` | 40K | 45 行 | core、spring、Redisson/Netty、Jackson | Redisson 是主要重量；同时对 `under-utils-spring` 有接口耦合。 |
+| `under-utils-redis` | 40K | 45 行 | core、spring、Redisson/Netty、Jackson；Micrometer optional | Redisson 是主要重量；Micrometer 只服务可选观测适配。 |
 | `under-utils-mybatis` | 24K | 9 行 | core、MyBatis-Plus、JSQLParser | 依赖和安全分页/审计能力匹配。 |
 | `under-utils-biz` | 40K | 4 行 | core、SLF4J | 当前代码未使用 Excel/POI/Jackson，基础 biz 模块保持无 Excel 栈。 |
 | `under-utils-spring-starter` | 16K | 10 行 | spring module、Boot autoconfigure、Servlet API | 符合 Spring-only starter 定位。 |
@@ -86,6 +87,12 @@
 - Jackson YAML
 
 这部分和 Redisson 客户端本身绑定，不能靠简单 POM 调整消除。
+
+Micrometer 观测适配以 optional dependency 形式提供：
+
+- 不改变 `under-utils-redis` 默认 runtime 依赖面。
+- 用户直接构造模板时，可以显式使用 `MicrometerCacheOperationObserver`。
+- starter 只有在应用上下文存在 `MeterRegistry` 且没有自定义 `CacheOperationObserver` 时才自动创建适配器。
 
 另一个边界问题是：`RedisRateLimitStore` 和 `RedisRepeatSubmitStore` 实现了 `under-utils-spring` 里的 store 接口，因此 `under-utils-redis` 会默认依赖 Spring 模块。cache/lock 用户理论上不需要 Spring，但当前坐标会一并带入。
 

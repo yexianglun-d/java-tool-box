@@ -11,6 +11,8 @@
  * 逻辑过期缓存中，{@link com.undernine.utils.redis.cache.LogicalExpireCacheOptions#logicalTtl()}
  * 表示逻辑新鲜期，{@link com.undernine.utils.redis.cache.LogicalExpireCacheOptions#physicalTtl()}
  * 表示 Redis key 的物理存活时间。
+ * {@link com.undernine.utils.redis.cache.MicrometerCacheOperationObserver} 可将缓存事件桥接到
+ * Micrometer，但不会把业务 key 写入低基数标签。
  * </p>
  */
 package com.undernine.utils.redis.cache;

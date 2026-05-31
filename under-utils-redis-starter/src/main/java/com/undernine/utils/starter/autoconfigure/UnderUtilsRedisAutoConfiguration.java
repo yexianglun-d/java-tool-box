@@ -8,12 +8,15 @@ import com.undernine.utils.redis.cache.JacksonCacheValueCodec;
 import com.undernine.utils.redis.cache.LogicalExpireCacheOptions;
 import com.undernine.utils.redis.cache.LogicalExpireCacheRefreshFailureHandler;
 import com.undernine.utils.redis.cache.LogicalExpireCacheTemplate;
+import com.undernine.utils.redis.cache.MicrometerCacheOperationObserver;
 import com.undernine.utils.redis.lock.DistributedLockTemplate;
 import com.undernine.utils.redis.ratelimit.RedisRateLimitStore;
 import com.undernine.utils.redis.repeat.RedisRepeatSubmitStore;
 import com.undernine.utils.spring.ratelimit.RateLimitStore;
 import com.undernine.utils.spring.repeat.RepeatSubmitStore;
 import com.undernine.utils.starter.properties.UnderUtilsProperties;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,6 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
@@ -41,6 +45,31 @@ import java.util.concurrent.Executor;
 @ConditionalOnClass(RedissonClient.class)
 @ConditionalOnBean(RedissonClient.class)
 public class UnderUtilsRedisAutoConfiguration {
+
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(name = {
+            "io.micrometer.core.instrument.MeterRegistry",
+            "io.micrometer.observation.ObservationRegistry",
+            "com.undernine.utils.redis.cache.MicrometerCacheOperationObserver"
+    })
+    static class CacheObservationConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean(CacheOperationObserver.class)
+        @ConditionalOnBean(MeterRegistry.class)
+        @ConditionalOnExpression("T(Boolean).parseBoolean('${under.utils.redis.cache.enabled:true}')"
+                + " || T(Boolean).parseBoolean('${under.utils.redis.logical-cache.enabled:false}')")
+        @ConditionalOnProperty(prefix = "under.utils.redis.observation", name = "enabled",
+                havingValue = "true", matchIfMissing = true)
+        public CacheOperationObserver micrometerCacheOperationObserver(
+                MeterRegistry meterRegistry,
+                ObjectProvider<ObservationRegistry> observationRegistry) {
+            return new MicrometerCacheOperationObserver(
+                    meterRegistry,
+                    observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP)
+            );
+        }
+    }
 
     @Bean
     @ConditionalOnMissingBean
