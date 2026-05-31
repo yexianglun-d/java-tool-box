@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +43,7 @@ class OpenAiCompatibleAiClientTest {
                         {
                           "id": "chatcmpl-001",
                           "model": "demo-model",
+                          "system_fingerprint": "fp-demo",
                           "choices": [
                             {
                               "message": {
@@ -81,8 +84,108 @@ class OpenAiCompatibleAiClientTest {
         assertThat(response.text()).isEqualTo("你好，Under-Utils");
         assertThat(response.getModel()).isEqualTo("demo-model");
         assertThat(response.getRequestId()).isEqualTo("chatcmpl-001");
+        assertThat(response.getResponseId()).isEqualTo("chatcmpl-001");
+        assertThat(response.getModelFingerprint()).isEqualTo("fp-demo");
+        assertThat(response.getDuration()).isNotNull();
+        assertThat(response.getMetadata().getProvider()).isEqualTo(AiProviderNames.OPENAI_COMPATIBLE);
+        assertThat(response.getMetadata().getRequestId()).isEqualTo("req-001");
         assertThat(response.getFinishReason()).isEqualTo("stop");
         assertThat(response.getUsage().getTotalTokens()).isEqualTo(12);
+    }
+
+    @Test
+    void shouldStreamOpenAiCompatibleChatCompletions() throws Exception {
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "text/event-stream")
+                .setBody("""
+                        data: {"id":"chatcmpl-stream","model":"demo-model","system_fingerprint":"fp-stream","choices":[{"delta":{"role":"assistant","content":"你"},"finish_reason":null}]}
+
+                        data: {"id":"chatcmpl-stream","model":"demo-model","choices":[{"delta":{"content":"好"},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":2,"total_tokens":5}}
+
+                        data: [DONE]
+
+                        """));
+        StreamingAiClient client = (StreamingAiClient) client();
+
+        List<ChatStreamEvent> events;
+        try (ChatStream stream = client.streamChat(ChatRequest.builder()
+                .user("打个招呼")
+                .requestId("req-stream")
+                .build())) {
+            events = stream.stream().toList();
+        }
+
+        RecordedRequest request = server.takeRequest();
+        assertThat(request.getHeader("Accept")).isEqualTo("text/event-stream");
+        assertThat(request.getHeader("X-Request-Id")).isEqualTo("req-stream");
+        assertThat(request.getBody().readUtf8()).contains("\"stream\":true");
+        assertThat(events).hasSize(3);
+        assertThat(events.get(0).text()).isEqualTo("你");
+        assertThat(events.get(0).getRole()).isEqualTo("assistant");
+        assertThat(events.get(0).getResponseId()).isEqualTo("chatcmpl-stream");
+        assertThat(events.get(0).getModelFingerprint()).isEqualTo("fp-stream");
+        assertThat(events.get(0).getMetadata().getRequestId()).isEqualTo("req-stream");
+        assertThat(events.get(1).text()).isEqualTo("好");
+        assertThat(events.get(1).getFinishReason()).isEqualTo("stop");
+        assertThat(events.get(1).getUsage().getTotalTokens()).isEqualTo(5);
+        assertThat(events.get(2).isDone()).isTrue();
+    }
+
+    @Test
+    void shouldMapStreamStatusFailure() {
+        server.enqueue(new MockResponse()
+                .setResponseCode(429)
+                .setHeader("Content-Type", "application/json")
+                .setBody("""
+                        {
+                          "error": {
+                            "message": "too many requests",
+                            "code": "rate_limit"
+                          }
+                        }
+                        """));
+        StreamingAiClient client = (StreamingAiClient) client();
+
+        assertThatThrownBy(() -> client.streamChat(ChatRequest.user("hello")))
+                .isInstanceOfSatisfying(AiException.class, ex -> {
+                    assertThat(ex.getErrorType()).isEqualTo(AiErrorType.RATE_LIMIT);
+                    assertThat(ex.getStatusCode()).isEqualTo(429);
+                    assertThat(ex.isRetryable()).isTrue();
+                    assertThat(ex.getMessage()).doesNotContain("hello");
+                });
+    }
+
+    @Test
+    void shouldMapStreamConnectionInterrupted() {
+        server.enqueue(new MockResponse()
+                .setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+        StreamingAiClient client = (StreamingAiClient) client();
+
+        assertThatThrownBy(() -> client.streamChat(ChatRequest.user("hello")))
+                .isInstanceOfSatisfying(AiException.class, ex ->
+                        assertThat(ex.getErrorType()).isEqualTo(AiErrorType.NETWORK));
+    }
+
+    @Test
+    void shouldAllowStreamCancellationByClose() {
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "text/event-stream")
+                .setBody("""
+                        data: {"id":"chatcmpl-cancel","model":"demo-model","choices":[{"delta":{"content":"first"},"finish_reason":null}]}
+
+                        """)
+                .setSocketPolicy(SocketPolicy.KEEP_OPEN));
+        StreamingAiClient client = (StreamingAiClient) client();
+
+        try (ChatStream stream = client.streamChat(ChatRequest.user("hello"))) {
+            Iterator<ChatStreamEvent> iterator = stream.iterator();
+            assertThat(iterator.hasNext()).isTrue();
+            assertThat(iterator.next().text()).isEqualTo("first");
+            stream.close();
+            assertThat(iterator.hasNext()).isFalse();
+        }
     }
 
     @Test
@@ -252,6 +355,29 @@ class OpenAiCompatibleAiClientTest {
         assertThat(options.toString()).doesNotContain("other-secret");
         assertThat(request.toString()).doesNotContain("secret prompt");
         assertThat(response.toString()).doesNotContain("secret output");
+    }
+
+    @Test
+    void shouldBuildClientWithCustomProvider() {
+        AiClientProvider provider = new AiClientProvider() {
+            @Override
+            public String provider() {
+                return "custom";
+            }
+
+            @Override
+            public AiClient create(AiClientOptions options) {
+                return request -> new ChatResponse("provider-ok", options.getModel(), "stop", "custom-001", null);
+            }
+        };
+
+        AiClient client = AiClient.builder()
+                .baseUrl("https://api.example.com/v1")
+                .model("custom-model")
+                .provider(provider)
+                .build();
+
+        assertThat(client.chat("hello").text()).isEqualTo("provider-ok");
     }
 
     @Test

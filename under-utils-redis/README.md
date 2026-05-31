@@ -62,6 +62,17 @@ UserProfile profile = cacheAsideTemplate.getOrLoad(
 );
 ```
 
+也可以使用模板提供的链式入口，把单次调用的 key、类型和局部配置写在一起：
+
+```java
+UserProfile profile = cacheAsideTemplate.cache("user:profile:" + userId, UserProfile.class)
+        .ttl(Duration.ofMinutes(3))
+        .nullValueTtl(Duration.ofSeconds(10))
+        .jitter(Duration.ofSeconds(5))
+        .rebuildLockEnabled(true)
+        .getOrLoad(key -> userRepository.findProfile(userId));
+```
+
 行为：
 
 - 缓存命中时不调用 loader。
@@ -86,6 +97,16 @@ ProductView view = logicalExpireCacheTemplate.getOrLoad(
         options,
         key -> productRepository.findView(productId)
 );
+```
+
+链式入口同样支持逻辑过期缓存：
+
+```java
+ProductView view = logicalExpireCacheTemplate.cache("product:view:" + productId, ProductView.class)
+        .logicalTtl(Duration.ofMinutes(2))
+        .physicalTtl(Duration.ofMinutes(20))
+        .refreshExecutor(refreshExecutor)
+        .getOrLoad(key -> productRepository.findView(productId));
 ```
 
 行为：

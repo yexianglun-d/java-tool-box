@@ -68,12 +68,12 @@
 
 ### AI
 
-`under-utils-ai` 当前复用 `under-utils-http` 的请求执行能力，主要传递依赖来自 HTTP 模块的 OkHttp、Okio、Kotlin runtime 和 Jackson。
+`under-utils-ai` 当前复用 `under-utils-http` 的同步请求执行能力，并为 SSE 流式响应显式使用 OkHttp。主要依赖来自 HTTP/AI 模块的 OkHttp、Okio、Kotlin runtime 和 Jackson。
 
 当前策略：
 
 - AI 能力只放在独立 `under-utils-ai` 坐标中，不加入 `under-utils-starter`。
-- 第一阶段不引入厂商 SDK，避免为一个 OpenAI-compatible 基础调用带入额外重量。
+- 不引入厂商 SDK，避免为 OpenAI-compatible 基础调用和流式 SSE 带入额外重量。
 - Spring Boot 自动装配已进入独立 `under-utils-ai-starter`，不并入 Spring/Redis starter，也不并入兼容聚合 starter。
 
 ### Redis

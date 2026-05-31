@@ -80,6 +80,10 @@ mvn -pl under-utils-samples -am spring-boot:run -Dspring-boot.run.profiles=ai
 curl -X POST http://localhost:18080/samples/ai/chat \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"请用一句话介绍 Under-Utils","systemPrompt":"你是一个简洁的助手"}'
+
+curl -N -X POST http://localhost:18080/samples/ai/chat/stream \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"请分三段介绍 Under-Utils","systemPrompt":"你是一个简洁的助手"}'
 ```
 
 ## Redis Profile
@@ -114,7 +118,9 @@ Redis 相关接口：
 curl http://localhost:18080/samples/redis/status
 curl http://localhost:18080/samples/redis/lock
 curl http://localhost:18080/samples/redis/cache-aside
+curl http://localhost:18080/samples/redis/cache-aside/fluent
 curl http://localhost:18080/samples/redis/logical-cache
+curl http://localhost:18080/samples/redis/cache-metrics
 ```
 
 停止 Redis：

@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -58,6 +60,20 @@ public class RedisSampleController {
         return Map.of("available", true, "value", view);
     }
 
+    @GetMapping("/cache-aside/fluent")
+    public Map<String, Object> cacheAsideFluent() {
+        CacheAsideTemplate template = cacheAsideTemplate.getIfAvailable();
+        if (template == null) {
+            return missingRedis("CacheAsideTemplate");
+        }
+        ProductView view = template.cache("sample:product:fluent:1001", ProductView.class)
+                .ttl(Duration.ofMinutes(2))
+                .nullValueCacheEnabled(true)
+                .rebuildLockEnabled(true)
+                .getOrLoad(key -> new ProductView("1001", "Sample product fluent", Instant.now().toString()));
+        return Map.of("available", true, "value", view, "metrics", template.getMetrics());
+    }
+
     @GetMapping("/logical-cache")
     public Map<String, Object> logicalCache() {
         LogicalExpireCacheTemplate template = logicalCacheTemplate.getIfAvailable();
@@ -67,6 +83,22 @@ public class RedisSampleController {
         ProductView view = template.get("sample:hot-product:1001", ProductView.class,
                 key -> new ProductView("1001", "Hot product", Instant.now().toString()));
         return Map.of("available", true, "value", view);
+    }
+
+    @GetMapping("/cache-metrics")
+    public Map<String, Object> cacheMetrics() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        CacheAsideTemplate cacheAside = cacheAsideTemplate.getIfAvailable();
+        LogicalExpireCacheTemplate logicalCache = logicalCacheTemplate.getIfAvailable();
+        result.put("cacheAsideAvailable", cacheAside != null);
+        result.put("logicalCacheAvailable", logicalCache != null);
+        if (cacheAside != null) {
+            result.put("cacheAside", cacheAside.getMetrics());
+        }
+        if (logicalCache != null) {
+            result.put("logicalCache", logicalCache.getMetrics());
+        }
+        return result;
     }
 
     private static Map<String, Object> missingRedis(String beanName) {

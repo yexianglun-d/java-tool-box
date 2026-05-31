@@ -72,6 +72,30 @@ public class CacheAsideTemplate {
         metricsObserver.reset();
     }
 
+    /**
+     * 创建 cache-aside 链式调用。
+     *
+     * @param key 缓存业务 key
+     * @param valueType 值类型
+     * @param <T> 值类型
+     * @return 链式调用对象
+     */
+    public <T> CacheQuery<T> cache(String key, Class<T> valueType) {
+        return new CacheQuery<>(key, valueType);
+    }
+
+    /**
+     * 创建 cache-aside 链式调用，等价于 {@link #cache(String, Class)}。
+     *
+     * @param key 缓存业务 key
+     * @param valueType 值类型
+     * @param <T> 值类型
+     * @return 链式调用对象
+     */
+    public <T> CacheQuery<T> key(String key, Class<T> valueType) {
+        return cache(key, valueType);
+    }
+
     public <T, E extends Throwable> T getOrLoad(
         String key,
         Class<T> valueType,
@@ -273,6 +297,96 @@ public class CacheAsideTemplate {
 
         static <T> CacheLookup<T> miss() {
             return new CacheLookup<>(false, null);
+        }
+    }
+
+    /**
+     * Cache-aside 链式调用对象。
+     *
+     * @param <T> 值类型
+     */
+    public final class CacheQuery<T> {
+
+        private final String key;
+        private final Class<T> valueType;
+        private CacheOptions.Builder optionsBuilder = defaultOptions.toBuilder();
+
+        private CacheQuery(String key, Class<T> valueType) {
+            this.key = key;
+            this.valueType = Objects.requireNonNull(valueType, "valueType must not be null");
+        }
+
+        public CacheQuery<T> options(CacheOptions options) {
+            this.optionsBuilder = Objects.requireNonNull(options, "options must not be null").toBuilder();
+            return this;
+        }
+
+        public CacheQuery<T> ttl(Duration ttl) {
+            optionsBuilder.ttl(ttl);
+            return this;
+        }
+
+        public CacheQuery<T> valueTtl(Duration valueTtl) {
+            optionsBuilder.valueTtl(valueTtl);
+            return this;
+        }
+
+        public CacheQuery<T> nullTtl(Duration nullTtl) {
+            optionsBuilder.nullTtl(nullTtl);
+            return this;
+        }
+
+        public CacheQuery<T> nullValueTtl(Duration nullValueTtl) {
+            optionsBuilder.nullValueTtl(nullValueTtl);
+            return this;
+        }
+
+        public CacheQuery<T> jitter(Duration jitter) {
+            optionsBuilder.jitter(jitter);
+            return this;
+        }
+
+        public CacheQuery<T> cacheNull(boolean cacheNull) {
+            optionsBuilder.cacheNull(cacheNull);
+            return this;
+        }
+
+        public CacheQuery<T> nullValueCacheEnabled(boolean enabled) {
+            optionsBuilder.nullValueCacheEnabled(enabled);
+            return this;
+        }
+
+        public CacheQuery<T> keyPrefix(String keyPrefix) {
+            optionsBuilder.keyPrefix(keyPrefix);
+            return this;
+        }
+
+        public CacheQuery<T> rebuildLockEnabled(boolean rebuildLockEnabled) {
+            optionsBuilder.rebuildLockEnabled(rebuildLockEnabled);
+            return this;
+        }
+
+        public CacheQuery<T> rebuildLockKeyPrefix(String rebuildLockKeyPrefix) {
+            optionsBuilder.rebuildLockKeyPrefix(rebuildLockKeyPrefix);
+            return this;
+        }
+
+        public CacheQuery<T> lockWaitTime(Duration lockWaitTime) {
+            optionsBuilder.lockWaitTime(lockWaitTime);
+            return this;
+        }
+
+        public CacheQuery<T> lockLeaseTime(Duration lockLeaseTime) {
+            optionsBuilder.lockLeaseTime(lockLeaseTime);
+            return this;
+        }
+
+        public <E extends Throwable> T getOrLoad(CacheLoadFunction<T, E> loader) throws E {
+            return CacheAsideTemplate.this.getOrLoad(key, valueType, optionsBuilder.build(), loader);
+        }
+
+        public <E extends Throwable> T get(CacheLoadFunction<T, E> loader) throws E {
+            return getOrLoad(loader);
         }
     }
 }

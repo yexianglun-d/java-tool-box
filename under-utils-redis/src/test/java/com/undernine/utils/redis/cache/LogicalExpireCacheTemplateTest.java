@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class LogicalExpireCacheTemplateTest {
@@ -247,6 +248,25 @@ class LogicalExpireCacheTemplateTest {
 
         template.resetMetrics();
         assertThat(template.getMetrics().getLookupCount()).isZero();
+    }
+
+    @Test
+    void fluentLogicalCacheQueryAppliesInlineOptions() {
+        CacheHarness harness = CacheHarness.create();
+        TrackingExecutor refreshExecutor = new TrackingExecutor();
+        LogicalExpireCacheTemplate template = new LogicalExpireCacheTemplate(harness.redissonClient());
+
+        String value = template.cache("hot:fluent", String.class)
+                .keyPrefix("chain-logical:")
+                .rebuildLockKeyPrefix("chain-logical:lock:")
+                .logicalTtl(Duration.ofSeconds(5))
+                .physicalTtl(Duration.ofSeconds(25))
+                .refreshExecutor(refreshExecutor)
+                .getOrLoad(key -> "fresh");
+
+        assertThat(value).isEqualTo("fresh");
+        assertThat(harness.lastWrittenTtl()).isEqualTo(Duration.ofSeconds(25));
+        verify(harness.redissonClient()).getBucket("chain-logical:hot:fluent");
     }
 
     private static LogicalExpireCacheOptions.Builder options(Executor refreshExecutor) {

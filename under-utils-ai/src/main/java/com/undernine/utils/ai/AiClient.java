@@ -1,6 +1,7 @@
 package com.undernine.utils.ai;
 
 import java.time.Duration;
+import java.util.Objects;
 
 /**
  * AI 模型调用入口。
@@ -44,6 +45,7 @@ public interface AiClient {
     final class Builder {
 
         private final AiClientOptions.Builder optionsBuilder = AiClientOptions.builder();
+        private AiClientProvider provider = new OpenAiCompatibleAiClientProvider();
 
         private Builder() {
         }
@@ -149,12 +151,23 @@ public interface AiClient {
         }
 
         /**
-         * 构建 OpenAI-compatible AI client。
+         * 设置 AI client provider。
+         *
+         * @param provider AI client provider
+         * @return 当前构建器
+         */
+        public Builder provider(AiClientProvider provider) {
+            this.provider = Objects.requireNonNull(provider, "provider must not be null");
+            return this;
+        }
+
+        /**
+         * 构建 AI client。
          *
          * @return AI client
          */
         public AiClient build() {
-            return new OpenAiCompatibleAiClient(optionsBuilder.build());
+            return provider.create(optionsBuilder.build());
         }
     }
 }

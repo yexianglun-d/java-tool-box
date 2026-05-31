@@ -14,9 +14,10 @@
 - 新增工程成熟度推进文档和后续功能孵化文档，并在 README 提供入口。
 - 贡献指南、PR 模板、Bug 模板和 release notes 模板增加回归测试命名、修复来源和 CHANGELOG 可追溯性要求。
 - `HttpRequest` 增加方法级快捷 builder、builder 直接执行和 `toBuilder()` 复制修改；`HttpConfig`、`OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式配置方法。
-- 新增 `under-utils-ai` 和 `under-utils-ai-starter`，提供 OpenAI-compatible 同步文本对话客户端、Spring Boot 自动装配、基础错误分类、token 用量响应模型和敏感信息脱敏边界。
-- `under-utils-samples` 新增 AI profile 示例，演示通过环境变量配置 `under-utils-ai-starter` 并调用文本对话接口。
+- 新增 `under-utils-ai` 和 `under-utils-ai-starter`，提供 OpenAI-compatible 同步文本对话、SSE 流式响应、provider 扩展、Spring Boot 自动装配、基础错误分类、token 用量响应模型、响应元数据和敏感信息脱敏边界。
+- `under-utils-samples` 新增 AI profile 示例，演示通过环境变量配置 `under-utils-ai-starter` 并调用同步文本对话和流式 SSE 接口。
 - `under-utils-redis` 新增 `MicrometerCacheOperationObserver`，Redis starter 可在存在 `MeterRegistry` 时自动接入缓存事件 counter、duration timer 和 observation。
+- `CacheAsideTemplate` 和 `LogicalExpireCacheTemplate` 新增链式单次调用入口，可通过 `template.cache(key, type).ttl(...).getOrLoad(...)` 简化缓存读取样板代码。
 - 新增 `docs/CRYPTO_REDESIGN.md`、`docs/JSON_MODULE_MIGRATION.md` 和 `docs/releases/v1.0.2.md`，收口 crypto、core JSON 迁移和 `1.0.2` 发布准备边界。
 
 ### Changed

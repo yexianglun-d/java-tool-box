@@ -6,6 +6,7 @@ import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -75,6 +76,30 @@ public class LogicalExpireCacheTemplate {
      */
     public void resetMetrics() {
         metricsObserver.reset();
+    }
+
+    /**
+     * 创建逻辑过期缓存链式调用。
+     *
+     * @param key 缓存业务 key
+     * @param valueType 值类型
+     * @param <T> 值类型
+     * @return 链式调用对象
+     */
+    public <T> LogicalCacheQuery<T> cache(String key, Class<T> valueType) {
+        return new LogicalCacheQuery<>(key, valueType);
+    }
+
+    /**
+     * 创建逻辑过期缓存链式调用，等价于 {@link #cache(String, Class)}。
+     *
+     * @param key 缓存业务 key
+     * @param valueType 值类型
+     * @param <T> 值类型
+     * @return 链式调用对象
+     */
+    public <T> LogicalCacheQuery<T> key(String key, Class<T> valueType) {
+        return cache(key, valueType);
     }
 
     public <T, E extends Throwable> T getOrLoad(
@@ -386,6 +411,87 @@ public class LogicalExpireCacheTemplate {
 
         static <T> CacheLookup<T> miss() {
             return new CacheLookup<>(false, null, 0L);
+        }
+    }
+
+    /**
+     * 逻辑过期缓存链式调用对象。
+     *
+     * @param <T> 值类型
+     */
+    public final class LogicalCacheQuery<T> {
+
+        private final String key;
+        private final Class<T> valueType;
+        private LogicalExpireCacheOptions.Builder optionsBuilder = defaultOptions.toBuilder();
+
+        private LogicalCacheQuery(String key, Class<T> valueType) {
+            this.key = key;
+            this.valueType = Objects.requireNonNull(valueType, "valueType must not be null");
+        }
+
+        public LogicalCacheQuery<T> options(LogicalExpireCacheOptions options) {
+            this.optionsBuilder = Objects.requireNonNull(options, "options must not be null").toBuilder();
+            return this;
+        }
+
+        public LogicalCacheQuery<T> logicalTtl(Duration logicalTtl) {
+            optionsBuilder.logicalTtl(logicalTtl);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> physicalTtl(Duration physicalTtl) {
+            optionsBuilder.physicalTtl(physicalTtl);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> cacheNull(boolean cacheNull) {
+            optionsBuilder.cacheNull(cacheNull);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> nullValueCacheEnabled(boolean enabled) {
+            optionsBuilder.nullValueCacheEnabled(enabled);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> keyPrefix(String keyPrefix) {
+            optionsBuilder.keyPrefix(keyPrefix);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> rebuildLockKeyPrefix(String rebuildLockKeyPrefix) {
+            optionsBuilder.rebuildLockKeyPrefix(rebuildLockKeyPrefix);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> lockWaitTime(Duration lockWaitTime) {
+            optionsBuilder.lockWaitTime(lockWaitTime);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> lockLeaseTime(Duration lockLeaseTime) {
+            optionsBuilder.lockLeaseTime(lockLeaseTime);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> refreshExecutor(java.util.concurrent.Executor refreshExecutor) {
+            optionsBuilder.refreshExecutor(refreshExecutor);
+            return this;
+        }
+
+        public LogicalCacheQuery<T> refreshFailureHandler(
+                LogicalExpireCacheRefreshFailureHandler refreshFailureHandler) {
+            optionsBuilder.refreshFailureHandler(refreshFailureHandler);
+            return this;
+        }
+
+        public <E extends Throwable> T getOrLoad(CacheLoadFunction<T, E> loader) throws E {
+            return LogicalExpireCacheTemplate.this.getOrLoad(key, valueType, optionsBuilder.build(), loader);
+        }
+
+        public <E extends Throwable> T get(CacheLoadFunction<T, E> loader) throws E {
+            return getOrLoad(loader);
         }
     }
 

@@ -22,9 +22,10 @@
 - 完成第一轮依赖重量审计，明确 core JSON、HTTP 客户端、Redis/Spring 耦合和 biz optional 依赖的处理顺序。
 - 清理 `under-utils-biz` 未使用的 EasyExcel、POI 和 Jackson optional 依赖。
 - 清理 `under-utils-http` 未实现的 HttpClient5 optional 依赖。
-- 新增 `under-utils-ai` 与 `under-utils-ai-starter`，完成 OpenAI-compatible 同步文本对话第一阶段封装。
-- `under-utils-samples` 覆盖 AI profile、OpenAPI 签名/幂等/token 刷新/业务错误解码、异步导入进度查询和错误导出示例。
+- 新增 `under-utils-ai` 与 `under-utils-ai-starter`，完成 OpenAI-compatible 同步文本对话、SSE 流式响应、provider 扩展和响应元数据封装。
+- `under-utils-samples` 覆盖 AI profile、AI 流式 SSE、OpenAPI 签名/幂等/token 刷新/业务错误解码、异步导入进度查询和错误导出示例。
 - Redis 缓存观测补齐内置计数指标和可选 Micrometer observer，starter 可在存在 `MeterRegistry` 时自动接入。
+- Redis cache-aside 和 logical-cache 模板补齐链式单次调用入口，降低常见缓存读取调用样板代码。
 - Crypto 重新建模和 core JSON 迁移均已形成独立设计备忘，避免长期停留在一句占位说明。
 
 ## 近期计划
@@ -36,7 +37,7 @@
 
 ## 后续方向
 
-- 评估 AI 第二阶段能力：流式响应、provider 扩展和更完整的元数据模型。
+- 评估 AI 后续能力：工具调用、结构化输出、模型私有参数边界和更完整的错误元数据。
 - 评估 `under-utils-crypto` 是否有真实业务需求；没有明确需求时继续保持暂缓。
 - 评估 Redis/Spring SPI 拆分，降低 cache/lock 用户对 Spring 横切接口的被动依赖。
 

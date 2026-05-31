@@ -1,8 +1,8 @@
 # Under-Utils AI
 
-AI 大模型基础调用封装模块，第一阶段只提供 OpenAI-compatible 文本对话客户端。
+AI 大模型基础调用封装模块，提供 OpenAI-compatible 文本对话客户端。
 
-本模块目标是让业务项目只配置模型服务的基础参数，就能完成最常见的同步文本对话调用；它不是 Agent 框架，也不覆盖流式响应、工具调用、RAG、向量数据库或厂商私有全部参数。
+本模块目标是让业务项目只配置模型服务的基础参数，就能完成最常见的同步文本对话和 SSE 流式对话调用；它不是 Agent 框架，也不覆盖工具调用、RAG、向量数据库或厂商私有全部参数。
 
 ## 依赖
 
@@ -42,6 +42,27 @@ String text = response.text();
 }
 ```
 
+## 流式响应
+
+`OpenAiCompatibleAiClient` 同时实现 `StreamingAiClient`。流式响应基于 OpenAI-compatible SSE，调用方必须关闭 `ChatStream`：
+
+```java
+StreamingAiClient streamingClient = (StreamingAiClient) aiClient;
+
+try (ChatStream stream = streamingClient.streamChat(ChatRequest.user("请逐步输出一句话"))) {
+    for (ChatStreamEvent event : stream) {
+        if (event.hasText()) {
+            System.out.print(event.text());
+        }
+        if (event.isDone()) {
+            break;
+        }
+    }
+}
+```
+
+流式请求会在请求体中写入 `"stream": true`，并读取 `data:` SSE 分片。`ChatStreamEvent` 暴露增量文本、角色、结束原因、token 用量和元数据；连接中断、超时、HTTP 错误和分片解析失败都会映射为 `AiException`。
+
 ## 多轮消息
 
 ```java
@@ -63,6 +84,47 @@ ChatRequest request = ChatRequest.builder()
         .user("ping")
         .model("another-model")
         .extraBody("top_p", 0.9D)
+        .build();
+```
+
+## 响应元数据
+
+`ChatResponse` 提供文本、模型名、结束原因和 token 用量，同时通过 `AiResponseMetadata` 暴露 provider、调用方 request id、模型服务 response id、模型指纹和请求耗时：
+
+```java
+ChatResponse response = aiClient.chat(ChatRequest.builder()
+        .user("ping")
+        .requestId("req-001")
+        .build());
+
+String responseId = response.getResponseId();
+String modelFingerprint = response.getModelFingerprint();
+Duration duration = response.getDuration();
+```
+
+`getRequestId()` 保留为兼容字段，优先返回模型服务响应 ID；如果需要区分调用方 request id 与模型服务 response id，请使用 `response.getMetadata()`。
+
+## Provider 扩展
+
+默认 provider 为 `openai-compatible`。如果业务项目需要接入非兼容协议，可以实现 `AiClientProvider`，不需要把具体厂商 SDK 放进 Under-Utils 默认依赖面：
+
+```java
+AiClientProvider provider = new AiClientProvider() {
+    @Override
+    public String provider() {
+        return "native-vendor";
+    }
+
+    @Override
+    public AiClient create(AiClientOptions options) {
+        return new NativeVendorAiClient(options);
+    }
+};
+
+AiClient client = AiClient.builder()
+        .baseUrl("https://api.example.com")
+        .model("vendor-model")
+        .provider(provider)
         .build();
 ```
 
@@ -91,8 +153,7 @@ ChatRequest request = ChatRequest.builder()
 
 ## 当前限制
 
-- 只支持同步文本对话调用。
-- 不支持流式响应。
+- 流式响应只覆盖 OpenAI-compatible SSE，不封装 WebSocket 或厂商私有流式协议。
 - 不封装工具调用、函数调用、Agent 工作流和多步骤推理。
+- 默认不引入具体厂商 SDK；厂商原生协议应通过业务侧 `AiClientProvider` 扩展。
 - Spring Boot 自动装配已放入独立 `under-utils-ai-starter`，不会被 `under-utils-starter` 聚合引入。
-- 第二阶段能力，例如流式响应和厂商原生 provider，先记录在 `docs/FUTURE_FEATURES.md`，不进入第一阶段 API。

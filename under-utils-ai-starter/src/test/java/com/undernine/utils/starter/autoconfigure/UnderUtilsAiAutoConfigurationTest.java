@@ -1,7 +1,10 @@
 package com.undernine.utils.starter.autoconfigure;
 
 import com.undernine.utils.ai.AiClient;
+import com.undernine.utils.ai.AiClientOptions;
+import com.undernine.utils.ai.AiClientProvider;
 import com.undernine.utils.ai.ChatRequest;
+import com.undernine.utils.ai.ChatResponse;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -83,6 +86,36 @@ class UnderUtilsAiAutoConfigurationTest {
                         "under.utils.ai.model=demo-model"
                 )
                 .run(context -> assertThat(context.getBean(AiClient.class)).isSameAs(customClient));
+    }
+
+    @Test
+    void shouldUseCustomProviderWhenProviderMatches() {
+        AiClientProvider customProvider = new AiClientProvider() {
+            @Override
+            public String provider() {
+                return "native-vendor";
+            }
+
+            @Override
+            public AiClient create(AiClientOptions options) {
+                return request -> new ChatResponse("custom-provider", options.getModel(), "stop", "custom-001", null);
+            }
+        };
+
+        contextRunner
+                .withBean(AiClientProvider.class, () -> customProvider)
+                .withPropertyValues(
+                        "under.utils.ai.enabled=true",
+                        "under.utils.ai.provider=native-vendor",
+                        "under.utils.ai.base-url=https://api.example.com/v1",
+                        "under.utils.ai.api-key=secret",
+                        "under.utils.ai.model=native-model"
+                )
+                .run(context -> {
+                    assertThat(context).hasSingleBean(AiClient.class);
+                    assertThat(context.getBean(AiClient.class).chat(ChatRequest.user("hello")).text())
+                            .isEqualTo("custom-provider");
+                });
     }
 
     @Test

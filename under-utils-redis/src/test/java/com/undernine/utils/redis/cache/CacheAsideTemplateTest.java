@@ -203,6 +203,23 @@ class CacheAsideTemplateTest {
         assertThat(template.getMetrics().getLookupCount()).isZero();
     }
 
+    @Test
+    void fluentCacheQueryAppliesInlineOptions() {
+        CacheHarness harness = CacheHarness.create();
+        CacheAsideTemplate template = new CacheAsideTemplate(harness.redissonClient());
+
+        String value = template.cache("user:fluent", String.class)
+                .keyPrefix("chain:")
+                .ttl(Duration.ofSeconds(9))
+                .cacheNull(false)
+                .rebuildLockEnabled(false)
+                .getOrLoad(key -> "fresh");
+
+        assertThat(value).isEqualTo("fresh");
+        assertThat(harness.lastWrittenTtl()).isEqualTo(Duration.ofSeconds(9));
+        verify(harness.redissonClient()).getBucket("chain:user:fluent");
+    }
+
     private static CacheOptions.Builder optionsWithoutLock() {
         return CacheOptions.builder()
             .keyPrefix("cache:")

@@ -233,7 +233,9 @@
 - `HttpRequest.Builder` 增加 `execute()` 和 `executeAsync()`，常见一次性请求可以由 builder 直接构建并执行；原有 `build().execute()` 路径继续可用。
 - `HttpRequest` 增加 `toBuilder()`，复制修改请求时会拷贝 headers、params、files 和 formParams，避免修改派生请求时污染原请求。
 - `HttpConfig` 和 `OpenApiClientOptions` 增加 `toBuilder()` 与 `Duration` 友好的链式方法。为保持 Lombok builder 原有 `int/long` setter 兼容，新增方法使用 `connectTimeoutDuration`、`retryIntervalDuration` 等不冲突命名。
-- `CacheOptions`、`LogicalExpireCacheOptions` 和 `ImportOptions` 已具备 builder/toBuilder，本轮不为增加 `return this` 数量继续扩 API。
+- `CacheOptions`、`LogicalExpireCacheOptions` 和 `ImportOptions` 已具备 builder/toBuilder。
+- `CacheAsideTemplate` 新增 `cache(key, type)` / `key(key, type)` 链式入口，可在单次调用上配置 TTL、空值缓存、jitter 和重建锁后直接 `getOrLoad(...)`。
+- `LogicalExpireCacheTemplate` 新增 `cache(key, type)` / `key(key, type)` 链式入口，可在单次调用上配置 logical TTL、physical TTL、刷新 executor 和失败处理器。
 
 ## 第二十三轮结论
 
@@ -258,3 +260,16 @@
 - `under-utils-redis` 和 `under-utils-redis-starter` 仅以 optional dependency 引入 Micrometer，不改变普通 Redis 用户的默认依赖面。
 - `under-utils-redis-starter` 在存在 `MeterRegistry`、没有用户自定义 `CacheOperationObserver` 且缓存能力启用时，自动创建 `MicrometerCacheOperationObserver`；配置 `under.utils.redis.observation.enabled=false` 可关闭。
 - 如果用户已经声明自己的 `CacheOperationObserver`，starter 继续退让，不会叠加第二个 observer。
+
+## 第二十五轮结论
+
+### AI Streaming and Provider Extension
+
+- 新增 `StreamingAiClient`、`ChatStream` 和 `ChatStreamEvent`，流式文本对话与同步 `AiClient` 分离，避免把同步入口扩成复杂回调 API。
+- `OpenAiCompatibleAiClient` 实现 OpenAI-compatible SSE 流式响应，请求体强制设置 `stream=true`，按 `data:` 分片产出增量事件。
+- `ChatStream` 实现 `AutoCloseable`，调用方可以通过 try-with-resources 或 `close()` 主动取消底层请求；同一个 stream 只能消费一次。
+- 新增 `AiResponseMetadata`，同步 `ChatResponse` 和流式事件均可暴露 provider、调用方 request id、模型服务 response id、模型指纹和耗时。
+- `ChatResponse#getRequestId()` 继续保留兼容语义；新增 `getResponseId()`、`getModelFingerprint()`、`getDuration()` 和 `getMetadata()` 用于更清晰地区分元数据。
+- 新增 `AiClientProvider` 扩展点和 `OpenAiCompatibleAiClientProvider`，业务侧可接入非兼容协议，项目本身不引入具体厂商 SDK。
+- `under-utils-ai-starter` 支持根据 `under.utils.ai.provider` 匹配自定义 `AiClientProvider` Bean；用户自定义 `AiClient` Bean 时继续退让。
+- 相关测试通过 MockWebServer 覆盖流式正常分片、HTTP 错误、连接中断、主动取消、provider 扩展和 starter provider 路由。
