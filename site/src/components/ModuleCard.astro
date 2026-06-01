@@ -1,0 +1,30 @@
+---
+import type { ModuleEntry } from '../data/modules';
+import Icon from './Icon.astro';
+
+const { module, compact = false } = Astro.props as { module: ModuleEntry; compact?: boolean };
+---
+
+<article class={`module-card${compact ? ' module-card--compact' : ''}`}>
+  <div class="module-card__head">
+    <div class="module-card__icon">
+      <Icon name={module.kind === 'starter' ? 'rocket' : 'package'} size={20} />
+    </div>
+    <div>
+      <h3>{module.title}</h3>
+      <p class="artifact">{module.artifact}</p>
+    </div>
+  </div>
+  {!compact && (
+    <>
+      <p class="module-card__summary">{module.summary}</p>
+      <ul class="module-card__highlights">
+        {module.highlights.map((item) => <li>{item}</li>)}
+      </ul>
+    </>
+  )}
+  <div class="module-card__actions">
+    <a href={`/docs/modules/${module.slug}/`}>文档</a>
+    <a href={`/api/?module=${module.apiQuery}`}>API</a>
+  </div>
+</article>

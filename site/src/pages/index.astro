@@ -1,0 +1,98 @@
+---
+import CodeBlock from '../components/CodeBlock.astro';
+import Icon from '../components/Icon.astro';
+import ModuleCard from '../components/ModuleCard.astro';
+import SiteShell from '../layouts/SiteShell.astro';
+import { primaryModules } from '../data/modules';
+import version from '../data/version.json';
+
+const installCode = `<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.github.yexianglun-d</groupId>
+            <artifactId>under-utils-bom</artifactId>
+            <version>${version.stable}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.yexianglun-d</groupId>
+        <artifactId>under-utils-spring-starter</artifactId>
+    </dependency>
+</dependencies>`;
+---
+
+<SiteShell current="home">
+  <section class="site-section hero">
+    <div class="hero__copy">
+      <div class="eyebrow"><Icon name="spark" size={16} /> Java 21 / Spring Boot 3.1.x</div>
+      <h1>Under-Utils</h1>
+      <div class="hero__stack" aria-label="核心模块">
+        <span>Context</span>
+        <span>RateLimit</span>
+        <span>Redis Cache</span>
+        <span>OpenAPI</span>
+        <span>AI Client</span>
+        <span>Safe Page</span>
+      </div>
+      <div class="hero__actions">
+        <a class="button button--primary" href="/docs/">
+          <Icon name="book" size={17} />
+          快速开始
+        </a>
+        <a class="button" href="/api/">
+          <Icon name="api" size={17} />
+          API
+        </a>
+      </div>
+      <div class="hero__meta" aria-label="项目版本和运行要求">
+        <span class="pill pill--success"><Icon name="check" size={14} /> stable {version.stable}</span>
+        <span class="pill">snapshot {version.snapshot}</span>
+        <span class="pill">Java {version.java}</span>
+        <span class="pill">Spring Boot {version.springBoot}</span>
+      </div>
+    </div>
+    <CodeBlock label="推荐安装：BOM + Spring Starter" language="xml" code={installCode} />
+  </section>
+
+  <section class="section-band">
+    <div class="site-section">
+      <div class="section-heading">
+        <h2>模块</h2>
+      </div>
+      <div class="module-grid">
+        {primaryModules.map((module) => <ModuleCard module={module} compact />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="site-section">
+      <div class="section-heading">
+        <h2>接入路径</h2>
+      </div>
+      <div class="path-grid">
+        <div class="path-item">
+          <strong>Spring Boot</strong>
+          <code>under-utils-spring-starter</code>
+        </div>
+        <div class="path-item">
+          <strong>Redis</strong>
+          <code>under-utils-redis-starter</code>
+        </div>
+        <div class="path-item">
+          <strong>AI</strong>
+          <code>under-utils-ai-starter</code>
+        </div>
+        <div class="path-item">
+          <strong>Compat</strong>
+          <code>under-utils-starter</code>
+        </div>
+      </div>
+    </div>
+  </section>
+</SiteShell>

@@ -1,0 +1,11 @@
+---
+import version from '../data/version.json';
+import Icon from './Icon.astro';
+---
+
+<div class="version-badge" aria-label="Under-Utils 版本信息">
+  <Icon name="shield" size={16} />
+  <span>stable {version.stable}</span>
+  <span class="version-divider"></span>
+  <span>{version.snapshot}</span>
+</div>

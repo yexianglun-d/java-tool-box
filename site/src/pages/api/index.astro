@@ -1,0 +1,135 @@
+---
+import Icon from '../../components/Icon.astro';
+import SiteShell from '../../layouts/SiteShell.astro';
+import { apiAnchor, apiItems, apiMeta } from '../../data/api';
+
+const modules = Array.from(new Set(apiItems.map((item) => item.module))).sort();
+const types = Array.from(new Set(apiItems.map((item) => item.type))).sort();
+---
+
+<SiteShell title="API" current="api">
+  <div class="api-layout">
+    <aside class="api-index" aria-label="API 过滤">
+      <h2>API Browser</h2>
+      <div class="api-stats">
+        <strong>{apiMeta.typeCount}</strong>
+        <span>public types</span>
+        <strong>{apiMeta.memberCount}</strong>
+        <span>members</span>
+      </div>
+      <div class="api-toolbar" data-api-filter>
+        <label>
+          <span class="sr-only">搜索 API</span>
+          <input type="search" placeholder="搜索类名、包名、说明" data-api-query />
+        </label>
+        <label>
+          <span class="sr-only">模块</span>
+          <select data-api-module>
+            <option value="">全部模块</option>
+            {modules.map((module) => <option value={module}>{module}</option>)}
+          </select>
+        </label>
+        <label>
+          <span class="sr-only">类型</span>
+          <select data-api-type>
+            <option value="">全部类型</option>
+            {types.map((type) => <option value={type}>{type}</option>)}
+          </select>
+        </label>
+      </div>
+    </aside>
+
+    <article class="api-content">
+      <h1>Public API 索引</h1>
+      <p>
+        API 浏览器由构建脚本从 <code>src/main/java</code> 的真实 public/protected API 自动生成，覆盖 {apiMeta.artifactCount} 个正式发布模块，不再依赖手写种子数据或 iframe Javadoc frames。
+      </p>
+
+      <div class="api-list" data-api-list>
+        {apiItems.map((item) => (
+          <section
+            class="api-card"
+            id={apiAnchor(item)}
+            data-name={item.name.toLowerCase()}
+            data-module={item.module}
+            data-artifact={item.artifact}
+            data-type={item.type}
+            data-status={item.status}
+            data-text={`${item.name} ${item.qualifiedName} ${item.artifact} ${item.packageName} ${item.summary} ${item.members.map((member) => `${member.name} ${member.signature} ${member.summary}`).join(' ')}`.toLowerCase()}
+          >
+            <div class="api-card__meta">
+              <span class="status-tag" data-status={item.status}>{item.status}</span>
+              <span class="pill">{item.artifact}</span>
+              <span class="pill">{item.type}</span>
+              {item.since && <span class="pill">since {item.since}</span>}
+            </div>
+            <h2>{item.name}</h2>
+            <p class="package">{item.qualifiedName}</p>
+            <p>{item.summary}</p>
+            <p class="source-path">{item.sourcePath}</p>
+            {item.members.length > 0 && (
+              <details class="member-list">
+                <summary>{item.members.length} 个 public/protected 成员</summary>
+                <ul>
+                  {item.members.map((member) => (
+                    <li>
+                      <code>{member.signature}</code>
+                      {member.summary && <span>{member.summary}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            <div class="api-actions">
+              <a class="button" href={item.docsPath}>
+                <Icon name="book" size={16} />
+                查看模块文档
+              </a>
+              <a class="button button--secondary" href={`https://github.com/yexianglun-d/java-tool-box/blob/main/${item.sourcePath}`}>
+                <Icon name="external" size={16} />
+                查看源码
+              </a>
+            </div>
+          </section>
+        ))}
+      </div>
+    </article>
+
+    <aside class="right-toc" aria-label="API 目录">
+      <h2>类型</h2>
+      {types.map((type) => <a href={`/api/?type=${type}`}><Icon name="filter" size={14} /> {type}</a>)}
+      <h2>模块</h2>
+      {modules.map((module) => <a href={`/api/?module=${module}`}><Icon name="package" size={14} /> {module}</a>)}
+    </aside>
+  </div>
+
+  <script>
+    const root = document.querySelector('[data-api-filter]');
+    const query = root?.querySelector('[data-api-query]');
+    const moduleSelect = root?.querySelector('[data-api-module]');
+    const typeSelect = root?.querySelector('[data-api-type]');
+    const cards = Array.from(document.querySelectorAll('[data-api-list] .api-card'));
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('module')) moduleSelect.value = params.get('module');
+    if (params.get('type')) typeSelect.value = params.get('type');
+
+    const applyFilter = () => {
+      const q = query.value.trim().toLowerCase();
+      const selectedModule = moduleSelect.value;
+      const selectedType = typeSelect.value;
+
+      for (const card of cards) {
+        const matchesQuery = !q || card.dataset.text.includes(q);
+        const matchesModule = !selectedModule || card.dataset.module === selectedModule;
+        const matchesType = !selectedType || card.dataset.type === selectedType;
+        card.hidden = !(matchesQuery && matchesModule && matchesType);
+      }
+    };
+
+    query?.addEventListener('input', applyFilter);
+    moduleSelect?.addEventListener('change', applyFilter);
+    typeSelect?.addEventListener('change', applyFilter);
+    applyFilter();
+  </script>
+</SiteShell>

@@ -1,0 +1,75 @@
+---
+import { searchEntries } from '../data/search';
+import Icon from './Icon.astro';
+
+const payload = JSON.stringify(searchEntries);
+---
+
+<div class="search-box" data-site-search>
+  <label class="sr-only" for="site-search">全站搜索</label>
+  <Icon name="search" size={17} className="search-box__icon" />
+  <input id="site-search" type="search" placeholder="搜索模块、配置、API" autocomplete="off" />
+  <div class="search-box__panel" role="listbox" hidden></div>
+  <script type="application/json" data-search-source set:html={payload}></script>
+</div>
+
+<script>
+  for (const root of document.querySelectorAll('[data-site-search]')) {
+    const input = root.querySelector('input');
+    const panel = root.querySelector('.search-box__panel');
+    const sourceNode = root.querySelector('[data-search-source]');
+    const entries = JSON.parse(sourceNode?.textContent || '[]');
+
+    const render = (items) => {
+      if (!panel) return;
+      if (items.length === 0) {
+        panel.innerHTML = `
+          <div class="search-empty">
+            <strong>没有匹配结果</strong>
+            <span>试试 RateLimit、CacheAsideTemplate、AiClient 或 SafePageQuery。</span>
+          </div>`;
+        panel.hidden = false;
+        return;
+      }
+
+      panel.innerHTML = items
+        .slice(0, 8)
+        .map((item) => `
+          <a class="search-result" href="${item.href}" role="option">
+            <span class="search-result__kind">${item.kind}</span>
+            <span class="search-result__title">${item.title}</span>
+          </a>`)
+        .join('');
+      panel.hidden = false;
+    };
+
+    input?.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+      if (!query) {
+        panel.hidden = true;
+        return;
+      }
+      render(entries.filter((entry) => entry.text.toLowerCase().includes(query)));
+    });
+
+    input?.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        input.value = '';
+        panel.hidden = true;
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === '/' && document.activeElement !== input) {
+        event.preventDefault();
+        input?.focus();
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!root.contains(event.target)) {
+        panel.hidden = true;
+      }
+    });
+  }
+</script>

@@ -1,0 +1,50 @@
+---
+import Icon from '../../../components/Icon.astro';
+import SiteShell from '../../../layouts/SiteShell.astro';
+import { generatedDocEntries, type GeneratedDocEntry } from '../../../data/generatedDocs';
+import { renderMarkdown } from '../../../utils/markdown';
+
+export function getStaticPaths() {
+  return generatedDocEntries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props as { entry: GeneratedDocEntry };
+const html = renderMarkdown(entry.markdown.replace(/^#\s+.+\r?\n+/, ''));
+const siblings = generatedDocEntries.filter((item) => item.category === entry.category);
+---
+
+<SiteShell title={entry.title} current="docs">
+  <div class="docs-layout">
+    <aside class="side-nav" aria-label="同类文档">
+      <h2>{entry.category}</h2>
+      {siblings.map((item) => (
+        <a href={`/docs/source/${item.slug}/`} aria-current={item.slug === entry.slug ? 'page' : undefined}>
+          {item.title}
+        </a>
+      ))}
+    </aside>
+
+    <article class="doc-content">
+      <div class="source-header">
+        <span class="eyebrow"><Icon name="book" size={16} /> {entry.source}</span>
+        <h1>{entry.title}</h1>
+        {entry.summary && <p>{entry.summary}</p>}
+      </div>
+
+      <section class="markdown-body" set:html={html} />
+    </article>
+
+    <aside class="right-toc" aria-label="本文目录">
+      <h2>目录</h2>
+      {entry.headings.slice(0, 18).map((heading) => (
+        <a class={`toc-depth-${heading.depth}`} href={`#${heading.id}`}>
+          {heading.depth <= 2 ? <Icon name="filter" size={14} /> : null}
+          {heading.title}
+        </a>
+      ))}
+    </aside>
+  </div>
+</SiteShell>

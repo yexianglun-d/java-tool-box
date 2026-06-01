@@ -1,0 +1,47 @@
+---
+import TopNav from '../components/TopNav.astro';
+import '../styles/global.css';
+
+const {
+  title = 'Under-Utils',
+  description = '面向 Java 21 / Spring Boot 项目的工程模式工具包',
+  current = 'home',
+  bodyClass = ''
+} = Astro.props as {
+  title?: string;
+  description?: string;
+  current?: string;
+  bodyClass?: string;
+};
+
+const pageTitle = title === 'Under-Utils' ? title : `${title} | Under-Utils`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1180, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f8fafc" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+  </head>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <TopNav current={current} />
+    <main id="main" class="site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div>
+        <strong>Under-Utils</strong>
+        <span>MIT License</span>
+        <span>Java 21 / Spring Boot 3.1.x</span>
+      </div>
+      <a href="https://central.sonatype.com/artifact/io.github.yexianglun-d/under-utils-starter" target="_blank" rel="noopener noreferrer">
+        Maven Central
+      </a>
+    </footer>
+  </body>
+</html>

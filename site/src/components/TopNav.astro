@@ -1,0 +1,51 @@
+---
+import Icon from './Icon.astro';
+import SearchBox from './SearchBox.astro';
+import VersionBadge from './VersionBadge.astro';
+
+const { current = 'home' } = Astro.props as { current?: string };
+
+const navItems = [
+  { id: 'home', label: '首页', href: '/' },
+  { id: 'docs', label: '文档', href: '/docs/' },
+  { id: 'modules', label: '模块', href: '/docs/#modules' },
+  { id: 'api', label: 'API', href: '/api/' },
+  { id: 'compatibility', label: '兼容性', href: '/docs/#compatibility' },
+  { id: 'release', label: '发布', href: '/docs/#release' }
+];
+---
+
+<header class="top-nav">
+  <div class="top-nav__inner">
+    <a class="brand" href="/" aria-label="Under-Utils 首页">
+      <span class="brand__mark"><Icon name="layers" size={22} /></span>
+      <span class="brand__text">Under-Utils</span>
+    </a>
+
+    <nav class="nav-links" aria-label="主导航">
+      {navItems.map((item) => (
+        <a
+          class:list={['nav-link', { 'is-active': current === item.id }]}
+          href={item.href}
+          aria-current={current === item.id ? 'page' : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="top-nav__actions">
+      <SearchBox />
+      <VersionBadge />
+      <a
+        class="github-link"
+        href="https://github.com/yexianglun-d/java-tool-box"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="打开 GitHub 仓库"
+      >
+        <Icon name="github" size={18} />
+      </a>
+    </div>
+  </div>
+</header>

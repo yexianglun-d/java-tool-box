@@ -1,0 +1,39 @@
+---
+import Icon from './Icon.astro';
+
+const {
+  label,
+  code,
+  language = 'text'
+} = Astro.props as {
+  label: string;
+  code: string;
+  language?: string;
+};
+---
+
+<figure class="code-frame">
+  <figcaption>
+    <span>{label}</span>
+    <button type="button" class="copy-button" data-copy={code} aria-label={`复制 ${label}`}>
+      <Icon name="copy" size={16} />
+      <span>复制</span>
+    </button>
+  </figcaption>
+  <pre><code class={`language-${language}`}>{code}</code></pre>
+</figure>
+
+<script>
+  for (const button of document.querySelectorAll('.copy-button[data-copy]')) {
+    button.addEventListener('click', async () => {
+      const text = button.getAttribute('data-copy') || '';
+      await navigator.clipboard.writeText(text);
+      const original = button.querySelector('span')?.textContent || '复制';
+      const label = button.querySelector('span');
+      if (label) label.textContent = '已复制';
+      window.setTimeout(() => {
+        if (label) label.textContent = original;
+      }, 1800);
+    });
+  }
+</script>

@@ -40,6 +40,14 @@ local.properties
 *.log
 logs/
 
+# Node / frontend
+node_modules/
+site/node_modules/
+site/dist/
+site/.astro/
+site/.cache/
+.playwright-cli/
+
 # Temporary files
 *.class
 *.jar

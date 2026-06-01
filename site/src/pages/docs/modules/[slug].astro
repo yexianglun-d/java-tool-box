@@ -1,0 +1,101 @@
+---
+import CodeBlock from '../../../components/CodeBlock.astro';
+import Icon from '../../../components/Icon.astro';
+import SiteShell from '../../../layouts/SiteShell.astro';
+import { getModuleReadme } from '../../../data/generatedDocs';
+import { modules, type ModuleEntry } from '../../../data/modules';
+import { renderMarkdown } from '../../../utils/markdown';
+import version from '../../../data/version.json';
+
+export function getStaticPaths() {
+  return modules.map((module) => ({
+    params: { slug: module.slug },
+    props: { module }
+  }));
+}
+
+const { module } = Astro.props as { module: ModuleEntry };
+const readme = getModuleReadme(module.slug);
+const readmeMarkdown = readme?.markdown.replace(/^#\s+.+\r?\n+/, '') ?? '';
+const readmeHtml = readme ? renderMarkdown(readmeMarkdown) : '';
+
+const dependencyCode = `<dependency>
+    <groupId>io.github.yexianglun-d</groupId>
+    <artifactId>${module.artifact}</artifactId>
+    <version>${version.stable}</version>
+</dependency>`;
+---
+
+<SiteShell title={`${module.title} 模块`} current="modules">
+  <div class="docs-layout">
+    <aside class="side-nav" aria-label="模块导航">
+      <h2>模块</h2>
+      {modules.map((item) => (
+        <a href={`/docs/modules/${item.slug}/`} aria-current={item.slug === module.slug ? 'page' : undefined}>
+          {item.artifact}
+        </a>
+      ))}
+    </aside>
+
+    <article class="doc-content">
+      <div class="module-hero">
+        <span class="eyebrow"><Icon name={module.kind === 'starter' ? 'rocket' : 'package'} size={16} /> {module.kind}</span>
+        <h1>{module.title}</h1>
+        <p class="artifact">{module.artifact}</p>
+        <p>{module.summary}</p>
+      </div>
+
+      <h2 id="install">依赖</h2>
+      <CodeBlock label={`${module.artifact} Maven 坐标`} language="xml" code={dependencyCode} />
+
+      <h2 id="fit">适用场景</h2>
+      <p>{module.recommendedFor}</p>
+
+      <h2 id="highlights">能力边界</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr>
+            <th>文档来源</th>
+            <td><code>{module.docsSource}</code></td>
+          </tr>
+          <tr>
+            <th>API 入口</th>
+            <td><a href={`/api/?module=${module.apiQuery}`}>查看 {module.title} 相关 API</a></td>
+          </tr>
+          <tr>
+            <th>设计约束</th>
+            <td>保留失败语义、配置 key 和 public API 兼容性说明，不以营销描述替代真实边界。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="doc-grid">
+        {module.highlights.map((item) => (
+          <div class="doc-link">
+            <strong>{item}</strong>
+            <span>该能力来自当前模块 README 或 API Review，页面下方同步展示原始 README 内容。</span>
+          </div>
+        ))}
+      </div>
+
+      {readme && (
+        <>
+          <h2 id="readme">README 同步内容</h2>
+          <p class="doc-note">来源：<code>{readme.source}</code>，构建时自动读取并渲染。</p>
+          <section class="markdown-body" set:html={readmeHtml} />
+        </>
+      )}
+    </article>
+
+    <aside class="right-toc" aria-label="本文目录">
+      <h2>目录</h2>
+      <a href="#install">依赖</a>
+      <a href="#fit">适用场景</a>
+      <a href="#highlights">能力边界</a>
+      {readme && <a href="#readme">README 同步</a>}
+      {readme?.headings.slice(0, 8).map((heading) => (
+        <a class={`toc-depth-${heading.depth}`} href={`#${heading.id}`}>{heading.title}</a>
+      ))}
+    </aside>
+  </div>
+</SiteShell>

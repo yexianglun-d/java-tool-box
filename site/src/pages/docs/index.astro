@@ -1,0 +1,110 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Icon from '../../components/Icon.astro';
+import SiteShell from '../../layouts/SiteShell.astro';
+import { docLinks } from '../../data/docs';
+import { docsIndex, guideDocs, overviewDoc, releaseDocs } from '../../data/generatedDocs';
+import { modules } from '../../data/modules';
+import version from '../../data/version.json';
+
+const springConfig = `under:
+  utils:
+    web:
+      operation-context:
+        enabled: true
+        task-decorator-enabled: true
+      rate-limit:
+        enabled: true
+        store: local
+      repeat-submit:
+        enabled: true
+        store: local`;
+---
+
+<SiteShell title="文档" current="docs">
+  <div class="docs-layout">
+    <aside class="side-nav" aria-label="文档导航">
+      <h2>文档</h2>
+      <a href="#quick-start">快速开始</a>
+      <a href="#boundary">项目边界</a>
+      <a href="#modules">模块文档</a>
+      <a href="#compatibility">兼容性</a>
+      <a href="#api-review">API Review</a>
+      <a href="#maturity">工程成熟度</a>
+      <a href="#release">发布指南</a>
+      <a href="#source-docs">文档源</a>
+    </aside>
+
+    <article class="doc-content">
+      <h1>Under-Utils 使用文档</h1>
+      <p>
+        文档站聚焦接入、配置、失败语义、资源边界和维护约束。当前收录 {docsIndex.meta.entryCount} 份仓库 Markdown，构建时从 README、docs 和模块 README 自动生成索引。
+      </p>
+      {overviewDoc && <p class="doc-note">{overviewDoc.summary}</p>}
+
+      <h2 id="quick-start">快速开始</h2>
+      <p>
+        当前稳定版本为 <strong>{version.stable}</strong>，主分支处于 <strong>{version.snapshot}</strong> 开发周期。普通 Spring Boot 服务优先从轻量 starter 开始。
+      </p>
+      <CodeBlock label="Spring 本地横切能力配置" language="yaml" code={springConfig} />
+
+      <h2 id="boundary">项目边界</h2>
+      <p>
+        适合进入本项目的能力，应有清晰复用边界，并能封装足够多的重复复杂度。JDK、Spring、Hutool、Apache Commons、Guava 已成熟覆盖的小工具方法不作为新增方向。
+      </p>
+
+      <h2 id="modules">模块文档</h2>
+      <div class="doc-grid">
+        {modules.map((module) => (
+          <a class="doc-link" href={`/docs/modules/${module.slug}/`}>
+            <strong>{module.artifact}</strong>
+            <span>{module.summary}</span>
+            <em class="source-tag">{module.docsSource}</em>
+          </a>
+        ))}
+      </div>
+
+      <h2 id="compatibility">兼容性</h2>
+      <p>
+        public API 范围包括 Maven 坐标、public/protected Java API、注解属性、`under.utils.*` 配置 key、starter 自动装配 Bean、SPI 接口和已文档化的失败语义。
+      </p>
+
+      <h2 id="api-review">API Review</h2>
+      <p>
+        API Review 用于持续收敛命名、配置 key、异常语义和模块边界。API 文档中的 deprecated 状态需要和审计结论互链。
+      </p>
+
+      <h2 id="maturity">工程成熟度</h2>
+      <p>
+        成熟度清单覆盖生命周期结束、缓存指标、Bug 回归测试、CHANGELOG 可追溯性和 API 兼容性门禁。
+      </p>
+
+      <h2 id="release">发布指南</h2>
+      <p>
+        发布流程面向 Maven Central Portal，默认跳过上传以避免误发布。真正 release 前需要完成测试、release profile、签名和 Central Portal 校验。
+      </p>
+
+      <h2 id="source-docs">文档源</h2>
+      <p>
+        以下页面直接由仓库 Markdown 渲染，保留代码块、表格和标题锚点，避免前台文案与工程文档分叉。
+      </p>
+      <div class="doc-grid">
+        {[...docLinks, ...guideDocs, ...releaseDocs].filter((doc, index, docs) => docs.findIndex((item) => item.source === doc.source) === index).map((doc) => (
+          <a class="doc-link" href={doc.href}>
+            <strong>{doc.title}</strong>
+            <span>{'description' in doc ? doc.description : doc.summary}</span>
+            <em class="source-tag">{doc.source}</em>
+          </a>
+        ))}
+      </div>
+    </article>
+
+    <aside class="right-toc" aria-label="本文目录">
+      <h2>目录</h2>
+      <a href="#quick-start"><Icon name="rocket" size={14} /> 快速开始</a>
+      <a href="#modules"><Icon name="package" size={14} /> 模块文档</a>
+      <a href="#compatibility"><Icon name="shield" size={14} /> 兼容性</a>
+      <a href="#release"><Icon name="external" size={14} /> 发布指南</a>
+    </aside>
+  </div>
+</SiteShell>
