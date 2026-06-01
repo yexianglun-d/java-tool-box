@@ -1,4 +1,4 @@
-# 安全策略
+# 安全策略 / Security Policy
 
 ## 支持版本
 
@@ -27,3 +27,33 @@
 - 是否已发现公开利用迹象。
 
 维护者会确认问题、评估影响、准备修复，并在 Release Notes 或 `CHANGELOG.md` 中说明结果。
+
+---
+
+## Supported Versions
+
+Security fixes are applied to `main` first. If affected code has already been released, the fix will be included in the next patch version.
+
+| Version line | Support policy |
+|--------------|----------------|
+| `main` | Supported |
+| `1.0.x` | Best-effort maintenance |
+
+## Reporting a Security Issue
+
+Do not paste exploit details, secrets, internal addresses, production logs, or directly reproducible attack payloads into public issues.
+
+Recommended reporting process:
+
+1. If GitHub Security Advisories are enabled for this repository, report the issue through a private security advisory.
+2. If private reporting is not enabled yet, create a public issue without vulnerability details and state only that you need a private channel to report a security issue. Maintainers will continue the discussion privately.
+
+When reporting, please include:
+
+- Affected module and version.
+- Vulnerability type and impact scope.
+- Minimal reproduction steps or a failing test.
+- Known mitigation options.
+- Whether public exploitation has been observed.
+
+Maintainers will confirm the issue, assess the impact, prepare a fix, and describe the outcome in Release Notes or `CHANGELOG.md`.

@@ -1,4 +1,4 @@
-# 贡献指南
+# 贡献指南 / Contributing Guide
 
 感谢你愿意改进 Under-Utils。
 
@@ -133,3 +133,147 @@ mvn -s docs/central-dry-run-settings.xml \
 - 依赖和自动装配是否有不可接受的副作用。
 - 失败处理、资源释放和并发边界是否明确。
 - 是否避免了与成熟工具库的低价值重复。
+
+---
+
+Thank you for helping improve Under-Utils.
+
+This project accepts reusable engineering-pattern abstractions. It does not accept growth into a generic utility collection just to increase the number of methods.
+
+## Project Scope
+
+A suitable contribution usually meets these conditions:
+
+- It solves an infrastructure problem that repeatedly appears across services.
+- It has a clear module boundary and does not put business rules from a single application into a shared library.
+- It defines failure semantics, thread-safety assumptions, and external dependency requirements.
+- It can be verified by unit tests or reproducible integration tests.
+- It does not duplicate APIs already well covered by the JDK, Spring, Hutool, Apache Commons, or Guava.
+
+Good directions include:
+
+- Request-context propagation.
+- Rate limiting and repeat-submit protection.
+- Redis distributed locks and cache rebuild templates.
+- OpenAPI client governance.
+- Safe pagination and audit filling.
+- Import task workflows.
+
+Usually poor fits include:
+
+- Small utility methods such as `StringUtils.isBlank`, `DateUtils.format`, or `CollectionUtils.map`.
+- Workflows tied to a single product domain such as orders, payments, memberships, or marketing.
+- Thin wrappers without error handling or tests.
+
+## Before You Start
+
+For larger changes, please create an issue first and describe:
+
+- The repeated scenario you want to solve.
+- Why existing libraries or current modules are not enough.
+- The planned module, public API, configuration keys, and failure semantics.
+- Compatibility impact: patch-compatible, minor-compatible, breaking, or deprecation-only.
+- Runtime assumptions such as Redis, database, thread pool, clock, or network dependencies.
+- Test plan.
+
+Small fixes, tests, and documentation improvements can be submitted directly as pull requests.
+
+## Bug Fixes and Regression Tests
+
+Bug fixes should leave a traceable guardrail so the same issue does not silently return during future refactoring.
+
+- Important bug fixes must add an independent regression test. The test should fail before the fix and pass after the fix.
+- If an issue number exists, prefer including it in the test class or method name, such as `Issue1234Test`, `IssueGH1234Test`, or `issue1234_shouldRejectUnsafeSort`.
+- If there is no external issue, use `Regression...Test` or `regression_...` naming and describe the source in the pull request, `CHANGELOG.md`, or `docs/API_REVIEW.md`, such as `review-doc`, `internal-review`, or `user-report`.
+- Regression tests should cover trigger conditions, failure semantics, and boundary values. Do not only verify the fixed happy path.
+- If an automated test cannot be added directly, the pull request must explain why and provide reproducible manual verification steps.
+
+## Local Environment
+
+Requirements:
+
+- Java 21
+- Maven 3.9+
+- Docker, only for Testcontainers integration tests
+
+Common commands:
+
+```bash
+mvn -DskipTests compile
+mvn test
+mvn -Prelease -DskipTests package
+```
+
+Public API compatibility check:
+
+```bash
+mvn -Papi-compat \
+  -pl under-utils-core,under-utils-http,under-utils-spring,under-utils-redis,under-utils-mybatis,under-utils-biz \
+  -am \
+  -DskipTests \
+  verify
+```
+
+Integration tests:
+
+```bash
+mvn -Pintegration-tests -pl under-utils-test -am test
+```
+
+Central Portal dry run:
+
+```bash
+mvn -s docs/central-dry-run-settings.xml \
+  -Prelease,central-publish \
+  -Dcentral.publishing.server.id=central-dry-run \
+  -Dcentral.skipPublishing=true \
+  -Dgpg.skip=true \
+  -DskipTests \
+  deploy
+```
+
+## Pull Request
+
+Before requesting review, confirm that:
+
+- The change has a clear module ownership.
+- Bug fixes include an independent regression test and can be traced to an issue, `review-doc`, `internal-review`, or `user-report`.
+- Public API behavior is documented when it is not obvious.
+- Public API changes follow [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+- Breaking changes are avoided outside major versions. If a security or correctness exception exists, explain the migration path.
+- Runtime-module public API changes have passed the `api-compat` profile, or the reason they cannot be checked automatically is documented.
+- Deprecated APIs have alternatives or migration notes.
+- Behavior changes include tests.
+- The default `mvn test` does not depend on Redis, MySQL, Docker, or private infrastructure.
+- `mvn -Prelease -DskipTests package` still generates sources and javadocs.
+- User-facing changes update README, module documentation, or `CHANGELOG.md`. `CHANGELOG.md` should describe the reason, impact scope, compatibility category, and source issue or source type.
+- No build artifacts, local paths, tokens, private keys, internal reports, or production logs are committed.
+
+## Commit Messages
+
+Chinese commit messages are acceptable. Keep messages short and describe the result:
+
+```text
+完善 Redis 缓存模板文档
+修复 OpenAPI 重试异常处理
+补充 MyBatis 安全分页测试
+```
+
+English commit messages are also acceptable:
+
+```text
+Improve Redis cache template docs
+Fix OpenAPI retry exception handling
+Add MyBatis safe pagination tests
+```
+
+## Review Focus
+
+Maintainers will focus on:
+
+- Whether the change fits the project scope.
+- Whether the API can be maintained stably.
+- Whether the compatibility impact category is accurate.
+- Whether dependencies and auto-configuration introduce unacceptable side effects.
+- Whether failure handling, resource release, and concurrency boundaries are clear.
+- Whether the change avoids low-value duplication of mature utility libraries.
