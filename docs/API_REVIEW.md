@@ -273,3 +273,15 @@
 - 新增 `AiClientProvider` 扩展点和 `OpenAiCompatibleAiClientProvider`，业务侧可接入非兼容协议，项目本身不引入具体厂商 SDK。
 - `under-utils-ai-starter` 支持根据 `under.utils.ai.provider` 匹配自定义 `AiClientProvider` Bean；用户自定义 `AiClient` Bean 时继续退让。
 - 相关测试通过 MockWebServer 覆盖流式正常分片、HTTP 错误、连接中断、主动取消、provider 扩展和 starter provider 路由。
+
+## 第二十六轮结论
+
+### AI Named Client Registry
+
+- 新增 `AiClientRegistry` 和 `DefaultAiClientRegistry`，只做命名客户端管理和默认客户端选择，不引入模型自动路由、负载均衡或健康检查。
+- `AiClientRegistry` 暴露 `getDefaultClient()`、`get(name)`、`find(name)`、`names()`、`getStreaming(name)` 和 `getDefaultStreaming()`，同步与流式边界继续分离。
+- `under-utils-ai-starter` 支持 `under.utils.ai.clients.<name>.*` 多客户端配置，并通过 `under.utils.ai.default-client` 指定默认客户端。
+- 未配置 `clients` 时，starter 继续按旧的顶层 `provider/base-url/api-key/model` 配置创建名为 `default` 的客户端，保持已有单客户端配置兼容。
+- 顶层配置可作为命名客户端默认值，单个客户端可覆盖 provider、base URL、API key、model、chat completions path、timeout、retry、temperature、max tokens 和 headers。
+- 默认客户端仍作为 `AiClient` Bean 暴露，业务代码只需要单模型时无需感知 registry；用户自定义 `AiClient` Bean 时自动装配继续退让。
+- 相关测试覆盖 registry 行为、多客户端自动装配、默认客户端选择、headers 继承、自定义 provider 和缺失/不支持流式客户端的失败语义。

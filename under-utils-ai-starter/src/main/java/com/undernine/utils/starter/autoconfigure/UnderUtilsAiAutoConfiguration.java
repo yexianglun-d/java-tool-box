@@ -3,7 +3,9 @@ package com.undernine.utils.starter.autoconfigure;
 import com.undernine.utils.ai.AiClient;
 import com.undernine.utils.ai.AiClientOptions;
 import com.undernine.utils.ai.AiClientProvider;
+import com.undernine.utils.ai.AiClientRegistry;
 import com.undernine.utils.ai.AiProviderNames;
+import com.undernine.utils.ai.DefaultAiClientRegistry;
 import com.undernine.utils.ai.OpenAiCompatibleAiClient;
 import com.undernine.utils.starter.properties.UnderUtilsAiProperties;
 import org.springframework.beans.factory.ObjectProvider;
@@ -13,6 +15,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * AI 模块自动装配。
@@ -27,20 +33,49 @@ import org.springframework.context.annotation.Bean;
 public class UnderUtilsAiAutoConfiguration {
 
     /**
-     * 创建默认 AI client。
+     * 创建 AI client 注册表。
      *
      * @param properties AI 配置
      * @param aiClientProviders 自定义 AI client provider
-     * @return AI client
+     * @return AI client 注册表
      */
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean({AiClient.class, AiClientRegistry.class})
     @ConditionalOnProperty(prefix = "under.utils.ai", name = "enabled", havingValue = "true")
-    public AiClient aiClient(UnderUtilsAiProperties properties,
-                             ObjectProvider<AiClientProvider> aiClientProviders) {
-        String provider = AiClientProvider.normalize(properties.getProvider());
-        AiClientOptions options = buildOptions(properties);
-        AiClientProvider customProvider = aiClientProviders.stream()
+    public AiClientRegistry aiClientRegistry(UnderUtilsAiProperties properties,
+                                             ObjectProvider<AiClientProvider> aiClientProviders) {
+        List<AiClientProvider> providers = aiClientProviders.stream().toList();
+        Map<String, AiClient> clients = new LinkedHashMap<>();
+        if (properties.getClients().isEmpty()) {
+            clients.put("default", createClient(properties.getProvider(),
+                    buildOptions(properties, null), providers));
+        } else {
+            properties.getClients().forEach((name, clientProperties) -> clients.put(
+                    AiClientRegistry.normalizeName(name),
+                    createClient(resolveProvider(properties, clientProperties),
+                            buildOptions(properties, clientProperties),
+                            providers)
+            ));
+        }
+        return new DefaultAiClientRegistry(clients, resolveDefaultName(properties, clients));
+    }
+
+    /**
+     * 创建默认 AI client。
+     *
+     * @param aiClientRegistry AI client 注册表
+     * @return 默认 AI client
+     */
+    @Bean
+    @ConditionalOnMissingBean(AiClient.class)
+    @ConditionalOnProperty(prefix = "under.utils.ai", name = "enabled", havingValue = "true")
+    public AiClient aiClient(AiClientRegistry aiClientRegistry) {
+        return aiClientRegistry.getDefaultClient();
+    }
+
+    private AiClient createClient(String providerName, AiClientOptions options, List<AiClientProvider> providers) {
+        String provider = AiClientProvider.normalize(providerName);
+        AiClientProvider customProvider = providers.stream()
                 .filter(candidate -> candidate.supports(provider))
                 .findFirst()
                 .orElse(null);
@@ -50,21 +85,63 @@ public class UnderUtilsAiAutoConfiguration {
         if (AiProviderNames.OPENAI_COMPATIBLE.equals(provider)) {
             return new OpenAiCompatibleAiClient(options);
         }
-        throw new IllegalArgumentException("unsupported AI provider: " + properties.getProvider());
+        throw new IllegalArgumentException("unsupported AI provider: " + providerName);
     }
 
-    private AiClientOptions buildOptions(UnderUtilsAiProperties properties) {
+    private AiClientOptions buildOptions(UnderUtilsAiProperties properties,
+                                         UnderUtilsAiProperties.Client clientProperties) {
         return AiClientOptions.builder()
-                .baseUrl(properties.getBaseUrl())
-                .apiKey(properties.getApiKey())
-                .model(properties.getModel())
-                .chatCompletionsPath(properties.getChatCompletionsPath())
-                .timeout(properties.getTimeout())
-                .maxRetries(properties.getMaxRetries())
-                .retryInterval(properties.getRetryInterval())
-                .temperature(properties.getTemperature())
-                .maxTokens(properties.getMaxTokens())
-                .headers(properties.getHeaders())
+                .baseUrl(resolve(properties.getBaseUrl(), clientProperties == null ? null : clientProperties.getBaseUrl()))
+                .apiKey(resolve(properties.getApiKey(), clientProperties == null ? null : clientProperties.getApiKey()))
+                .model(resolve(properties.getModel(), clientProperties == null ? null : clientProperties.getModel()))
+                .chatCompletionsPath(resolve(properties.getChatCompletionsPath(),
+                        clientProperties == null ? null : clientProperties.getChatCompletionsPath()))
+                .timeout(clientProperties == null || clientProperties.getTimeout() == null
+                        ? properties.getTimeout() : clientProperties.getTimeout())
+                .maxRetries(clientProperties == null || clientProperties.getMaxRetries() == null
+                        ? properties.getMaxRetries() : clientProperties.getMaxRetries())
+                .retryInterval(clientProperties == null || clientProperties.getRetryInterval() == null
+                        ? properties.getRetryInterval() : clientProperties.getRetryInterval())
+                .temperature(clientProperties == null || clientProperties.getTemperature() == null
+                        ? properties.getTemperature() : clientProperties.getTemperature())
+                .maxTokens(clientProperties == null || clientProperties.getMaxTokens() == null
+                        ? properties.getMaxTokens() : clientProperties.getMaxTokens())
+                .headers(resolveHeaders(properties, clientProperties))
                 .build();
+    }
+
+    private String resolveProvider(UnderUtilsAiProperties properties, UnderUtilsAiProperties.Client clientProperties) {
+        return resolve(properties.getProvider(), clientProperties == null ? null : clientProperties.getProvider());
+    }
+
+    private Map<String, String> resolveHeaders(UnderUtilsAiProperties properties,
+                                               UnderUtilsAiProperties.Client clientProperties) {
+        Map<String, String> headers = new LinkedHashMap<>(properties.getHeaders());
+        if (clientProperties != null) {
+            headers.putAll(clientProperties.getHeaders());
+        }
+        return headers;
+    }
+
+    private String resolveDefaultName(UnderUtilsAiProperties properties, Map<String, AiClient> clients) {
+        String configuredName = trimToNull(properties.getDefaultClient());
+        if (configuredName != null) {
+            return AiClientRegistry.normalizeName(configuredName);
+        }
+        if (clients.containsKey("default")) {
+            return "default";
+        }
+        return clients.keySet().iterator().next();
+    }
+
+    private String resolve(String fallback, String value) {
+        return value == null ? fallback : value;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 }

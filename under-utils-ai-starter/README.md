@@ -50,12 +50,57 @@ public class SummaryService {
 }
 ```
 
+多模型配置：
+
+该能力位于当前 `1.0.3-SNAPSHOT` 开发周期，正式发布后再使用对应稳定版本坐标。
+
+```yaml
+under:
+  utils:
+    ai:
+      enabled: true
+      default-client: deepseek
+      timeout: 30s
+      clients:
+        deepseek:
+          provider: openai-compatible
+          base-url: https://api.deepseek.example/v1
+          api-key: ${DEEPSEEK_API_KEY}
+          model: deepseek-chat
+        qwen:
+          provider: openai-compatible
+          base-url: https://dashscope-compatible.example/v1
+          api-key: ${QWEN_API_KEY}
+          model: qwen-plus
+```
+
+使用命名客户端：
+
+```java
+@Service
+public class ModelRouter {
+
+    private final AiClientRegistry aiClients;
+
+    public ModelRouter(AiClientRegistry aiClients) {
+        this.aiClients = aiClients;
+    }
+
+    public String askQwen(String prompt) {
+        return aiClients.get("qwen").chat(ChatRequest.user(prompt)).text();
+    }
+}
+```
+
+顶层 `provider`、`base-url`、`api-key`、`model`、`timeout`、`max-retries`、`retry-interval`、`temperature`、`max-tokens` 和 `headers` 可作为命名客户端默认值；单个客户端配置会覆盖同名字段。未配置 `clients` 时，starter 会继续按旧的顶层配置创建名为 `default` 的客户端。
+
 ## 自动装配规则
 
 - `under.utils.ai.enabled=true` 时才创建默认 `AiClient`。
 - 默认内置 `openai-compatible` provider。
-- 如需非兼容协议，可声明自定义 `AiClientProvider` Bean，并将 `under.utils.ai.provider` 设置为该 provider 名称。
-- 用户自定义 `AiClient` Bean 时，自动装配会退让。
+- 配置 `under.utils.ai.clients.<name>.*` 时会创建 `AiClientRegistry`，并将默认客户端作为 `AiClient` Bean 暴露。
+- 如需非兼容协议，可声明自定义 `AiClientProvider` Bean，并将顶层或命名客户端的 `provider` 设置为该 provider 名称。
+- 用户自定义 `AiClient` Bean 时，自动装配会退让，不再强制创建注册表。
 - `api-key` 为空时不会发送 Authorization header，适合本地兼容服务。
 
 ## 流式响应

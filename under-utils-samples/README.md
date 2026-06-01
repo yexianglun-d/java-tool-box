@@ -65,7 +65,7 @@ curl http://localhost:18080/samples/ai/status
 
 ## AI Profile
 
-`ai` profile 展示如何通过 `under-utils-ai-starter` 按配置创建默认 `AiClient`。默认配置指向本地占位地址，不会自动访问公网；真实调用前需要设置模型服务地址和模型名。
+`ai` profile 展示如何通过 `under-utils-ai-starter` 按配置创建默认 `AiClient` 和命名 `AiClientRegistry`。默认配置指向本地占位地址，不会自动访问公网；真实调用前需要设置模型服务地址和模型名。
 
 ```bash
 AI_BASE_URL=https://api.example.com/v1 \
@@ -84,6 +84,14 @@ curl -X POST http://localhost:18080/samples/ai/chat \
 curl -N -X POST http://localhost:18080/samples/ai/chat/stream \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"请分三段介绍 Under-Utils","systemPrompt":"你是一个简洁的助手"}'
+
+curl -X POST http://localhost:18080/samples/ai/clients/secondary/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"请用一句话介绍 Under-Utils"}'
+
+curl -N -X POST http://localhost:18080/samples/ai/clients/secondary/chat/stream \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"请分三段介绍 Under-Utils"}'
 ```
 
 ## Redis Profile

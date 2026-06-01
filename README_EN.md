@@ -47,10 +47,10 @@ Dependency weight and module-splitting decisions are documented in [docs/DEPENDE
 | `under-utils-spring` | Spring Web context propagation, rate-limit/repeat-submit abstractions, response models, exception handling, and JSON masking. |
 | `under-utils-redis` | Redisson-based distributed locks, Redis stores, cache-aside, logical-expire cache templates, built-in metrics, and optional Micrometer observation. |
 | `under-utils-http` | HTTP convenience calls and OpenAPI client governance, including token refresh, signing, trace/idempotency headers, error decoding, and retry behavior. |
-| `under-utils-ai` | Basic OpenAI-compatible AI model calls, including sync/streaming chat, provider extension, response metadata, error classification, and sensitive-data protection. |
+| `under-utils-ai` | Basic OpenAI-compatible AI model calls, including sync/streaming chat, named client registry, provider extension, response metadata, error classification, and sensitive-data protection. |
 | `under-utils-mybatis` | MyBatis-Plus safe pagination, sort whitelisting, audit filling, and page result models. |
 | `under-utils-biz` | Reusable business workflow templates, currently focused on CSV import, async progress lookup, and error export. |
-| `under-utils-ai-starter` | Spring Boot AI autoconfiguration that creates a default `AiClient` from configuration. |
+| `under-utils-ai-starter` | Spring Boot AI autoconfiguration that creates a default or multiple named `AiClient` instances from configuration. |
 | `under-utils-spring-starter` | Spring Boot starter for local Spring cross-cutting features only. |
 | `under-utils-redis-starter` | Spring Boot Redis starter that includes the Spring starter and Redis-backed distributed features. |
 | `under-utils-starter` | Compatibility aggregate starter that continues to cover Spring and Redis autoconfiguration. |

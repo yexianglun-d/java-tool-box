@@ -87,6 +87,34 @@ ChatRequest request = ChatRequest.builder()
         .build();
 ```
 
+## 多客户端注册表
+
+该能力位于当前 `1.0.3-SNAPSHOT` 开发周期，正式发布后再使用对应稳定版本坐标。
+
+同一个应用需要同时接入多个模型服务时，可以使用 `AiClientRegistry` 按名称路由：
+
+```java
+Map<String, AiClient> clients = new LinkedHashMap<>();
+clients.put("deepseek", AiClient.builder()
+        .baseUrl("https://api.deepseek.example/v1")
+        .apiKey(deepseekKey)
+        .model("deepseek-chat")
+        .build());
+clients.put("qwen", AiClient.builder()
+        .baseUrl("https://dashscope-compatible.example/v1")
+        .apiKey(qwenKey)
+        .model("qwen-plus")
+        .build());
+
+AiClientRegistry registry = new DefaultAiClientRegistry(clients, "deepseek");
+
+String text = registry.get("qwen")
+        .chat(ChatRequest.user("请总结这段文本"))
+        .text();
+```
+
+`AiClientRegistry#getDefaultClient()` 返回默认客户端，`getStreaming(name)` 会在目标客户端不支持流式响应时抛出明确异常。
+
 ## 响应元数据
 
 `ChatResponse` 提供文本、模型名、结束原因和 token 用量，同时通过 `AiResponseMetadata` 暴露 provider、调用方 request id、模型服务 response id、模型指纹和请求耗时：

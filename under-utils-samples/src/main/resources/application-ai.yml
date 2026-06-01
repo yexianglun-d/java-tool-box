@@ -3,9 +3,16 @@ under:
     ai:
       enabled: true
       provider: openai-compatible
+      default-client: ${AI_DEFAULT_CLIENT:default}
       base-url: ${AI_BASE_URL:http://127.0.0.1:9999/v1}
       api-key: ${AI_API_KEY:}
       model: ${AI_MODEL:demo-model}
       timeout: ${AI_TIMEOUT:30s}
       max-retries: ${AI_MAX_RETRIES:0}
       retry-interval: ${AI_RETRY_INTERVAL:0ms}
+      clients:
+        default: {}
+        secondary:
+          base-url: ${AI_SECONDARY_BASE_URL:http://127.0.0.1:9999/v1}
+          api-key: ${AI_SECONDARY_API_KEY:${AI_API_KEY:}}
+          model: ${AI_SECONDARY_MODEL:demo-model}

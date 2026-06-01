@@ -50,10 +50,10 @@ Crypto 重新建模和 core JSON 迁移分别见 [docs/CRYPTO_REDESIGN.md](docs/
 | `under-utils-spring` | Spring Web 上下文传播、限流/防重抽象、返回结果、异常处理和 JSON 脱敏。 |
 | `under-utils-redis` | 基于 Redisson 的分布式锁、限流/防重存储、cache-aside、逻辑过期缓存模板、内置指标和可选 Micrometer 观测适配。 |
 | `under-utils-http` | HTTP 便捷调用与 OpenAPI 客户端治理，包括 token 刷新、签名、trace/idempotency header、错误解码和重试。 |
-| `under-utils-ai` | OpenAI-compatible AI 大模型基础调用封装，覆盖同步/流式文本对话、provider 扩展、响应元数据、基础错误分类和敏感信息脱敏。 |
+| `under-utils-ai` | OpenAI-compatible AI 大模型基础调用封装，覆盖同步/流式文本对话、命名客户端注册表、provider 扩展、响应元数据、基础错误分类和敏感信息脱敏。 |
 | `under-utils-mybatis` | MyBatis-Plus 安全分页、排序白名单、审计填充和分页结果封装。 |
 | `under-utils-biz` | 可复用业务流程模板，目前主要是 CSV 导入、异步导入进度查询和错误导出。 |
-| `under-utils-ai-starter` | Spring Boot AI 自动装配入口，按配置创建默认 `AiClient`。 |
+| `under-utils-ai-starter` | Spring Boot AI 自动装配入口，按配置创建默认或多个命名 `AiClient`。 |
 | `under-utils-spring-starter` | Spring Boot 自动装配入口，只包含 Spring 本地横切能力。 |
 | `under-utils-redis-starter` | Spring Boot Redis 自动装配入口，包含 Spring starter 并接入 Redis 分布式能力。 |
 | `under-utils-starter` | 兼容聚合 starter，继续覆盖 Spring 与 Redis 自动装配。 |

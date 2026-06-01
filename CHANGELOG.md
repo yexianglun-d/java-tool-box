@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- `under-utils-ai` 新增 `AiClientRegistry` 和 `DefaultAiClientRegistry`，支持在一个应用内按名称管理多个 AI client，并获取默认或指定客户端。
+- `under-utils-ai-starter` 支持 `under.utils.ai.clients.<name>.*` 多客户端配置和 `under.utils.ai.default-client` 默认路由；旧的单客户端顶层配置继续兼容。
+- `under-utils-samples` 的 AI profile 新增命名客户端示例和 `/samples/ai/clients/{clientName}/chat`、`/samples/ai/clients/{clientName}/chat/stream` 路由。
+
 ### Changed
 
 - `main` 分支 Maven 版本进入 `1.0.3-SNAPSHOT` 开发周期，`1.0.2` 保持为当前稳定版本。
